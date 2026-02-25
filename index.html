@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Virtus Fit Dashboard</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); }
+        .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 16px; }
+        .accent { color: var(--tg-theme-button-color, #3390ec); }
+        .btn-main { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); }
+    </style>
+</head>
+<body class="p-4 font-sans">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-xl font-bold">Привіт, <span id="user-name">Атлет</span>! 👋</h1>
+            <p class="text-sm opacity-60">Твій прогрес на сьогодні</p>
+        </div>
+        <div class="card p-2 text-center min-w-[80px]">
+            <span class="text-xs opacity-60">Баланс</span>
+            <div class="font-bold accent" id="user-balance">...</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="card p-4 flex flex-col items-center">
+            <span class="text-sm opacity-60 mb-2">Вага</span>
+            <div class="text-2xl font-bold" id="current-weight">... кг</div>
+            <div class="text-xs text-green-400 mt-1">⬇️ -0.5 кг за тиждень</div>
+        </div>
+        <div class="card p-4 flex flex-col items-center">
+            <span class="text-sm opacity-60 mb-2">Ціль</span>
+            <div class="text-sm font-medium text-center" id="user-goal">...</div>
+        </div>
+    </div>
+
+    <div class="card p-4 mb-6">
+        <h3 class="text-sm font-bold mb-4 italic">Аналітика ваги</h3>
+        <div class="h-32 w-full flex items-end justify-between px-2">
+            <div class="bg-blue-500 w-4 h-12 rounded-t opacity-40"></div>
+            <div class="bg-blue-500 w-4 h-16 rounded-t opacity-50"></div>
+            <div class="bg-blue-500 w-4 h-20 rounded-t opacity-60"></div>
+            <div class="bg-blue-500 w-4 h-14 rounded-t opacity-70"></div>
+            <div class="bg-blue-500 w-4 h-24 rounded-t"></div>
+        </div>
+        <p class="text-[10px] text-center mt-2 opacity-40">Дані оновлюються автоматично з Supabase</p>
+    </div>
+
+    <div class="space-y-3">
+        <button onclick="tg.close()" class="w-full btn-main py-4 rounded-xl font-bold shadow-lg transition-transform active:scale-95">
+            ПОВЕРНУТИСЯ В ЧАТ
+        </button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Розгорнути на весь екран
+
+        // Відображаємо дані з Telegram (ім'я)
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+        }
+
+        // Тут пізніше ми додамо логіку Supabase, щоб підтягнути вагу 70кг та баланс
+    </script>
+</body>
+</html>
