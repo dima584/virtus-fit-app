@@ -2,28 +2,38 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtus Fit App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Virtus Fit Dashboard</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); }
+        .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 16px; }
+        .accent { color: var(--tg-theme-button-color, #3390ec); }
+    </style>
 </head>
-<body class="bg-[#1a1a1a] text-white p-4 font-sans">
-    <div class="mb-6">
-        <h1 class="text-xl font-bold">Привіт, <span id="user-name" class="text-blue-400">...</span>! 👋</h1>
-        <p class="text-xs opacity-50" id="status-msg">Завантаження даних...</p>
+<body class="p-4 font-sans">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-xl font-bold">Привіт, <span id="user-name" class="text-blue-400">...</span>! 👋</h1>
+            <p class="text-xs opacity-50" id="status-msg">Завантаження даних...</p>
+        </div>
+        <div class="card p-2 text-center min-w-[80px]">
+            <span class="text-xs opacity-60">Баланс</span>
+            <div class="font-bold accent" id="user-balance">--</div>
+        </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
-        <div class="bg-[#2d2d2d] p-4 rounded-2xl text-center shadow-lg">
-            <p class="text-xs opacity-60 uppercase mb-1">Вага</p>
-            <p class="text-3xl font-black text-blue-400" id="user-weight">--</p>
+    <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="card p-4 flex flex-col items-center shadow-lg">
+            <span class="text-sm opacity-60 mb-2 uppercase tracking-wider">Вага</span>
+            <div class="text-3xl font-black text-blue-400" id="user-weight">--</div>
             <p class="text-[10px] opacity-40 mt-1">кг</p>
         </div>
-        <div class="bg-[#2d2d2d] p-4 rounded-2xl text-center shadow-lg">
-            <p class="text-xs opacity-60 uppercase mb-1">Баланс ІІ</p>
-            <p class="text-3xl font-black text-green-400" id="user-balance">--</p>
-            <p class="text-[10px] opacity-40 mt-1">запитів</p>
+        <div class="card p-4 flex flex-col items-center shadow-lg">
+            <span class="text-sm opacity-60 mb-2 uppercase tracking-wider">Ціль</span>
+            <div class="text-xs font-medium text-center" id="user-goal">...</div>
         </div>
     </div>
 
@@ -31,11 +41,9 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Твої ключі з коду бота
+        // Твої ключі з Supabase
         const SUPABASE_URL = "https://ckokeseagvvghxpmulwp.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Ir8nKEcq4o3ap05_4MIaPg_ZtJGPG1Z";
-        
-        // ПРАВИЛЬНА ініціалізація (через об'єкт supabase)
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function initApp() {
@@ -52,22 +60,22 @@
                 // Робимо запит до таблиці users
                 const { data, error } = await supabaseClient
                     .from('users')
-                    .select('weight, balance')
+                    .select('weight, balance, goal')
                     .eq('user_id', user.id)
                     .single();
 
                 if (error) throw error;
 
                 if (data) {
-                    // Виводимо 70 кг та 93 запити
+                    // Виводимо дані, які ти ввів в анкеті
                     document.getElementById('user-weight').innerText = data.weight || "0";
                     document.getElementById('user-balance').innerText = data.balance || "0";
+                    document.getElementById('user-goal').innerText = data.goal || "Не вказана";
                     document.getElementById('status-msg').innerText = "Дані оновлено";
                 }
             } catch (err) {
                 console.error(err);
                 document.getElementById('status-msg').innerText = "Помилка БД: " + err.message;
-                document.getElementById('status-msg').className = "text-xs text-red-400";
             }
         }
 
