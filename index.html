@@ -9,74 +9,100 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); }
-        .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 16px; }
-        .accent { color: var(--tg-theme-button-color, #3390ec); }
+        .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 20px; }
+        .accent-text { color: var(--tg-theme-button-color, #3390ec); }
+        .btn-main { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); }
     </style>
 </head>
-<body class="p-4 font-sans">
-    <div class="flex justify-between items-center mb-6">
+<body class="p-4 font-sans select-none">
+    <div class="flex justify-between items-start mb-8">
         <div>
-            <h1 class="text-xl font-bold">Привіт, <span id="user-name" class="text-blue-400">...</span>! 👋</h1>
-            <p class="text-xs opacity-50" id="status-msg">Завантаження даних...</p>
+            <h1 class="text-2xl font-bold">Привіт, <span id="user-name" class="accent-text">Атлет</span>! 👋</h1>
+            <p class="text-xs opacity-50 mt-1" id="status-msg">Синхронізація з базою...</p>
         </div>
-        <div class="card p-2 text-center min-w-[80px]">
-            <span class="text-xs opacity-60">Баланс</span>
-            <div class="font-bold accent" id="user-balance">--</div>
+        <div class="card p-3 text-center min-w-[90px] shadow-lg">
+            <span class="text-[10px] opacity-50 uppercase font-bold tracking-wider">Баланс ІІ</span>
+            <div class="text-xl font-black accent-text" id="user-balance">--</div>
         </div>
     </div>
 
     <div class="grid grid-cols-2 gap-4 mb-6">
-        <div class="card p-4 flex flex-col items-center shadow-lg">
-            <span class="text-sm opacity-60 mb-2 uppercase tracking-wider">Вага</span>
-            <div class="text-3xl font-black text-blue-400" id="user-weight">--</div>
-            <p class="text-[10px] opacity-40 mt-1">кг</p>
+        <div class="card p-5 flex flex-col items-center shadow-xl border border-white/5">
+            <span class="text-xs opacity-50 mb-2 uppercase font-bold">Поточна вага</span>
+            <div class="text-3xl font-black text-white" id="user-weight">--</div>
+            <p class="text-[10px] opacity-40 mt-1 uppercase">кілограмів</p>
         </div>
-        <div class="card p-4 flex flex-col items-center shadow-lg">
-            <span class="text-sm opacity-60 mb-2 uppercase tracking-wider">Ціль</span>
-            <div class="text-xs font-medium text-center" id="user-goal">...</div>
+        <div class="card p-5 flex flex-col items-center shadow-xl border border-white/5">
+            <span class="text-xs opacity-50 mb-2 uppercase font-bold">Твоя ціль</span>
+            <div class="text-xs font-bold text-center leading-tight mt-1" id="user-goal">Завантаження...</div>
         </div>
     </div>
 
+    <div class="card p-5 mb-8 border border-white/5">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-sm font-bold italic opacity-80">Аналітика прогресу</h3>
+            <span class="text-[10px] bg-green-500/20 text-green-400 px-2 py-1 rounded-full font-bold">LIVE</span>
+        </div>
+        <div class="h-24 w-full flex items-end justify-between px-2 gap-2">
+            <div class="bg-blue-500/20 w-full h-[40%] rounded-t-lg"></div>
+            <div class="bg-blue-500/30 w-full h-[60%] rounded-t-lg"></div>
+            <div class="bg-blue-500/40 w-full h-[55%] rounded-t-lg"></div>
+            <div class="bg-blue-500/60 w-full h-[80%] rounded-t-lg"></div>
+            <div class="bg-blue-500 w-full h-[95%] rounded-t-lg shadow-[0_0_15px_rgba(51,144,236,0.4)]"></div>
+        </div>
+    </div>
+
+    <button onclick="window.Telegram.WebApp.close()" class="w-full btn-main py-4 rounded-2xl font-black uppercase tracking-widest shadow-2xl transition-transform active:scale-95">
+        Повернутися в чат
+    </button>
+
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // Твої ключі з Supabase
+        
+        // Ініціалізація Supabase
         const SUPABASE_URL = "https://ckokeseagvvghxpmulwp.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Ir8nKEcq4o3ap05_4MIaPg_ZtJGPG1Z";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function initApp() {
-            const user = tg.initDataUnsafe?.user;
-            
-            if (!user) {
-                document.getElementById('status-msg').innerText = "Помилка: Відкрий через Telegram";
-                return;
-            }
+            tg.ready(); // Повідомляємо ТГ про готовність
+            tg.expand(); // Розгортаємо на весь екран
 
-            document.getElementById('user-name').innerText = user.first_name;
-
-            try {
-                // Робимо запит до таблиці users
-                const { data, error } = await supabaseClient
-                    .from('users')
-                    .select('weight, balance, goal')
-                    .eq('user_id', user.id)
-                    .single();
-
-                if (error) throw error;
-
-                if (data) {
-                    // Виводимо дані, які ти ввів в анкеті
-                    document.getElementById('user-weight').innerText = data.weight || "0";
-                    document.getElementById('user-balance').innerText = data.balance || "0";
-                    document.getElementById('user-goal').innerText = data.goal || "Не вказана";
-                    document.getElementById('status-msg').innerText = "Дані оновлено";
+            // Невелика затримка для стабільного отримання initData
+            setTimeout(async () => {
+                const user = tg.initDataUnsafe?.user;
+                
+                if (!user) {
+                    document.getElementById('status-msg').innerText = "Помилка: Відкрий через меню бота";
+                    document.getElementById('status-msg').style.color = "#ff4d4d";
+                    return;
                 }
-            } catch (err) {
-                console.error(err);
-                document.getElementById('status-msg').innerText = "Помилка БД: " + err.message;
-            }
+
+                document.getElementById('user-name').innerText = user.first_name;
+
+                try {
+                    // Запит до таблиці users за твоїм реальним ID
+                    const { data, error } = await supabaseClient
+                        .from('users')
+                        .select('weight, balance, goal')
+                        .eq('user_id', user.id)
+                        .maybeSingle();
+
+                    if (error) throw error;
+
+                    if (data) {
+                        // Оновлюємо інтерфейс твоїми даними (наприклад, 70 кг та 93 спроби)
+                        document.getElementById('user-weight').innerText = data.weight ? data.weight + " кг" : "0 кг";
+                        document.getElementById('user-balance').innerText = data.balance || "0";
+                        document.getElementById('user-goal').innerText = data.goal || "Ціль не вказана";
+                        document.getElementById('status-msg').innerText = "Дані синхронізовано";
+                    } else {
+                        document.getElementById('status-msg').innerText = "Користувача не знайдено в базі";
+                    }
+                } catch (err) {
+                    document.getElementById('status-msg').innerText = "Помилка бази: " + err.message;
+                }
+            }, 150);
         }
 
         initApp();
