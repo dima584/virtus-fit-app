@@ -24,30 +24,46 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Твої дані з бота
+        // Твої актуальні дані
         const SUPABASE_URL = "https://ckokeseagvvghxpmulwp.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Ir8nKEcq4o3ap05_4MIaPg_ZtJGPG1Z";
-        const supabase = document.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+        // ВАЖЛИВО: Використовуємо правильний метод створення клієнта
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function loadUserData() {
             const user = tg.initDataUnsafe?.user;
+        
             if (user) {
                 document.getElementById('user-name').innerText = user.first_name;
-                
-                // Отримуємо дані з Supabase за Telegram ID
-                const { data, error } = await supabase
+            
+                // Запит до таблиці users
+                const { data, error } = await supabaseClient
                     .from('users')
-                    .select('weight, balance')
+                    .select('weight, balance, goal')
                     .eq('user_id', user.id)
                     .single();
 
                 if (data) {
+                    // Відображаємо ті самі 70 кг, які ти ввів
                     document.getElementById('user-weight').innerText = data.weight + " кг";
                     document.getElementById('user-balance').innerText = data.balance;
+                
+                    // Якщо захочеш додати відображення цілі "be strong"
+                    if (document.getElementById('user-goal')) {
+                    document.getElementById('user-goal').innerText = data.goal;
+                    }
+                } else if (error) {
+                    console.error("Помилка Supabase:", error.message);
+                    document.getElementById('user-name').innerText = "Помилка бази";
                 }
+            } else {
+                document.getElementById('user-name').innerText = "Тест (не в ТГ)";
             }
         }
+
         loadUserData();
     </script>
 </body>
 </html>
+
