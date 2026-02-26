@@ -16,6 +16,8 @@
         .btn-main { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); }
         input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; padding: 5px; width: 65px; text-align: center; font-size: 14px; }
         .progress-ring { transition: stroke-dashoffset 0.5s ease; }
+        .food-item { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .food-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body class="p-4 font-sans select-none">
@@ -71,12 +73,19 @@
         </div>
     </div>
 
-    <div class="card p-5 mb-6 border border-white/5 shadow-2xl">
+    <div class="card p-5 mb-4 border border-white/5 shadow-2xl">
         <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Аналітика ваги</h3>
         <div style="height: 140px;"><canvas id="weightChart"></canvas></div>
     </div>
 
-    <button onclick="tg.close()" class="w-full btn-main py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-transform mb-4">Закрити</button>
+    <div class="card p-5 mb-6 border border-white/5 shadow-lg">
+        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Архів їжі за сьогодні</h3>
+        <div id="food-list" class="space-y-3">
+            <p class="text-[10px] opacity-30 italic text-center py-2">Сьогодні записів ще немає...</p>
+        </div>
+    </div>
+
+    <button onclick="tg.close()" class="w-full btn-main py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-transform mb-6">Закрити</button>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -104,11 +113,12 @@
         }
 
         async function loadNutrition() {
-            const today = new Date().toISOString().split('T')[0];
+            const today = new Date().toLocaleDateString('sv'); // Формат YYYY-MM-DD
             const { data } = await supabaseClient.from('nutrition_logs')
                 .select('*')
                 .eq('user_id', currentUserId)
-                .gte('created_at', today);
+                .gte('created_at', today)
+                .order('created_at', { ascending: false });
 
             if (data) {
                 const totals = data.reduce((acc, curr) => ({
@@ -118,13 +128,11 @@
                     c: acc.c + (curr.carbs || 0)
                 }), { cal: 0, p: 0, f: 0, c: 0 });
 
-                // Відображаємо цифри
                 document.getElementById('total-cal').innerText = totals.cal;
                 document.getElementById('p-val').innerText = totals.p + 'г';
                 document.getElementById('f-val').innerText = totals.f + 'г';
                 document.getElementById('c-val').innerText = totals.c + 'г';
 
-                // Оновлюємо кільце та бари (норми: 2000 ккал, 100г білків, 70г жирів, 250г вугл)
                 const calTarget = 2000;
                 const percent = Math.min((totals.cal / calTarget) * 100, 100);
                 document.getElementById('cal-percent').innerText = Math.round(percent) + '%';
@@ -133,6 +141,20 @@
                 document.getElementById('p-bar').style.width = Math.min((totals.p / 100) * 100, 100) + '%';
                 document.getElementById('f-bar').style.width = Math.min((totals.f / 70) * 100, 100) + '%';
                 document.getElementById('c-bar').style.width = Math.min((totals.c / 250) * 100, 100) + '%';
+
+                // ОНОВЛЕННЯ СПИСКУ СТРАВ
+                const listContainer = document.getElementById('food-list');
+                if (data.length > 0) {
+                    listContainer.innerHTML = data.map(item => `
+                        <div class="food-item pb-2 flex justify-between items-center">
+                            <div>
+                                <div class="text-xs font-bold">${item.food_name || 'Страва'}</div>
+                                <div class="text-[9px] opacity-40 italic">Б:${item.proteins} Ж:${item.fats} В:${item.carbs}</div>
+                            </div>
+                            <div class="accent-text font-black text-xs">${item.calories} ккал</div>
+                        </div>
+                    `).join('');
+                }
             }
         }
 
@@ -146,7 +168,7 @@
                 chartInstance = new Chart(document.getElementById('weightChart'), {
                     type: 'line', plugins: [ChartDataLabels],
                     data: { labels, datasets: [{ data: weights, borderColor: '#3390ec', backgroundColor: 'rgba(51, 144, 236, 0.1)', borderWidth: 3, tension: 0.4, fill: true, pointRadius: 5, pointBackgroundColor: '#3390ec', datalabels: { align: 'top', color: '#fff', font: { weight: 'bold' }, formatter: v => v+'кг' }}] },
-                    options: { plugins: { legend: { display: false } }, scales: { y: { min: minW, max: maxW, display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } } }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: minW, max: maxW, display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } } }
                 });
             }
         }
@@ -161,5 +183,6 @@
     </script>
 </body>
 </html>
+
 
 
