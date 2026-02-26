@@ -3,109 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Virtus Fit Dashboard</title>
+    <title>Virtus Fit Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); }
-        .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 20px; }
+        .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 20px; transition: all 0.3s ease; }
         .accent-text { color: var(--tg-theme-button-color, #3390ec); }
         .btn-main { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); }
+        input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; padding: 5px; width: 80px; text-align: center; }
     </style>
 </head>
 <body class="p-4 font-sans select-none">
-    <div class="flex justify-between items-start mb-8">
+    <div class="flex justify-between items-start mb-6">
         <div>
-            <h1 class="text-2xl font-bold">Привіт, <span id="user-name" class="accent-text">Атлет</span>! 👋</h1>
-            <p class="text-[10px] opacity-50 mt-1 uppercase tracking-tighter" id="status-msg">Синхронізація даних...</p>
+            <h1 class="text-2xl font-bold">Привіт, <span id="user-name" class="accent-text">Атлет</span>!</h1>
+            <p class="text-[10px] opacity-50 mt-1 uppercase tracking-tighter" id="status-msg">Синхронізація...</p>
         </div>
-        <div class="card p-3 text-center min-w-[90px] shadow-lg">
-            <span class="text-[10px] opacity-50 uppercase font-bold tracking-wider">Баланс ІІ</span>
-            <div class="text-xl font-black accent-text" id="user-balance">--</div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-2 gap-4 mb-6">
-        <div class="card p-5 flex flex-col items-center shadow-xl border border-white/5 text-center">
-            <span class="text-[10px] opacity-50 mb-2 uppercase font-bold tracking-widest">Вага</span>
-            <div class="text-3xl font-black text-white" id="user-weight">--</div>
-            <p class="text-[10px] opacity-40 mt-1 uppercase">кілограмів</p>
-        </div>
-        <div class="card p-5 flex flex-col items-center shadow-xl border border-white/5 text-center">
-            <span class="text-[10px] opacity-50 mb-2 uppercase font-bold tracking-widest">Ціль</span>
-            <div class="text-[11px] font-bold leading-tight mt-1" id="user-goal">...</div>
+        <div class="card p-3 text-center min-w-[80px]">
+            <span class="text-[9px] opacity-50 uppercase font-bold">Баланс</span>
+            <div class="text-lg font-black accent-text" id="user-balance">--</div>
         </div>
     </div>
 
-    <div class="card p-5 mb-8 border border-white/5">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xs font-bold italic opacity-60 uppercase tracking-widest">Аналітика прогресу</h3>
-            <span class="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-bold">LIVE</span>
+    <div class="grid grid-cols-1 gap-3 mb-6">
+        <div class="card p-4 flex justify-between items-center border border-white/5">
+            <div class="flex flex-col">
+                <span class="text-[10px] opacity-50 uppercase font-bold">Поточна вага</span>
+                <div class="text-2xl font-black" id="weight-display">-- кг</div>
+            </div>
+            <div class="flex gap-2">
+                <input type="number" id="weight-input" placeholder="00.0">
+                <button onclick="updateUserField('weight')" class="btn-main px-3 py-1 rounded-lg text-xs font-bold uppercase">ОК</button>
+            </div>
         </div>
-        <div class="h-24 w-full flex items-end justify-between px-2 gap-2">
-            <div class="bg-blue-500/10 w-full h-[30%] rounded-t-lg"></div>
-            <div class="bg-blue-500/20 w-full h-[50%] rounded-t-lg"></div>
-            <div class="bg-blue-500/30 w-full h-[45%] rounded-t-lg"></div>
-            <div class="bg-blue-500/50 w-full h-[70%] rounded-t-lg"></div>
-            <div class="bg-blue-500 w-full h-[90%] rounded-t-lg shadow-[0_0_15px_rgba(51,144,236,0.3)]"></div>
+
+        <div class="card p-4 flex justify-between items-center border border-white/5">
+            <div class="flex flex-col flex-1 mr-4">
+                <span class="text-[10px] opacity-50 uppercase font-bold">Твоя ціль</span>
+                <div class="text-sm font-medium leading-tight mt-1" id="goal-display">...</div>
+            </div>
+            <div class="flex gap-2">
+                <input type="text" id="goal-input" placeholder="Напр: 65кг" style="width: 100px;">
+                <button onclick="updateUserField('goal')" class="btn-main px-3 py-1 rounded-lg text-xs font-bold uppercase">ОК</button>
+            </div>
         </div>
     </div>
 
-    <button onclick="window.Telegram.WebApp.close()" class="w-full btn-main py-4 rounded-2xl font-black uppercase tracking-widest shadow-2xl transition-transform active:scale-95">
-        Повернутися в чат
-    </button>
+    <div class="card p-5 mb-6 border border-white/5 text-center">
+        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4 text-left">Графік за тиждень</h3>
+        <div class="h-16 w-full flex items-end justify-between px-2 gap-2">
+            <div class="bg-blue-500/20 w-full h-[40%] rounded-t-md"></div>
+            <div class="bg-blue-500/30 w-full h-[60%] rounded-t-md"></div>
+            <div class="bg-blue-500/40 w-full h-[55%] rounded-t-md"></div>
+            <div class="bg-blue-500/60 w-full h-[80%] rounded-t-md shadow-[0_0_10px_rgba(51,144,236,0.2)]"></div>
+        </div>
+    </div>
+
+    <button onclick="window.Telegram.WebApp.close()" class="w-full btn-main py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg">Закрити</button>
 
     <script>
         const tg = window.Telegram.WebApp;
-        
-        // Ініціалізація Supabase
         const SUPABASE_URL = "https://ckokeseagvvghxpmulwp.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Ir8nKEcq4o3ap05_4MIaPg_ZtJGPG1Z";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        let currentUserId = null;
+
         async function initApp() {
             tg.ready();
             tg.expand();
-
-            // 1. Беремо ID з посилання (твоя нова функція його туди додає)
+            
             const urlParams = new URLSearchParams(window.location.search);
-            let userId = urlParams.get('user_id');
+            currentUserId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
 
-            // 2. Якщо в посиланні немає, беремо з ТГ
-            if (!userId) {
-                userId = tg.initDataUnsafe?.user?.id;
-            }
-
-            if (!userId) {
-                document.getElementById('status-msg').innerText = "Помилка ідентифікації";
-                document.getElementById('status-msg').style.color = "#ef4444";
+            if (!currentUserId) {
+                document.getElementById('status-msg').innerText = "Помилка ID";
                 return;
             }
 
-            try {
-                // Запит до твоїх даних (70 кг та 93 спроби)
-                const { data, error } = await supabaseClient
-                    .from('users')
-                    .select('name, weight, balance, goal')
-                    .eq('user_id', userId)
-                    .maybeSingle();
+            loadData();
+        }
 
-                if (error) throw error;
+        async function loadData() {
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('user_id', currentUserId)
+                .maybeSingle();
 
-                if (data) {
-                    document.getElementById('user-name').innerText = data.name || "Атлет";
-                    document.getElementById('user-weight').innerText = data.weight ? data.weight : "0";
-                    document.getElementById('user-balance').innerText = data.balance ?? "0";
-                    document.getElementById('user-goal').innerText = data.goal || "Ціль не вказана";
-                    document.getElementById('status-msg').innerText = "Дані синхронізовано";
-                    document.getElementById('status-msg').style.color = "#4ade80";
-                } else {
-                    document.getElementById('status-msg').innerText = "Юзера " + userId + " немає в базі";
-                }
-            } catch (err) {
-                document.getElementById('status-msg').innerText = "Помилка БД: " + err.message;
-                document.getElementById('status-msg').style.color = "#ef4444";
+            if (data) {
+                document.getElementById('user-name').innerText = data.name || "Атлет";
+                document.getElementById('weight-display').innerText = (data.weight || "0") + " кг";
+                document.getElementById('user-balance').innerText = data.balance ?? "0";
+                document.getElementById('goal-display').innerText = data.goal || "Вкажи свою ціль";
+                document.getElementById('status-msg').innerText = "Дані оновлено";
+                document.getElementById('status-msg').style.color = "#4ade80";
+            }
+        }
+
+        async function updateUserField(field) {
+            const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
+            const value = document.getElementById(inputId).value;
+
+            if (!value) return;
+
+            document.getElementById('status-msg').innerText = "Зберігаю...";
+            
+            const updateData = {};
+            updateData[field] = value;
+
+            const { error } = await supabaseClient
+                .from('users')
+                .update(updateData)
+                .eq('user_id', currentUserId);
+
+            if (error) {
+                alert("Помилка: " + error.message);
+            } else {
+                document.getElementById(inputId).value = '';
+                loadData(); // Перезавантажуємо дані, щоб побачити зміни
+                tg.HapticFeedback.notificationOccurred('success'); // Вібрація при успіху
             }
         }
 
