@@ -3,65 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Virtus Fit Pro</title>
+    <title>Virtus Fit Analytics</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); }
-        .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 20px; transition: all 0.3s ease; }
+        .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 20px; }
         .accent-text { color: var(--tg-theme-button-color, #3390ec); }
         .btn-main { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); }
-        input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; padding: 5px; width: 80px; text-align: center; }
+        input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; padding: 5px; width: 70px; text-align: center; font-size: 14px; }
     </style>
 </head>
 <body class="p-4 font-sans select-none">
     <div class="flex justify-between items-start mb-6">
         <div>
-            <h1 class="text-2xl font-bold">Привіт, <span id="user-name" class="accent-text">Атлет</span>!</h1>
-            <p class="text-[10px] opacity-50 mt-1 uppercase tracking-tighter" id="status-msg">Синхронізація...</p>
+            <h1 class="text-2xl font-bold">Привіт, <span id="user-name" class="accent-text">...</span>!</h1>
+            <p class="text-[10px] opacity-50 uppercase tracking-widest" id="status-msg">Синхронізація...</p>
         </div>
         <div class="card p-3 text-center min-w-[80px]">
-            <span class="text-[9px] opacity-50 uppercase font-bold">Баланс</span>
+            <span class="text-[9px] opacity-50 uppercase font-bold tracking-tighter">Баланс ІІ</span>
             <div class="text-lg font-black accent-text" id="user-balance">--</div>
         </div>
     </div>
 
     <div class="grid grid-cols-1 gap-3 mb-6">
-        <div class="card p-4 flex justify-between items-center border border-white/5">
-            <div class="flex flex-col">
-                <span class="text-[10px] opacity-50 uppercase font-bold">Поточна вага</span>
+        <div class="card p-4 flex justify-between items-center border border-white/5 shadow-lg">
+            <div>
+                <span class="text-[10px] opacity-50 uppercase font-bold">Вага зараз</span>
                 <div class="text-2xl font-black" id="weight-display">-- кг</div>
             </div>
             <div class="flex gap-2">
-                <input type="number" id="weight-input" placeholder="00.0">
-                <button onclick="updateUserField('weight')" class="btn-main px-3 py-1 rounded-lg text-xs font-bold uppercase">ОК</button>
+                <input type="number" id="weight-input" step="0.1" placeholder="70.0">
+                <button onclick="updateField('weight')" class="btn-main px-4 py-2 rounded-xl text-xs font-bold uppercase">ОК</button>
             </div>
         </div>
 
-        <div class="card p-4 flex justify-between items-center border border-white/5">
-            <div class="flex flex-col flex-1 mr-4">
+        <div class="card p-4 flex justify-between items-center border border-white/5 shadow-lg">
+            <div class="flex-1 mr-4">
                 <span class="text-[10px] opacity-50 uppercase font-bold">Твоя ціль</span>
-                <div class="text-sm font-medium leading-tight mt-1" id="goal-display">...</div>
+                <div class="text-xs font-medium mt-1 italic" id="goal-display">...</div>
             </div>
             <div class="flex gap-2">
-                <input type="text" id="goal-input" placeholder="Напр: 65кг" style="width: 100px;">
-                <button onclick="updateUserField('goal')" class="btn-main px-3 py-1 rounded-lg text-xs font-bold uppercase">ОК</button>
+                <input type="text" id="goal-input" style="width: 90px;" placeholder="Ціль">
+                <button onclick="updateField('goal')" class="btn-main px-4 py-2 rounded-xl text-xs font-bold uppercase">ОК</button>
             </div>
         </div>
     </div>
 
-    <div class="card p-5 mb-6 border border-white/5 text-center">
-        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4 text-left">Графік за тиждень</h3>
-        <div class="h-16 w-full flex items-end justify-between px-2 gap-2">
-            <div class="bg-blue-500/20 w-full h-[40%] rounded-t-md"></div>
-            <div class="bg-blue-500/30 w-full h-[60%] rounded-t-md"></div>
-            <div class="bg-blue-500/40 w-full h-[55%] rounded-t-md"></div>
-            <div class="bg-blue-500/60 w-full h-[80%] rounded-t-md shadow-[0_0_10px_rgba(51,144,236,0.2)]"></div>
-        </div>
+    <div class="card p-5 mb-6 border border-white/5 shadow-2xl">
+        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4 text-left">Графік прогресу (7 днів)</h3>
+        <canvas id="weightChart" style="width:100%; height:130px;"></canvas>
     </div>
 
-    <button onclick="window.Telegram.WebApp.close()" class="w-full btn-main py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg">Закрити</button>
+    <button onclick="tg.close()" class="w-full btn-main py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform">
+        Закрити
+    </button>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -70,6 +68,7 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUserId = null;
+        let chartInstance = null;
 
         async function initApp() {
             tg.ready();
@@ -83,7 +82,8 @@
                 return;
             }
 
-            loadData();
+            await loadData();
+            await loadChart();
         }
 
         async function loadData() {
@@ -95,36 +95,69 @@
 
             if (data) {
                 document.getElementById('user-name').innerText = data.name || "Атлет";
-                document.getElementById('weight-display').innerText = (data.weight || "0") + " кг";
+                document.getElementById('weight-display').innerText = data.weight + " кг";
                 document.getElementById('user-balance').innerText = data.balance ?? "0";
-                document.getElementById('goal-display').innerText = data.goal || "Вкажи свою ціль";
-                document.getElementById('status-msg').innerText = "Дані оновлено";
-                document.getElementById('status-msg').style.color = "#4ade80";
+                document.getElementById('goal-display').innerText = data.goal || "Вкажи ціль";
+                document.getElementById('status-msg').innerText = "Оновлено";
             }
         }
 
-        async function updateUserField(field) {
+        async function loadChart() {
+            const { data, error } = await supabaseClient
+                .from('weight_history')
+                .select('weight, created_at')
+                .eq('user_id', currentUserId)
+                .order('created_at', { ascending: true })
+                .limit(7);
+
+            if (data && data.length > 1) {
+                const labels = data.map(i => new Date(i.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
+                const weights = data.map(i => i.weight);
+
+                if (chartInstance) chartInstance.destroy();
+
+                const ctx = document.getElementById('weightChart').getContext('2d');
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: weights,
+                            borderColor: '#3390ec',
+                            backgroundColor: 'rgba(51, 144, 236, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#3390ec'
+                        }]
+                    },
+                    options: {
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { display: false },
+                            x: { ticks: { color: 'rgba(255,255,255,0.4)', font:{size:9} }, grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        }
+
+        async function updateField(field) {
             const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
             const value = document.getElementById(inputId).value;
-
             if (!value) return;
 
-            document.getElementById('status-msg').innerText = "Зберігаю...";
-            
             const updateData = {};
             updateData[field] = value;
 
-            const { error } = await supabaseClient
-                .from('users')
-                .update(updateData)
-                .eq('user_id', currentUserId);
+            const { error } = await supabaseClient.from('users').update(updateData).eq('user_id', currentUserId);
 
-            if (error) {
-                alert("Помилка: " + error.message);
-            } else {
+            if (!error) {
                 document.getElementById(inputId).value = '';
-                loadData(); // Перезавантажуємо дані, щоб побачити зміни
-                tg.HapticFeedback.notificationOccurred('success'); // Вібрація при успіху
+                await loadData();
+                await loadChart();
+                tg.HapticFeedback.notificationOccurred('success');
             }
         }
 
@@ -132,3 +165,4 @@
     </script>
 </body>
 </html>
+
