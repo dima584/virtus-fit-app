@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Virtus Fit Analytics</title>
+    <title>Virtus Fit AI</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,13 +14,14 @@
         .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 20px; }
         .accent-text { color: var(--tg-theme-button-color, #3390ec); }
         .btn-main { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); }
-        input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; padding: 5px; width: 70px; text-align: center; font-size: 14px; }
+        input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; padding: 5px; width: 65px; text-align: center; font-size: 14px; }
+        .progress-ring { transition: stroke-dashoffset 0.5s ease; }
     </style>
 </head>
 <body class="p-4 font-sans select-none">
     <div class="flex justify-between items-start mb-6">
         <div>
-            <h1 class="text-2xl font-bold italic">Привіт, <span id="user-name" class="accent-text">...</span>!</h1>
+            <h1 class="text-2xl font-bold italic">Привіт, <span id="user-name" class="accent-text">...</span>! 👋</h1>
             <p class="text-[10px] opacity-50 uppercase tracking-widest" id="status-msg">Синхронізація...</p>
         </div>
         <div class="card p-3 text-center min-w-[80px]">
@@ -29,58 +30,67 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-3 mb-6">
-        <div class="card p-4 flex justify-between items-center border border-white/5 shadow-lg">
-            <div>
-                <span class="text-[10px] opacity-50 uppercase font-bold">Вага зараз</span>
-                <div class="text-2xl font-black" id="weight-display">-- кг</div>
+    <div class="card p-5 mb-4 border border-white/5 shadow-lg">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest">Денна норма</h3>
+            <span class="text-[10px] accent-text font-bold" id="cal-percent">0%</span>
+        </div>
+        <div class="flex justify-around items-center">
+            <div class="relative flex items-center justify-center">
+                <svg class="w-20 h-20 transform -rotate-90">
+                    <circle cx="40" cy="40" r="35" stroke="rgba(255,255,255,0.05)" stroke-width="8" fill="none"/>
+                    <circle id="cal-circle" cx="40" cy="40" r="35" stroke="#3390ec" stroke-width="8" fill="none" 
+                            stroke-dasharray="220" stroke-dashoffset="220" stroke-linecap="round" class="progress-ring"/>
+                </svg>
+                <div class="absolute text-center transform rotate-90">
+                    <span class="text-sm font-black" id="total-cal">0</span>
+                    <p class="text-[8px] opacity-40 uppercase">ккал</p>
+                </div>
             </div>
-            <div class="flex gap-2">
-                <input type="number" id="weight-input" step="0.1" placeholder="00.0">
-                <button onclick="updateField('weight')" class="btn-main px-4 py-2 rounded-xl text-xs font-bold uppercase">ОК</button>
+            <div class="flex-1 ml-6 space-y-2">
+                <div>
+                    <div class="flex justify-between text-[9px] mb-1"><span class="opacity-50 text-orange-400">Білки</span><span id="p-val">0г</span></div>
+                    <div class="w-full bg-white/5 h-1 rounded-full"><div id="p-bar" class="bg-orange-400 h-full rounded-full" style="width: 0%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[9px] mb-1"><span class="opacity-50 text-yellow-400">Жири</span><span id="f-val">0г</span></div>
+                    <div class="w-full bg-white/5 h-1 rounded-full"><div id="f-bar" class="bg-yellow-400 h-full rounded-full" style="width: 0%"></div></div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[9px] mb-1"><span class="opacity-50 text-green-400">Вугл.</span><span id="c-val">0г</span></div>
+                    <div class="w-full bg-white/5 h-1 rounded-full"><div id="c-bar" class="bg-green-400 h-full rounded-full" style="width: 0%"></div></div>
+                </div>
             </div>
         </div>
-        <div class="card p-4 flex justify-between items-center border border-white/5 shadow-lg">
-            <div class="flex-1 mr-4">
-                <span class="text-[10px] opacity-50 uppercase font-bold">Ціль</span>
-                <div class="text-xs font-medium mt-1 italic" id="goal-display">...</div>
-            </div>
-            <div class="flex gap-2">
-                <input type="text" id="goal-input" style="width: 90px;" placeholder="Ціль">
-                <button onclick="updateField('goal')" class="btn-main px-4 py-2 rounded-xl text-xs font-bold uppercase">ОК</button>
-            </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-3 mb-6">
+        <div class="card p-4 flex justify-between items-center border border-white/5">
+            <div><span class="text-[10px] opacity-50 uppercase font-bold">Вага зараз</span><div class="text-2xl font-black" id="weight-display">-- кг</div></div>
+            <div class="flex gap-2"><input type="number" id="weight-input" step="0.1" placeholder="00.0"><button onclick="updateField('weight')" class="btn-main px-4 py-2 rounded-xl text-xs font-bold uppercase">ОК</button></div>
         </div>
     </div>
 
     <div class="card p-5 mb-6 border border-white/5 shadow-2xl">
-        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Детальна динаміка ваги</h3>
-        <div style="height: 160px; position: relative;">
-            <canvas id="weightChart"></canvas>
-        </div>
+        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Аналітика ваги</h3>
+        <div style="height: 140px;"><canvas id="weightChart"></canvas></div>
     </div>
 
-    <button onclick="window.Telegram.WebApp.close()" class="w-full btn-main py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform">
-        Закрити
-    </button>
+    <button onclick="tg.close()" class="w-full btn-main py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-transform mb-4">Закрити</button>
 
     <script>
         const tg = window.Telegram.WebApp;
         const SUPABASE_URL = "https://ckokeseagvvghxpmulwp.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Ir8nKEcq4o3ap05_4MIaPg_ZtJGPG1Z";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        let currentUserId = null;
-        let chartInstance = null;
+        let currentUserId = null, chartInstance = null;
 
         async function initApp() {
-            tg.ready();
-            tg.expand();
+            tg.ready(); tg.expand();
             const urlParams = new URLSearchParams(window.location.search);
             currentUserId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
             if (!currentUserId) return;
-
-            await loadData();
-            await loadChart();
+            await loadData(); await loadNutrition(); await loadChart();
         }
 
         async function loadData() {
@@ -89,78 +99,64 @@
                 document.getElementById('user-name').innerText = data.name || "Атлет";
                 document.getElementById('weight-display').innerText = data.weight + " кг";
                 document.getElementById('user-balance').innerText = data.balance ?? "0";
-                document.getElementById('goal-display').innerText = data.goal || "Вкажи ціль";
-                document.getElementById('status-msg').innerText = "Дані оновлено";
-                document.getElementById('status-msg').style.color = "#4ade80";
+                document.getElementById('status-msg').innerText = "Оновлено";
+            }
+        }
+
+        async function loadNutrition() {
+            const today = new Date().toISOString().split('T')[0];
+            const { data } = await supabaseClient.from('nutrition_logs')
+                .select('*')
+                .eq('user_id', currentUserId)
+                .gte('created_at', today);
+
+            if (data) {
+                const totals = data.reduce((acc, curr) => ({
+                    cal: acc.cal + (curr.calories || 0),
+                    p: acc.p + (curr.proteins || 0),
+                    f: acc.f + (curr.fats || 0),
+                    c: acc.c + (curr.carbs || 0)
+                }), { cal: 0, p: 0, f: 0, c: 0 });
+
+                // Відображаємо цифри
+                document.getElementById('total-cal').innerText = totals.cal;
+                document.getElementById('p-val').innerText = totals.p + 'г';
+                document.getElementById('f-val').innerText = totals.f + 'г';
+                document.getElementById('c-val').innerText = totals.c + 'г';
+
+                // Оновлюємо кільце та бари (норми: 2000 ккал, 100г білків, 70г жирів, 250г вугл)
+                const calTarget = 2000;
+                const percent = Math.min((totals.cal / calTarget) * 100, 100);
+                document.getElementById('cal-percent').innerText = Math.round(percent) + '%';
+                document.getElementById('cal-circle').style.strokeDashoffset = 220 - (220 * percent / 100);
+                
+                document.getElementById('p-bar').style.width = Math.min((totals.p / 100) * 100, 100) + '%';
+                document.getElementById('f-bar').style.width = Math.min((totals.f / 70) * 100, 100) + '%';
+                document.getElementById('c-bar').style.width = Math.min((totals.c / 250) * 100, 100) + '%';
             }
         }
 
         async function loadChart() {
-            const { data } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(10);
-
+            const { data } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(7);
             if (data && data.length > 0) {
                 const labels = data.map(i => new Date(i.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
                 const weights = data.map(i => i.weight);
-
-                // Налаштування ціни поділки, щоб зміна була помітною
-                const minW = Math.min(...weights) - 1.5;
-                const maxW = Math.max(...weights) + 1.5;
-
+                const minW = Math.min(...weights) - 1.5, maxW = Math.max(...weights) + 1.5;
                 if (chartInstance) chartInstance.destroy();
-
-                const ctx = document.getElementById('weightChart').getContext('2d');
-                chartInstance = new Chart(ctx, {
-                    type: 'line',
-                    plugins: [ChartDataLabels],
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: weights,
-                            borderColor: '#3390ec',
-                            backgroundColor: 'rgba(51, 144, 236, 0.1)',
-                            borderWidth: 3,
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 5,
-                            pointBackgroundColor: '#3390ec',
-                            datalabels: {
-                                align: 'top',
-                                offset: 8,
-                                color: '#ffffff',
-                                font: { weight: 'bold', size: 11 },
-                                formatter: (value) => value + ' кг'
-                            }
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        layout: { padding: { top: 20 } },
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { min: minW, max: maxW, display: false },
-                            x: { ticks: { color: 'rgba(255,255,255,0.4)', font:{size:9} }, grid: { display: false } }
-                        }
-                    }
+                chartInstance = new Chart(document.getElementById('weightChart'), {
+                    type: 'line', plugins: [ChartDataLabels],
+                    data: { labels, datasets: [{ data: weights, borderColor: '#3390ec', backgroundColor: 'rgba(51, 144, 236, 0.1)', borderWidth: 3, tension: 0.4, fill: true, pointRadius: 5, pointBackgroundColor: '#3390ec', datalabels: { align: 'top', color: '#fff', font: { weight: 'bold' }, formatter: v => v+'кг' }}] },
+                    options: { plugins: { legend: { display: false } }, scales: { y: { min: minW, max: maxW, display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } } }
                 });
             }
         }
 
         async function updateField(field) {
-            const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
-            const value = document.getElementById(inputId).value;
-            if (!value) return;
-
-            const { error } = await supabaseClient.from('users').update({[field]: value}).eq('user_id', currentUserId);
-
-            if (!error) {
-                document.getElementById(inputId).value = '';
-                await loadData();
-                await loadChart();
-                tg.HapticFeedback.notificationOccurred('success');
-            }
+            const val = document.getElementById('weight-input').value;
+            if (!val) return;
+            const { error } = await supabaseClient.from('users').update({[field]: val}).eq('user_id', currentUserId);
+            if (!error) { document.getElementById('weight-input').value = ''; await loadData(); await loadChart(); tg.HapticFeedback.notificationOccurred('success'); }
         }
-
         initApp();
     </script>
 </body>
