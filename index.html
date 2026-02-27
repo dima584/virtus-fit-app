@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Virtus Fit AI</title>
+    <title>Virtus Fit AI Ultimate</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,15 +19,34 @@
         .progress-ring { transition: stroke-dashoffset 0.5s ease; }
         .food-item { border-bottom: 1px solid rgba(255,255,255,0.05); }
         .hint-box { background: rgba(51, 144, 236, 0.1); border-left: 3px solid #3390ec; }
+        .btn-filter { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; background: rgba(255,255,255,0.05); opacity: 0.5; }
+        .btn-filter.active { background: #3390ec; opacity: 1; }
     </style>
 </head>
-<body class="p-4 font-sans select-none">
+<body class="p-4 font-sans select-none pb-24">
     <div id="admin-panel" class="hidden card p-4 mb-4 border-2 border-yellow-500/30 shadow-xl">
         <h3 class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest mb-3">🛡️ Адмін-центр</h3>
         <div class="grid grid-cols-2 gap-4 text-center">
             <div class="card bg-white/5 p-2"><p class="text-[8px] opacity-50 uppercase">Юзерів</p><span id="total-users" class="text-lg font-black italic">--</span></div>
             <div class="card bg-white/5 p-2"><p class="text-[8px] opacity-50 uppercase">Логів їжі</p><span id="total-food-logs" class="text-lg font-black italic">--</span></div>
         </div>
+    </div>
+
+    <div class="flex justify-center items-center gap-4 mb-6 bg-white/5 py-3 rounded-2xl border border-white/5">
+        <button onclick="changeDate(-1)" class="p-2 opacity-50 active:scale-90 transition-transform">◀</button>
+        <div class="text-center min-w-[140px]">
+            <div id="display-date" class="text-sm font-bold">Сьогодні</div>
+            <div id="display-date-sub" class="text-[8px] opacity-40 uppercase tracking-widest">Перегляд історії</div>
+        </div>
+        <button onclick="changeDate(1)" class="p-2 opacity-50 active:scale-90 transition-transform">▶</button>
+    </div>
+
+    <div id="ai-insight" class="card p-4 mb-4 border border-blue-500/30 bg-blue-500/5 hidden">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="text-lg">🤖</span>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-blue-400">Аналіз AI</span>
+        </div>
+        <p id="insight-text" class="text-[11px] leading-snug opacity-80 italic">Аналізую ваші дані...</p>
     </div>
 
     <div class="flex justify-between items-start mb-6">
@@ -43,7 +62,7 @@
 
     <div class="hint-box p-3 mb-4 rounded-r-xl">
         <p class="text-[11px] leading-relaxed opacity-90">
-            <span class="text-lg">💡</span> Для розрахунку калорій надішли <b>фото страви</b> або її <b>текст</b> у чат боту.
+            <span class="text-lg">💡</span> Щоб розрахувати калорії, просто надішли боту <b>фото страви</b> або її <b>текст</b> у чат.
         </p>
     </div>
 
@@ -81,15 +100,15 @@
         </div>
     </div>
 
-    <div class="card p-5 mb-4 border border-white/5 shadow-lg">
+    <div id="water-card" class="card p-5 mb-4 border border-white/5 shadow-lg">
         <div class="flex justify-between items-center mb-3">
             <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest text-blue-400">💧 Трекер води</h3>
             <span class="text-[10px] text-blue-400 font-bold" id="water-display">0 / 2000 мл</span>
         </div>
         <div class="flex items-center gap-4">
             <div class="flex-1 bg-white/5 h-2 rounded-full overflow-hidden"><div id="water-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div></div>
-            <div class="flex gap-2">
-                <button onclick="addWater(250)" class="card p-2 active:scale-90 bg-blue-500/20 text-blue-400 text-xs font-bold">＋250</button>
+            <div id="water-controls" class="flex gap-2">
+                <button onclick="addWater(250)" class="card p-2 active:scale-90 transition-transform bg-blue-500/20 text-blue-400 text-xs font-bold">＋250</button>
                 <button onclick="resetWater()" class="card p-2 active:scale-90 opacity-30 text-xs">🔄</button>
             </div>
         </div>
@@ -102,7 +121,7 @@
             <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Білки (г)</span><input type="number" id="goal-p-input"></div>
             <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Жири (г)</span><input type="number" id="goal-f-input"></div>
             <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Вугл (г)</span><input type="number" id="goal-c-input"></div>
-            <div class="flex flex-col gap-1 col-span-2"><span class="text-[8px] opacity-50 uppercase">Вода (мл)</span><input type="number" id="goal-water-input" class="w-full"></div>
+            <div class="flex flex-col gap-1 col-span-2"><span class="text-[8px] opacity-50 uppercase">Ціль води (мл)</span><input type="number" id="goal-water-input" class="w-full"></div>
             <button onclick="saveGoals()" class="col-span-2 btn-main py-2 rounded-xl text-[10px] font-bold mt-2 uppercase">Зберегти норми</button>
         </div>
     </details>
@@ -119,28 +138,37 @@
     </div>
 
     <div class="card p-5 mb-4 border border-white/5 shadow-2xl">
-        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Аналітика ваги</h3>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest">Тренд ваги</h3>
+            <div class="flex gap-1">
+                <button onclick="setWeightFilter(7)" id="wf-7" class="btn-filter active">7д</button>
+                <button onclick="setWeightFilter(30)" id="wf-30" class="btn-filter">30д</button>
+                <button onclick="setWeightFilter(365)" id="wf-365" class="btn-filter">Рік</button>
+            </div>
+        </div>
         <div style="height: 140px;"><canvas id="weightChart"></canvas></div>
     </div>
 
     <div class="card p-5 mb-6 border border-white/5 shadow-2xl">
-        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Аналітика калорій (7 днів)</h3>
+        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Калорії (7 днів)</h3>
         <div style="height: 140px;"><canvas id="calorieChart"></canvas></div>
     </div>
 
     <div class="card p-5 mb-6 border border-white/5 shadow-lg">
-        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Архів їжі за сьогодні</h3>
+        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Архів дня</h3>
         <div id="food-list" class="space-y-3"><p class="text-[10px] opacity-30 italic text-center py-2">Завантаження...</p></div>
     </div>
 
-    <button onclick="tg.close()" class="w-full btn-main py-4 rounded-2xl font-black uppercase mb-6 active:scale-95 transition-transform">Закрити</button>
+    <button onclick="tg.close()" class="fixed bottom-4 left-4 right-4 btn-main py-4 rounded-2xl font-black uppercase shadow-2xl active:scale-95 transition-transform z-50">Закрити</button>
 
     <script>
         const tg = window.Telegram.WebApp;
         const SUPABASE_URL = "https://ckokeseagvvghxpmulwp.supabase.co";
         const SUPABASE_KEY = "sb_publishable_Ir8nKEcq4o3ap05_4MIaPg_ZtJGPG1Z";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
         let currentUserId = null, weightChart = null, calorieChart = null;
+        let selectedDate = new Date(), weightFilterDays = 7;
         let userGoals = { cal: 2000, p: 150, f: 70, c: 250, water: 2000 };
 
         async function initApp() {
@@ -148,7 +176,10 @@
             const urlParams = new URLSearchParams(window.location.search);
             currentUserId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
             if (!currentUserId) return;
-            await loadData(); await loadNutrition(); await loadCharts(); await checkAdmin();
+            
+            await loadUserData();
+            await refreshScreen();
+            await checkAdmin();
         }
 
         async function checkAdmin() {
@@ -161,7 +192,7 @@
             }
         }
 
-        async function loadData() {
+        async function loadUserData() {
             const { data } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
                 document.getElementById('user-name').innerText = data.name || "Атлет";
@@ -174,18 +205,11 @@
                     f: data.daily_f_goal || 70, c: data.daily_c_goal || 250, water: data.water_goal || 2000 
                 };
 
-                // Авто-заповнення інпутів налаштувань
-                document.getElementById('goal-cal-input').placeholder = userGoals.cal;
-                document.getElementById('goal-water-input').placeholder = userGoals.water;
-
-                // ЛОГІКА АВТО-СКИНУ ВОДИ (порівняння по даті оновлення)
+                // Авто-скид води завтра
                 const todayStr = new Date().toLocaleDateString('sv');
                 const lastUpdate = data.updated_at ? new Date(data.updated_at).toLocaleDateString('sv') : "";
                 if (lastUpdate && lastUpdate !== todayStr) {
                     await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId);
-                    updateWaterUI(0, userGoals.water);
-                } else {
-                    updateWaterUI(data.water_today || 0, userGoals.water);
                 }
 
                 if (data.target_weight && data.weight) {
@@ -195,96 +219,108 @@
             }
         }
 
-        async function loadNutrition() {
-            const today = new Date().toLocaleDateString('sv');
-            const { data } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', today).order('created_at', { ascending: false });
-            if (data) {
-                const totals = data.reduce((acc, curr) => ({ cal: acc.cal + (curr.calories || 0), p: acc.p + (curr.proteins || 0), f: acc.f + (curr.fats || 0), c: acc.c + (curr.carbs || 0) }), { cal: 0, p: 0, f: 0, c: 0 });
-                document.getElementById('total-cal').innerText = totals.cal;
-                const percent = Math.min((totals.cal / userGoals.cal) * 100, 100);
-                document.getElementById('cal-percent').innerText = Math.round(percent) + '%';
-                document.getElementById('cal-circle').style.strokeDashoffset = 220 - (220 * percent / 100);
-                document.getElementById('p-bar').style.width = Math.min((totals.p / userGoals.p) * 100, 100) + '%';
-                document.getElementById('f-bar').style.width = Math.min((totals.f / userGoals.f) * 100, 100) + '%';
-                document.getElementById('c-bar').style.width = Math.min((totals.c / userGoals.c) * 100, 100) + '%';
-                
-                const listContainer = document.getElementById('food-list');
-                listContainer.innerHTML = data.length > 0 ? data.map(item => `
-                    <div class="food-item pb-2 mb-2 flex justify-between items-center">
-                        <div class="flex-1"><div class="text-xs font-bold leading-tight">${item.food_name}</div><div class="text-[9px] opacity-40">Б:${item.proteins} Ж:${item.fats} В:${item.carbs}</div></div>
-                        <div class="flex items-center gap-3"><div class="accent-text font-black text-xs">${item.calories} ккал</div><button onclick="deleteFood(${item.id})" class="opacity-30 p-2">🗑️</button></div>
-                    </div>`).join('') : `<p class="text-[10px] opacity-30 italic text-center py-2">Сьогодні порожньо...</p>`;
+        async function refreshScreen() {
+            const dateStr = selectedDate.toLocaleDateString('sv');
+            const isToday = dateStr === new Date().toLocaleDateString('sv');
+            document.getElementById('display-date').innerText = isToday ? "Сьогодні" : selectedDate.toLocaleDateString('uk', {day:'numeric', month:'long'});
+            document.getElementById('water-controls').style.display = isToday ? 'flex' : 'none';
+
+            // Дані за обраний день
+            const { data: logs } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', dateStr + 'T00:00:00').lte('created_at', dateStr + 'T23:59:59').order('created_at', {ascending: false});
+            
+            let waterVal = 0;
+            if (isToday) {
+                const { data: u } = await supabaseClient.from('users').select('water_today').eq('user_id', currentUserId).single();
+                waterVal = u?.water_today || 0;
             }
+
+            updateUI(logs || [], waterVal);
+            await loadCharts();
+            generateAIInsight(logs || [], waterVal);
+        }
+
+        function updateUI(logs, water) {
+            const totals = logs.reduce((acc, curr) => ({ cal: acc.cal + curr.calories, p: acc.p + curr.proteins, f: acc.f + curr.fats, c: acc.c + curr.carbs }), { cal: 0, p: 0, f: 0, c: 0 });
+            
+            document.getElementById('total-cal').innerText = totals.cal;
+            const calPercent = Math.min((totals.cal / userGoals.cal) * 100, 100);
+            document.getElementById('cal-circle').style.strokeDashoffset = 220 - (220 * calPercent / 100);
+            document.getElementById('cal-percent').innerText = Math.round(calPercent) + '%';
+            
+            document.getElementById('p-bar').style.width = Math.min((totals.p / userGoals.p) * 100, 100) + '%';
+            document.getElementById('f-bar').style.width = Math.min((totals.f / userGoals.f) * 100, 100) + '%';
+            document.getElementById('c-bar').style.width = Math.min((totals.c / userGoals.c) * 100, 100) + '%';
+            document.getElementById('p-val').innerText = totals.p + 'г';
+            document.getElementById('f-val').innerText = totals.f + 'г';
+            document.getElementById('c-val').innerText = totals.c + 'г';
+            
+            document.getElementById('water-display').innerText = `${water} / ${userGoals.water} мл`;
+            document.getElementById('water-bar').style.width = Math.min((water / userGoals.water) * 100, 100) + '%';
+
+            const list = document.getElementById('food-list');
+            list.innerHTML = logs.length ? logs.map(i => `
+                <div class="food-item pb-2 flex justify-between items-center">
+                    <div><div class="text-xs font-bold">${i.food_name}</div><div class="text-[9px] opacity-40">Б:${i.proteins} Ж:${i.fats} В:${i.carbs}</div></div>
+                    <div class="flex items-center gap-3"><div class="accent-text font-black text-xs">${i.calories} ккал</div><button onclick="deleteFood(${i.id})" class="opacity-30 p-2">🗑️</button></div>
+                </div>`).join('') : '<p class="text-center opacity-30 text-[10px] italic py-4">Немає записів за цей день</p>';
         }
 
         async function loadCharts() {
-            // ГРАФІК ВАГИ
-            const { data: userData } = await supabaseClient.from('users').select('target_weight').eq('user_id', currentUserId).maybeSingle();
-            const { data: weights } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(10);
+            const { data: weights } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(weightFilterDays);
+            const { data: userData } = await supabaseClient.from('users').select('target_weight').eq('user_id', currentUserId).single();
+
             if (weights && weights.length > 0) {
-                const labels = weights.map(i => new Date(i.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
-                const goalW = parseFloat(userData?.target_weight) || 0;
+                const labels = weights.map(w => new Date(w.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
+                const goalW = userData?.target_weight || 0;
                 if (weightChart) weightChart.destroy();
-                const allVals = [...weights.map(i => i.weight)]; if (goalW > 0) allVals.push(goalW);
-                const minW = Math.min(...allVals) - 2, maxW = Math.max(...allVals) + 2;
-                weightChart = new Chart(document.getElementById('weightChart').getContext('2d'), {
+                weightChart = new Chart(document.getElementById('weightChart'), {
                     type: 'line', plugins: [ChartDataLabels],
-                    data: { labels, datasets: [{ data: weights.map(i => i.weight), borderColor: '#3390ec', backgroundColor: 'rgba(51, 144, 236, 0.1)', fill: true, tension: 0.4, pointRadius: 5, datalabels: { color: '#fff', formatter: v => v+'кг' }}] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, annotation: { annotations: { line1: { type: 'line', yMin: goalW, yMax: goalW, borderColor: 'rgba(255, 215, 0, 0.4)', borderWidth: 2, borderDash: [6,6], label: { display: goalW > 0, content: 'Мета '+goalW+'кг', position: 'end', backgroundColor: '#3390ec' } } } } }, scales: { y: { min: minW, max: maxW, display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } } }
+                    data: { labels, datasets: [{ data: weights.map(w => w.weight), borderColor: '#3390ec', tension: 0.4, fill: true, backgroundColor: 'rgba(51,144,236,0.1)', pointRadius: weightFilterDays > 30 ? 0 : 5, datalabels: { display: weightFilterDays <= 7, color: '#fff', formatter: v => v+'кг' }}] },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { legend: { display: false }, annotation: { annotations: { line1: { type: 'line', yMin: goalW, yMax: goalW, borderColor: 'rgba(255, 215, 0, 0.4)', borderDash: [6,6], label: { display: goalW > 0, content: 'Мета '+goalW+'кг', position: 'end', backgroundColor: '#3390ec' } } } } },
+                        scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 8 }, color: 'rgba(255,255,255,0.4)' } } } 
+                    }
                 });
             }
 
-            // ГРАФІК КАЛОРІЙ ЗА 7 ДНІВ
-            const { data: logs } = await supabaseClient.from('nutrition_logs').select('calories, created_at').eq('user_id', currentUserId).gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString());
-            if (logs && logs.length > 0) {
-                const grouped = logs.reduce((acc, curr) => {
-                    const date = new Date(curr.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'});
-                    acc[date] = (acc[date] || 0) + curr.calories; return acc;
-                }, {});
+            const { data: cals } = await supabaseClient.from('nutrition_logs').select('calories, created_at').eq('user_id', currentUserId).gte('created_at', new Date(Date.now() - 7*86400000).toISOString());
+            if (cals) {
+                const grouped = cals.reduce((acc, curr) => { const d = new Date(curr.created_at).toLocaleDateString('uk', {day:'numeric'}); acc[d] = (acc[d] || 0) + curr.calories; return acc; }, {});
                 if (calorieChart) calorieChart.destroy();
-                calorieChart = new Chart(document.getElementById('calorieChart').getContext('2d'), {
+                calorieChart = new Chart(document.getElementById('calorieChart'), {
                     type: 'bar', plugins: [ChartDataLabels],
-                    data: { labels: Object.keys(grouped), datasets: [{ data: Object.values(grouped), backgroundColor: '#3390ec', borderRadius: 8, datalabels: { color: '#fff', font: { size: 8 } }}] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, annotation: { annotations: { line1: { type: 'line', yMin: userGoals.cal, yMax: userGoals.cal, borderColor: 'rgba(255,255,255,0.2)', borderDash: [5,5] } } } }, scales: { y: { display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } } }
+                    data: { labels: Object.keys(grouped), datasets: [{ data: Object.values(grouped), backgroundColor: '#3390ec', borderRadius: 5, datalabels: { color: '#fff', font: { size: 8 } }}] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
                 });
             }
+        }
+
+        function generateAIInsight(logs, water) {
+            const totals = logs.reduce((acc, curr) => ({ cal: acc.cal + curr.calories, p: acc.p + curr.proteins }), { cal: 0, p: 0 });
+            let insight = "";
+            if (logs.length === 0) insight = "Сьогодні ще немає записів. Додайте перший прийом їжі!";
+            else if (water < 1000) insight = "Ваш рівень гідратації низький. Випийте склянку води прямо зараз! 💧";
+            else if (totals.p < 40) insight = "Сьогодні мало білка. Додайте в меню сир, м'ясо або бобові. 🥩";
+            else insight = "Чудовий баланс! Ви на правильному шляху. 🚀";
+            document.getElementById('ai-insight').classList.remove('hidden');
+            document.getElementById('insight-text').innerText = insight;
         }
 
         async function addWater(ml) {
-            const { data } = await supabaseClient.from('users').select('water_today').eq('user_id', currentUserId).maybeSingle();
-            const newVal = (data.water_today || 0) + ml;
-            await supabaseClient.from('users').update({ water_today: newVal }).eq('user_id', currentUserId);
-            updateWaterUI(newVal, userGoals.water);
-            tg.HapticFeedback.impactOccurred('medium');
+            const { data } = await supabaseClient.from('users').select('water_today').eq('user_id', currentUserId).single();
+            await supabaseClient.from('users').update({ water_today: (data.water_today || 0) + ml }).eq('user_id', currentUserId);
+            refreshScreen(); tg.HapticFeedback.impactOccurred('light');
         }
 
-        function updateWaterUI(current, goal) {
-            document.getElementById('water-display').innerText = `${current} / ${goal} мл`;
-            document.getElementById('water-bar').style.width = Math.min((current/goal)*100, 100) + '%';
-        }
-
-        async function resetWater() {
-            if(!confirm('Скинути воду?')) return;
-            await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId);
-            updateWaterUI(0, userGoals.water);
-        }
-
-        async function deleteFood(id) {
-            if(!confirm('Видалити страву?')) return;
-            const { error } = await supabaseClient.from('nutrition_logs').delete().eq('id', id);
-            if (!error) { await loadNutrition(); await loadCharts(); tg.HapticFeedback.notificationOccurred('warning'); }
-        }
+        async function resetWater() { if(confirm('Скинути воду?')) { await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId); refreshScreen(); } }
+        
+        async function deleteFood(id) { if(confirm('Видалити?')) { await supabaseClient.from('nutrition_logs').delete().eq('id', id); refreshScreen(); tg.HapticFeedback.notificationOccurred('warning'); } }
 
         async function saveGoals() {
-            const updates = {
-                daily_cal_goal: document.getElementById('goal-cal-input').value || userGoals.cal,
-                daily_p_goal: document.getElementById('goal-p-input').value || userGoals.p,
-                daily_f_goal: document.getElementById('goal-f-input').value || userGoals.f,
-                daily_c_goal: document.getElementById('goal-c-input').value || userGoals.c,
-                water_goal: document.getElementById('goal-water-input').value || userGoals.water
-            };
-            await supabaseClient.from('users').update(updates).eq('user_id', currentUserId);
-            alert('Норми оновлено!'); await loadData(); await loadNutrition(); await loadCharts();
+            const upd = { daily_cal_goal: document.getElementById('goal-cal-input').value || userGoals.cal, water_goal: document.getElementById('goal-water-input').value || userGoals.water };
+            await supabaseClient.from('users').update(upd).eq('user_id', currentUserId);
+            alert('Збережено!'); initApp();
         }
 
         async function updateField(field) {
@@ -293,11 +329,20 @@
             if (!val) return;
             await supabaseClient.from('users').update({[field]: val}).eq('user_id', currentUserId);
             document.getElementById(inputId).value = '';
-            await loadData(); await loadCharts();
-            tg.HapticFeedback.notificationOccurred('success');
+            initApp(); tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        function changeDate(days) { selectedDate.setDate(selectedDate.getDate() + days); refreshScreen(); tg.HapticFeedback.selectionChanged(); }
+        
+        async function setWeightFilter(days) { 
+            weightFilterDays = days; 
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            document.getElementById('wf-' + days).classList.add('active');
+            await loadCharts(); 
         }
 
         initApp();
     </script>
 </body>
 </html>
+
