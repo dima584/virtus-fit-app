@@ -113,12 +113,9 @@
         }
 
         async function loadNutrition() {
-            const today = new Date().toLocaleDateString('sv'); // Формат YYYY-MM-DD
+            const today = new Date().toLocaleDateString('sv');
             const { data } = await supabaseClient.from('nutrition_logs')
-                .select('*')
-                .eq('user_id', currentUserId)
-                .gte('created_at', today)
-                .order('created_at', { ascending: false });
+                .select('*').eq('user_id', currentUserId).gte('created_at', today).order('created_at', { ascending: false });
 
             if (data) {
                 const totals = data.reduce((acc, curr) => ({
@@ -133,8 +130,7 @@
                 document.getElementById('f-val').innerText = totals.f + 'г';
                 document.getElementById('c-val').innerText = totals.c + 'г';
 
-                const calTarget = 2000;
-                const percent = Math.min((totals.cal / calTarget) * 100, 100);
+                const percent = Math.min((totals.cal / 2000) * 100, 100);
                 document.getElementById('cal-percent').innerText = Math.round(percent) + '%';
                 document.getElementById('cal-circle').style.strokeDashoffset = 220 - (220 * percent / 100);
                 
@@ -142,7 +138,6 @@
                 document.getElementById('f-bar').style.width = Math.min((totals.f / 70) * 100, 100) + '%';
                 document.getElementById('c-bar').style.width = Math.min((totals.c / 250) * 100, 100) + '%';
 
-                // ОНОВЛЕННЯ СПИСКУ СТРАВ
                 const listContainer = document.getElementById('food-list');
                 if (data.length > 0) {
                     listContainer.innerHTML = data.map(item => `
@@ -173,16 +168,27 @@
             }
         }
 
+        // ОНОВЛЕНА ФУНКЦІЯ: МИТТЄВЕ ОНОВЛЕННЯ
         async function updateField(field) {
-            const val = document.getElementById('weight-input').value;
-            if (!val) return;
-            const { error } = await supabaseClient.from('users').update({[field]: val}).eq('user_id', currentUserId);
-            if (!error) { document.getElementById('weight-input').value = ''; await loadData(); await loadChart(); tg.HapticFeedback.notificationOccurred('success'); }
+            const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
+            const value = document.getElementById(inputId).value;
+            if (!value) return;
+
+            const { error } = await supabaseClient.from('users').update({[field]: value}).eq('user_id', currentUserId);
+
+            if (!error) {
+                document.getElementById(inputId).value = '';
+                // Перевантажуємо дані без перезавантаження сторінки
+                await loadData();
+                await loadChart();
+                tg.HapticFeedback.notificationOccurred('success');
+            }
         }
         initApp();
     </script>
 </body>
 </html>
+
 
 
 
