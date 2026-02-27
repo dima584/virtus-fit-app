@@ -9,8 +9,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
 
     <style>
         body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); }
@@ -105,7 +105,7 @@
             tg.ready(); tg.expand();
             const urlParams = new URLSearchParams(window.location.search);
             currentUserId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
-            if (!currentUserId) return;
+            if (!currentUserId) { document.getElementById('status-msg').innerText = "ID не знайдено"; return; }
             await loadData(); await loadNutrition(); await loadChart();
         }
 
@@ -120,21 +120,19 @@
                 if (data.goal && data.weight) {
                     const diff = Math.abs(data.weight - data.goal).toFixed(1);
                     document.getElementById('status-msg').innerText = data.weight > data.goal ? `Залишилося скинути: ${diff} кг` : `Залишилося набрати: ${diff} кг`;
+                } else {
+                    document.getElementById('status-msg').innerText = "Дані оновлено";
                 }
             }
         }
 
         async function loadNutrition() {
             const today = new Date().toLocaleDateString('sv');
-            const { data } = await supabaseClient.from('nutrition_logs')
-                .select('*').eq('user_id', currentUserId).gte('created_at', today).order('created_at', { ascending: false });
+            const { data } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', today).order('created_at', { ascending: false });
 
             if (data) {
                 const totals = data.reduce((acc, curr) => ({
-                    cal: acc.cal + (curr.calories || 0),
-                    p: acc.p + (curr.proteins || 0),
-                    f: acc.f + (curr.fats || 0),
-                    c: acc.c + (curr.carbs || 0)
+                    cal: acc.cal + (curr.calories || 0), p: acc.p + (curr.proteins || 0), f: acc.f + (curr.fats || 0), c: acc.c + (curr.carbs || 0)
                 }), { cal: 0, p: 0, f: 0, c: 0 });
 
                 document.getElementById('total-cal').innerText = totals.cal;
@@ -152,10 +150,7 @@
                 if (data.length > 0) {
                     listContainer.innerHTML = data.map(item => `
                         <div class="food-item pb-2 flex justify-between items-center">
-                            <div>
-                                <div class="text-xs font-bold">${item.food_name || 'Страва'}</div>
-                                <div class="text-[9px] opacity-40 italic">Б:${item.proteins} Ж:${item.fats} В:${item.carbs}</div>
-                            </div>
+                            <div><div class="text-xs font-bold">${item.food_name || 'Страва'}</div><div class="text-[9px] opacity-40 italic">Б:${item.proteins} Ж:${item.fats} В:${item.carbs}</div></div>
                             <div class="accent-text font-black text-xs">${item.calories} ккал</div>
                         </div>
                     `).join('');
@@ -165,17 +160,15 @@
 
         async function loadChart() {
             try {
-                const { data: userData } = await supabaseClient.from('users').select('goal, weight').eq('user_id', currentUserId).maybeSingle();
+                const { data: userData } = await supabaseClient.from('users').select('goal').eq('user_id', currentUserId).maybeSingle();
                 const { data: history } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(7);
 
                 if (history && history.length > 0) {
                     const labels = history.map(i => new Date(i.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
                     const weights = history.map(i => i.weight);
-                    
-                    // Отримуємо тільки числове значення цілі
                     const goalW = userData?.goal ? parseFloat(userData.goal.toString().replace(/[^\d.]/g, '')) : 0;
 
-                    if (chartInstance) chartInstance.destroy();
+                    if (chartInstance) { chartInstance.destroy(); }
 
                     const allVals = [...weights];
                     if (goalW > 0) allVals.push(goalW);
@@ -188,38 +181,21 @@
                         data: {
                             labels: labels,
                             datasets: [{
-                                data: weights,
-                                borderColor: '#3390ec',
-                                backgroundColor: 'rgba(51, 144, 236, 0.1)',
-                                borderWidth: 3,
-                                tension: 0.4,
-                                fill: true,
-                                pointRadius: 5,
-                                pointBackgroundColor: '#3390ec',
+                                data: weights, borderColor: '#3390ec', backgroundColor: 'rgba(51, 144, 236, 0.1)', borderWidth: 3, tension: 0.4, fill: true, pointRadius: 5, pointBackgroundColor: '#3390ec',
                                 datalabels: { align: 'top', color: '#fff', font: { weight: 'bold' }, formatter: v => v+'кг' }
                             }]
                         },
                         options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
+                            responsive: true, maintainAspectRatio: false,
                             plugins: { 
                                 legend: { display: false },
                                 annotation: {
                                     annotations: {
-                                        line1: {
-                                            type: 'line',
-                                            yMin: goalW, yMax: goalW,
-                                            borderColor: 'rgba(255, 215, 0, 0.3)', // Золотиста ціль
-                                            borderWidth: 2, borderDash: [6, 6],
-                                            label: { display: goalW > 0, content: 'Ціль ' + goalW + 'кг', position: 'end', backgroundColor: 'rgba(51, 144, 236, 0.8)', font: { size: 10 } }
-                                        }
+                                        line1: { type: 'line', yMin: goalW, yMax: goalW, borderColor: 'rgba(255, 215, 0, 0.4)', borderWidth: 2, borderDash: [6, 6], label: { display: goalW > 0, content: 'Ціль ' + goalW + 'кг', position: 'end', backgroundColor: 'rgba(51, 144, 236, 0.8)', font: { size: 10 } } }
                                     }
                                 }
                             },
-                            scales: {
-                                y: { min: minW, max: maxW, display: false },
-                                x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } }
-                            }
+                            scales: { y: { min: minW, max: maxW, display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } }
                         }
                     });
                 }
@@ -230,16 +206,13 @@
             const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
             const val = document.getElementById(inputId).value;
             if (!val) return;
-
             const { error } = await supabaseClient.from('users').update({[field]: val}).eq('user_id', currentUserId);
             if (!error) {
                 document.getElementById(inputId).value = '';
-                await loadData();
-                await loadChart();
+                await loadData(); await loadChart();
                 tg.HapticFeedback.notificationOccurred('success');
             }
         }
-
         initApp();
     </script>
 </body>
