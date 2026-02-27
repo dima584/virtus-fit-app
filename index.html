@@ -9,19 +9,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); }
         .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
         .accent-text { color: var(--tg-theme-button-color, #3390ec); }
-        .btn-main { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); }
-        input, textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 12px; padding: 10px; font-size: 14px; outline: none; }
+        .btn-main { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); border-radius: 12px; }
         .tab-btn { opacity: 0.4; transition: 0.3s; font-size: 10px; font-weight: bold; text-align: center; }
         .tab-btn.active { opacity: 1; color: #3390ec; }
         .xp-bar-inner { transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .hidden { display: none !important; }
+        .achievement-card { transition: 0.5s; border: 1px solid rgba(255,255,255,0.03); }
         .achievement-locked { filter: grayscale(1); opacity: 0.3; }
         .unlocked { filter: none !important; opacity: 1 !important; border-color: #3390ec !important; box-shadow: 0 0 15px rgba(51, 144, 236, 0.2); }
     </style>
@@ -39,7 +38,6 @@
         <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden mb-2">
             <div id="xp-bar" class="xp-bar-inner bg-gradient-to-r from-blue-500 to-cyan-400 h-full" style="width: 0%"></div>
         </div>
-        <div id="invited-by-msg" class="text-[9px] opacity-40 italic text-white"></div>
     </div>
 
     <div id="page-main" class="page-content">
@@ -51,30 +49,21 @@
             </div>
         </div>
 
-        <div class="flex justify-center items-center gap-4 mb-6 bg-white/5 py-3 rounded-2xl border border-white/5">
-            <button onclick="changeDate(-1)" class="p-2 opacity-50 active:scale-90 text-white">◀</button>
-            <div class="text-center min-w-[140px]">
-                <div id="display-date" class="text-sm font-bold text-white">Сьогодні</div>
-                <div id="display-date-sub" class="text-[8px] opacity-40 uppercase tracking-widest text-white">Перегляд історії</div>
-            </div>
-            <button onclick="changeDate(1)" class="p-2 opacity-50 active:scale-90 text-white">▶</button>
-        </div>
-
         <div class="flex justify-between items-start mb-6 px-2">
-            <div><h1 class="text-2xl font-bold italic text-white">Привіт, <span id="user-name" class="accent-text">...</span>! 👋</h1><p id="status-msg" class="text-[10px] opacity-50 uppercase text-white">Синхронізація...</p></div>
+            <div><h1 class="text-2xl font-bold italic text-white">Привіт, <span id="user-name" class="accent-text">...</span>! 👋</h1><p id="status-msg" class="text-[10px] opacity-50 uppercase tracking-widest text-white">Синхронізація...</p></div>
             <div class="card p-3 text-center min-w-[80px]"><span class="text-[9px] opacity-50 uppercase font-bold text-white">БАЛАНС ІІ</span><div id="user-balance" class="text-lg font-black accent-text">--</div></div>
         </div>
 
         <div class="card p-5 mb-4 border border-white/5 shadow-lg">
             <div class="flex justify-around items-center">
                 <div class="relative flex items-center justify-center">
-                    <svg class="w-20 h-20 transform -rotate-90"><circle cx="40" cy="40" r="35" stroke="rgba(255,255,255,0.05)" stroke-width="8" fill="none"/><circle id="cal-circle" cx="40" cy="40" r="35" stroke="#3390ec" stroke-width="8" fill="none" stroke-dasharray="220" stroke-dashoffset="220" stroke-linecap="round"/></svg>
+                    <svg class="w-20 h-20 transform -rotate-90"><circle cx="40" cy="40" r="35" stroke="rgba(255,255,255,0.05)" stroke-width="8" fill="none"/><circle id="cal-circle" cx="40" cy="40" r="35" stroke="#3390ec" stroke-width="8" fill="none" stroke-dasharray="220" stroke-dashoffset="220" stroke-linecap="round" class="progress-ring"/></svg>
                     <div class="absolute text-center"><span id="total-cal" class="text-sm font-black text-white">0</span><p class="text-[8px] opacity-40 uppercase text-white">ккал</p></div>
                 </div>
                 <div class="flex-1 ml-6 space-y-2">
-                    <div><div class="flex justify-between text-[9px] mb-1"><span class="text-orange-400 font-bold">БІЛКИ</span><span id="p-val" class="text-white">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div id="p-bar" class="bg-orange-400 h-full" style="width: 0%"></div></div></div>
-                    <div><div class="flex justify-between text-[9px] mb-1"><span class="text-yellow-400 font-bold">ЖИРИ</span><span id="f-val" class="text-white">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div id="f-bar" class="bg-yellow-400 h-full" style="width: 0%"></div></div></div>
-                    <div><div class="flex justify-between text-[9px] mb-1"><span class="text-green-400 font-bold">ВУГЛ.</span><span id="c-val" class="text-white">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div id="c-bar" class="bg-green-400 h-full" style="width: 0%"></div></div></div>
+                    <div><div class="flex justify-between text-[9px] mb-1"><span class="text-orange-400 font-bold">БІЛКИ</span><span id="p-val" class="text-white">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div id="p-bar" class="bg-orange-400 h-full transition-all duration-500" style="width: 0%"></div></div></div>
+                    <div><div class="flex justify-between text-[9px] mb-1"><span class="text-yellow-400 font-bold">ЖИРИ</span><span id="f-val" class="text-white">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div id="f-bar" class="bg-yellow-400 h-full transition-all duration-500" style="width: 0%"></div></div></div>
+                    <div><div class="flex justify-between text-[9px] mb-1"><span class="text-green-400 font-bold">ВУГЛ.</span><span id="c-val" class="text-white">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div id="c-bar" class="bg-green-400 h-full transition-all duration-500" style="width: 0%"></div></div></div>
                 </div>
             </div>
         </div>
@@ -83,40 +72,47 @@
             <div class="flex justify-between items-center mb-3 text-[10px] font-bold text-blue-400 uppercase"><span>💧 ТРЕКЕР ВОДИ</span><span id="water-display">0 / 2000 мл</span></div>
             <div class="flex items-center gap-4">
                 <div class="flex-1 bg-white/5 h-2 rounded-full overflow-hidden"><div id="water-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div></div>
-                <button onclick="addWater(250)" class="card p-2 active:scale-90 bg-blue-500/20 text-blue-400 text-xs font-bold">＋250</button>
+                <button onclick="addWater(250)" class="card p-2 active:scale-90 bg-blue-500/20 text-blue-400 text-xs font-bold shadow-lg">＋250</button>
             </div>
         </div>
 
         <div class="card p-5 mb-4 border border-white/5 shadow-2xl">
-            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-white">АНАЛІТИКА ВАГИ</h3>
+            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-white text-center">АНАЛІТИКА ВАГИ</h3>
             <div style="height: 140px;"><canvas id="weightChart"></canvas></div>
         </div>
     </div>
 
     <div id="page-achievements" class="page-content hidden space-y-6">
-        <h2 class="text-xl font-black italic mb-6 uppercase text-white">Твої досягнення</h2>
+        <h2 class="text-xl font-black italic mb-6 uppercase text-white px-2">Твої досягнення</h2>
         <div class="grid grid-cols-2 gap-4" id="achievements-grid">
-            <div id="ach-newbie" class="card p-4 text-center achievement-locked">
+            <div id="ach-newbie" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🐣</div>
                 <div class="text-[10px] font-bold uppercase text-white">Новачок</div>
-                <div class="text-[8px] opacity-60 mb-1">Вже зареєстровано</div>
+                <div class="text-[8px] opacity-60 mb-1 leading-tight">Вже зареєстровано</div>
                 <div class="text-[8px] text-blue-400 font-bold">+100 XP</div>
             </div>
-            <div id="ach-foodie" class="card p-4 text-center achievement-locked">
+            <div id="ach-streak" class="card p-4 text-center achievement-card achievement-locked">
+                <div class="text-2xl mb-1">🔥</div>
+                <div class="text-[10px] font-bold uppercase text-white">Стрік 3 дні</div>
+                <div class="text-[8px] opacity-60 mb-1 leading-tight">Заходь 3 дні поспіль</div>
+                <div class="text-[8px] text-blue-400 font-bold">+300 XP</div>
+            </div>
+            <div id="ach-foodie" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🥦</div>
                 <div class="text-[10px] font-bold uppercase text-white">Здорове меню</div>
-                <div class="text-[8px] opacity-60 mb-1">Запиши 10 страв</div>
+                <div class="text-[8px] opacity-60 mb-1 leading-tight">Запиши 10 страв</div>
                 <div class="text-[8px] text-blue-400 font-bold">+500 XP</div>
             </div>
-            <div id="ach-water" class="card p-4 text-center achievement-locked">
+            <div id="ach-water" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🐳</div>
                 <div class="text-[10px] font-bold uppercase text-white">Водний магнат</div>
-                <div class="text-[8px] opacity-60 mb-1">Випий 2л води сьогодні</div>
+                <div class="text-[8px] opacity-60 mb-1 leading-tight">Випий 2л води за день</div>
                 <div class="text-[8px] text-blue-400 font-bold">+400 XP</div>
             </div>
             <div class="card p-4 text-center unlocked">
                 <div class="text-2xl mb-1">🥇</div>
                 <div class="text-[10px] font-bold uppercase text-white">ЗАПРОШЕНІ</div>
+                <div class="text-[8px] opacity-60 mb-1 leading-tight">Приводь друзів</div>
                 <div id="ref-count-display" class="text-blue-400 font-bold text-sm">0</div>
             </div>
         </div>
@@ -125,13 +121,13 @@
     <div id="page-coach" class="page-content hidden">
         <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white">AI ТРЕНЕР PRO</h2>
         <div class="card p-6 shadow-2xl">
-            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left" placeholder="Напишіть ваш запит..."></textarea>
+            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Напишіть ваш запит..."></textarea>
             <div class="flex justify-between items-center mb-6 text-white text-[10px] font-bold">
-                <span>БАЛАНС:</span><span id="ai-balance-display">--</span>
+                <span>БАЛАНС ГЕНЕРАЦІЙ:</span><span id="ai-balance-display">--</span>
             </div>
             <button onclick="generateAIWorkout()" class="btn-main w-full py-5 font-black uppercase tracking-widest active:scale-95">СФОРМУВАТИ PDF</button>
         </div>
-        <div class="mt-8 card p-5"><div style="height: 140px;"><canvas id="calorieChart"></canvas></div></div>
+        <div class="mt-8 card p-5 border-white/5"><div style="height: 140px;"><canvas id="calorieChart"></canvas></div></div>
     </div>
 
     <div class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-2xl border-t border-white/5 p-4 flex justify-around items-center z-50">
@@ -147,7 +143,6 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let currentUserId = null, userData = null, weightChart = null, calorieChart = null;
-        let selectedDate = new Date();
 
         async function initApp() {
             tg.ready(); tg.expand();
@@ -174,14 +169,12 @@
             }
         }
 
+        // ПЕРЕВІРКА ДОСЯГНЕНЬ
         async function checkAchievements() {
             if (!userData) return;
-            // Автоматично розблокувати "Новачок"
             if (userData.name) unlockAchievement('ach-newbie');
-            
             const { count } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
             if (count >= 10) unlockAchievement('ach-foodie');
-            
             if (userData.water_today >= 2000) unlockAchievement('ach-water');
         }
 
@@ -223,8 +216,8 @@
         }
 
         async function refreshScreen() {
-            const dateStr = selectedDate.toLocaleDateString('sv');
-            const { data: logs } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', dateStr + 'T00:00:00').lte('created_at', dateStr + 'T23:59:59');
+            const dateStr = new Date().toLocaleDateString('sv');
+            const { data: logs } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', dateStr + 'T00:00:00');
             const totals = (logs || []).reduce((acc, curr) => ({ cal: acc.cal + curr.calories, p: acc.p + curr.proteins, f: acc.f + curr.fats, c: acc.c + curr.carbs }), { cal: 0, p: 0, f: 0, c: 0 });
             document.getElementById('total-cal').innerText = totals.cal;
             document.getElementById('water-display').innerText = `${userData?.water_today || 0} / 2000 мл`;
@@ -255,3 +248,4 @@
     </script>
 </body>
 </html>
+
