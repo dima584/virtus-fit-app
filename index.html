@@ -7,9 +7,11 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.1"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+
     <style>
         body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); }
         .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 20px; }
@@ -162,17 +164,22 @@
         }
 
         async function loadChart() {
-            const { data: userData } = await supabaseClient.from('users').select('goal').eq('user_id', currentUserId).maybeSingle();
-            const { data: history } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(7);
+    try {
+        const { data: userData } = await supabaseClient.from('users').select('goal, weight').eq('user_id', currentUserId).maybeSingle();
+        const { data: history } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(7);
 
-            if (history && history.length > 0) {
-                const labels = history.map(i => new Date(i.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
-                const weights = history.map(i => i.weight);
-                const goalW = parseFloat(userData?.goal) || 0;
+        if (history && history.length > 0) {
+            const labels = history.map(i => new Date(i.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
+            const weights = history.map(i => i.weight);
+            
+            // Чистимо ціль від тексту, залишаємо тільки число
+            const goalW = userData?.goal ? parseFloat(userData.goal.toString().replace(/[^\d.]/g, '')) : 0;
 
-                // ВАЖЛИВО: Знищуємо старий графік перед малюванням нового                 if (chartInstance) {
-                    chartInstance.destroy();
-                }
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            
+            // Далі твій код малювання...
 
                 const allVals = [...weights];
                 if (goalW > 0) allVals.push(goalW);
@@ -242,6 +249,7 @@
     </script>
 </body>
 </html>
+
 
 
 
