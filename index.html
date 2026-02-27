@@ -41,6 +41,12 @@
         </div>
     </div>
 
+    <div class="hint-box p-3 mb-4 rounded-r-xl">
+        <p class="text-[11px] leading-relaxed opacity-90">
+            <span class="text-lg">💡</span> Для розрахунку калорій надішли <b>фото страви</b> або її <b>текст</b> у чат боту.
+        </p>
+    </div>
+
     <div class="card p-5 mb-4 border border-white/5 shadow-lg">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest">Денна норма</h3>
@@ -96,24 +102,29 @@
             <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Білки (г)</span><input type="number" id="goal-p-input"></div>
             <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Жири (г)</span><input type="number" id="goal-f-input"></div>
             <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Вугл (г)</span><input type="number" id="goal-c-input"></div>
-            <button onclick="saveGoals()" class="col-span-2 btn-main py-2 rounded-xl text-[10px] font-bold mt-2">ЗБЕРЕГТИ НОРМИ</button>
+            <div class="flex flex-col gap-1 col-span-2"><span class="text-[8px] opacity-50 uppercase">Вода (мл)</span><input type="number" id="goal-water-input" class="w-full"></div>
+            <button onclick="saveGoals()" class="col-span-2 btn-main py-2 rounded-xl text-[10px] font-bold mt-2 uppercase">Зберегти норми</button>
         </div>
     </details>
 
     <div class="grid grid-cols-1 gap-3 mb-6">
         <div class="card p-4 flex justify-between items-center border border-white/5">
             <div><span class="text-[10px] opacity-50 uppercase font-bold">Вага зараз</span><div class="text-2xl font-black" id="weight-display">-- кг</div></div>
-            <div class="flex gap-2"><input type="number" id="weight-input" step="0.1"><button onclick="updateField('weight')" class="btn-main px-4 py-2 rounded-xl text-xs font-bold">ОК</button></div>
+            <div class="flex gap-2"><input type="number" id="weight-input" step="0.1" placeholder="00.0"><button onclick="updateField('weight')" class="btn-main px-4 py-2 rounded-xl text-xs font-bold uppercase">ОК</button></div>
+        </div>
+        <div class="card p-4 flex justify-between items-center border border-white/5">
+            <div><span class="text-[10px] opacity-50 uppercase font-bold">Цільова вага</span><div class="text-sm font-bold italic accent-text" id="goal-display">...</div></div>
+            <div class="flex gap-2"><input type="number" id="goal-input" step="0.1" placeholder="00.0"><button onclick="updateField('target_weight')" class="btn-main px-4 py-2 rounded-xl text-xs font-bold uppercase">ОК</button></div>
         </div>
     </div>
 
     <div class="card p-5 mb-4 border border-white/5 shadow-2xl">
-        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Аналітика прогресу (Вага)</h3>
+        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Аналітика ваги</h3>
         <div style="height: 140px;"><canvas id="weightChart"></canvas></div>
     </div>
 
     <div class="card p-5 mb-6 border border-white/5 shadow-2xl">
-        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Споживання калорій (7 днів)</h3>
+        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Аналітика калорій (7 днів)</h3>
         <div style="height: 140px;"><canvas id="calorieChart"></canvas></div>
     </div>
 
@@ -122,7 +133,7 @@
         <div id="food-list" class="space-y-3"><p class="text-[10px] opacity-30 italic text-center py-2">Завантаження...</p></div>
     </div>
 
-    <button onclick="tg.close()" class="w-full btn-main py-4 rounded-2xl font-black uppercase mb-6">Закрити</button>
+    <button onclick="tg.close()" class="w-full btn-main py-4 rounded-2xl font-black uppercase mb-6 active:scale-95 transition-transform">Закрити</button>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -140,11 +151,22 @@
             await loadData(); await loadNutrition(); await loadCharts(); await checkAdmin();
         }
 
+        async function checkAdmin() {
+            if (currentUserId == 983710534) {
+                document.getElementById('admin-panel').classList.remove('hidden');
+                const { count: u } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
+                const { count: f } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true });
+                document.getElementById('total-users').innerText = u;
+                document.getElementById('total-food-logs').innerText = f;
+            }
+        }
+
         async function loadData() {
             const { data } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
                 document.getElementById('user-name').innerText = data.name || "Атлет";
                 document.getElementById('weight-display').innerText = (data.weight || 0) + " кг";
+                document.getElementById('goal-display').innerText = data.target_weight ? data.target_weight + " кг" : "Не вказано";
                 document.getElementById('user-balance').innerText = data.balance ?? "0";
                 
                 userGoals = { 
@@ -152,7 +174,11 @@
                     f: data.daily_f_goal || 70, c: data.daily_c_goal || 250, water: data.water_goal || 2000 
                 };
 
-                // AUTO-RESET ВОДИ (якщо дата змінилася)
+                // Авто-заповнення інпутів налаштувань
+                document.getElementById('goal-cal-input').placeholder = userGoals.cal;
+                document.getElementById('goal-water-input').placeholder = userGoals.water;
+
+                // ЛОГІКА АВТО-СКИНУ ВОДИ (порівняння по даті оновлення)
                 const todayStr = new Date().toLocaleDateString('sv');
                 const lastUpdate = data.updated_at ? new Date(data.updated_at).toLocaleDateString('sv') : "";
                 if (lastUpdate && lastUpdate !== todayStr) {
@@ -160,6 +186,11 @@
                     updateWaterUI(0, userGoals.water);
                 } else {
                     updateWaterUI(data.water_today || 0, userGoals.water);
+                }
+
+                if (data.target_weight && data.weight) {
+                    const diff = Math.abs(data.weight - data.target_weight).toFixed(1);
+                    document.getElementById('status-msg').innerText = data.weight > data.target_weight ? `До цілі: -${diff} кг` : `До цілі: +${diff} кг`;
                 }
             }
         }
@@ -176,38 +207,44 @@
                 document.getElementById('p-bar').style.width = Math.min((totals.p / userGoals.p) * 100, 100) + '%';
                 document.getElementById('f-bar').style.width = Math.min((totals.f / userGoals.f) * 100, 100) + '%';
                 document.getElementById('c-bar').style.width = Math.min((totals.c / userGoals.c) * 100, 100) + '%';
+                
                 const listContainer = document.getElementById('food-list');
-                listContainer.innerHTML = data.length > 0 ? data.map(item => `<div class="food-item pb-2 mb-2 flex justify-between items-center"><div class="flex-1"><div class="text-xs font-bold">${item.food_name}</div><div class="text-[9px] opacity-40 italic">Б:${item.proteins} Ж:${item.fats} В:${item.carbs}</div></div><div class="flex items-center gap-3"><div class="accent-text font-black text-xs">${item.calories} ккал</div><button onclick="deleteFood(${item.id})" class="opacity-30 p-2">🗑️</button></div></div>`).join('') : `<p class="text-[10px] opacity-30 italic text-center py-2">Сьогодні порожньо...</p>`;
+                listContainer.innerHTML = data.length > 0 ? data.map(item => `
+                    <div class="food-item pb-2 mb-2 flex justify-between items-center">
+                        <div class="flex-1"><div class="text-xs font-bold leading-tight">${item.food_name}</div><div class="text-[9px] opacity-40">Б:${item.proteins} Ж:${item.fats} В:${item.carbs}</div></div>
+                        <div class="flex items-center gap-3"><div class="accent-text font-black text-xs">${item.calories} ккал</div><button onclick="deleteFood(${item.id})" class="opacity-30 p-2">🗑️</button></div>
+                    </div>`).join('') : `<p class="text-[10px] opacity-30 italic text-center py-2">Сьогодні порожньо...</p>`;
             }
         }
 
         async function loadCharts() {
-            const { data: weights } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(7);
-            const { data: calories } = await supabaseClient.rpc('get_weekly_calories', { uid: currentUserId }); // Потребує SQL функції
-
+            // ГРАФІК ВАГИ
+            const { data: userData } = await supabaseClient.from('users').select('target_weight').eq('user_id', currentUserId).maybeSingle();
+            const { data: weights } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(10);
             if (weights && weights.length > 0) {
                 const labels = weights.map(i => new Date(i.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
+                const goalW = parseFloat(userData?.target_weight) || 0;
                 if (weightChart) weightChart.destroy();
+                const allVals = [...weights.map(i => i.weight)]; if (goalW > 0) allVals.push(goalW);
+                const minW = Math.min(...allVals) - 2, maxW = Math.max(...allVals) + 2;
                 weightChart = new Chart(document.getElementById('weightChart').getContext('2d'), {
                     type: 'line', plugins: [ChartDataLabels],
-                    data: { labels, datasets: [{ data: weights.map(i => i.weight), borderColor: '#3390ec', backgroundColor: 'rgba(51, 144, 236, 0.1)', fill: true, tension: 0.4, datalabels: { color: '#fff', formatter: v => v+'кг' }}] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } } }
+                    data: { labels, datasets: [{ data: weights.map(i => i.weight), borderColor: '#3390ec', backgroundColor: 'rgba(51, 144, 236, 0.1)', fill: true, tension: 0.4, pointRadius: 5, datalabels: { color: '#fff', formatter: v => v+'кг' }}] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, annotation: { annotations: { line1: { type: 'line', yMin: goalW, yMax: goalW, borderColor: 'rgba(255, 215, 0, 0.4)', borderWidth: 2, borderDash: [6,6], label: { display: goalW > 0, content: 'Мета '+goalW+'кг', position: 'end', backgroundColor: '#3390ec' } } } } }, scales: { y: { min: minW, max: maxW, display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } } }
                 });
             }
 
-            // ГРАФІК КАЛОРІЙ (Тимчасова логіка на основі nutrition_logs)
+            // ГРАФІК КАЛОРІЙ ЗА 7 ДНІВ
             const { data: logs } = await supabaseClient.from('nutrition_logs').select('calories, created_at').eq('user_id', currentUserId).gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString());
-            if (logs) {
+            if (logs && logs.length > 0) {
                 const grouped = logs.reduce((acc, curr) => {
                     const date = new Date(curr.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'});
                     acc[date] = (acc[date] || 0) + curr.calories; return acc;
                 }, {});
-                const labels = Object.keys(grouped);
-                const data = Object.values(grouped);
                 if (calorieChart) calorieChart.destroy();
                 calorieChart = new Chart(document.getElementById('calorieChart').getContext('2d'), {
                     type: 'bar', plugins: [ChartDataLabels],
-                    data: { labels, datasets: [{ data, backgroundColor: 'rgba(255, 165, 0, 0.4)', borderRadius: 5, datalabels: { color: '#fff', font: { size: 8 } }}] },
+                    data: { labels: Object.keys(grouped), datasets: [{ data: Object.values(grouped), backgroundColor: '#3390ec', borderRadius: 8, datalabels: { color: '#fff', font: { size: 8 } }}] },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, annotation: { annotations: { line1: { type: 'line', yMin: userGoals.cal, yMax: userGoals.cal, borderColor: 'rgba(255,255,255,0.2)', borderDash: [5,5] } } } }, scales: { y: { display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } } }
                 });
             }
@@ -226,20 +263,38 @@
             document.getElementById('water-bar').style.width = Math.min((current/goal)*100, 100) + '%';
         }
 
-        async function checkAdmin() {
-            if (currentUserId == 983710534) {
-                document.getElementById('admin-panel').classList.remove('hidden');
-                const { count: u } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
-                const { count: f } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true });
-                document.getElementById('total-users').innerText = u; document.getElementById('total-food-logs').innerText = f;
-            }
+        async function resetWater() {
+            if(!confirm('Скинути воду?')) return;
+            await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId);
+            updateWaterUI(0, userGoals.water);
+        }
+
+        async function deleteFood(id) {
+            if(!confirm('Видалити страву?')) return;
+            const { error } = await supabaseClient.from('nutrition_logs').delete().eq('id', id);
+            if (!error) { await loadNutrition(); await loadCharts(); tg.HapticFeedback.notificationOccurred('warning'); }
+        }
+
+        async function saveGoals() {
+            const updates = {
+                daily_cal_goal: document.getElementById('goal-cal-input').value || userGoals.cal,
+                daily_p_goal: document.getElementById('goal-p-input').value || userGoals.p,
+                daily_f_goal: document.getElementById('goal-f-input').value || userGoals.f,
+                daily_c_goal: document.getElementById('goal-c-input').value || userGoals.c,
+                water_goal: document.getElementById('goal-water-input').value || userGoals.water
+            };
+            await supabaseClient.from('users').update(updates).eq('user_id', currentUserId);
+            alert('Норми оновлено!'); await loadData(); await loadNutrition(); await loadCharts();
         }
 
         async function updateField(field) {
-            const val = document.getElementById('weight-input').value;
+            const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
+            const val = document.getElementById(inputId).value;
             if (!val) return;
             await supabaseClient.from('users').update({[field]: val}).eq('user_id', currentUserId);
-            await initApp(); tg.HapticFeedback.notificationOccurred('success');
+            document.getElementById(inputId).value = '';
+            await loadData(); await loadCharts();
+            tg.HapticFeedback.notificationOccurred('success');
         }
 
         initApp();
