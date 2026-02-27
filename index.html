@@ -21,8 +21,8 @@
         input, textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 12px; padding: 10px; font-size: 14px; outline: none; transition: 0.3s; }
         input:focus, textarea:focus { border-color: #3390ec; background: rgba(51, 144, 236, 0.05); }
         .progress-ring { transition: stroke-dashoffset 0.5s ease; }
-        .btn-filter { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; background: rgba(255,255,255,0.05); opacity: 0.5; transition: 0.3s; }
-        .btn-filter.active { background: #3390ec; opacity: 1; color: white; }
+        .btn-filter { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; background: rgba(255,255,255,0.05); opacity: 0.5; transition: 0.3s; color: white; border: none; }
+        .btn-filter.active { background: #3390ec; opacity: 1; }
         .tab-btn { opacity: 0.4; transition: 0.3s; font-size: 10px; font-weight: bold; text-align: center; }
         .tab-btn.active { opacity: 1; color: #3390ec; }
         .xp-bar-inner { transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -243,7 +243,7 @@
         let selectedDate = new Date(), weightFilterDays = 7;
         let userGoals = { cal: 2000, p: 150, f: 70, c: 250, water: 2000 };
 
-        // Безпечне оновлення DOM
+        // Функція для безпечного оновлення тексту
         function setText(id, text) {
             const el = document.getElementById(id);
             if (el) el.innerText = text;
@@ -267,7 +267,7 @@
             }
         }
 
-        // --- 2. ЗАВАНТАЖЕННЯ ДАНИХ ---
+        // --- 2. ЗАВАНТАЖЕННЯ ДАНИХ (БЕЗПЕЧНЕ) ---
         async function loadUserData() {
             const { data, error } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
@@ -282,21 +282,21 @@
 
                 userData = data;
                 
-                // Заповнюємо цілі з бази (якщо є)
+                // Зчитування норм
                 userGoals.cal = data.daily_cal_goal || 2000;
                 userGoals.water = data.water_goal || 2000;
                 userGoals.p = data.p_goal || 150;
                 userGoals.f = data.f_goal || 70;
                 userGoals.c = data.c_goal || 250;
                 
-                // Заповнюємо інпути налаштувань
+                // Заповнення інпутів норм
                 if(document.getElementById('goal-cal')) document.getElementById('goal-cal').value = userGoals.cal;
                 if(document.getElementById('goal-water')) document.getElementById('goal-water').value = userGoals.water;
                 if(document.getElementById('goal-p')) document.getElementById('goal-p').value = userGoals.p;
                 if(document.getElementById('goal-f')) document.getElementById('goal-f').value = userGoals.f;
                 if(document.getElementById('goal-c')) document.getElementById('goal-c').value = userGoals.c;
 
-                // UI
+                // Заповнення UI
                 setText('user-name', data.name || "Атлет");
                 setText('user-name-top', data.name || "Атлет");
                 setText('weight-display', (data.weight || 0) + " кг");
@@ -318,7 +318,7 @@
             }
         }
 
-        // --- 3. НАЛАШТУВАННЯ НОРМ (ВІДНОВЛЕНО) ---
+        // --- 3. ЗБЕРЕЖЕННЯ НОРМ ТА ОНОВЛЕННЯ ІНПУТІВ ---
         async function saveGoals() {
             const cal = parseInt(document.getElementById('goal-cal').value) || 2000;
             const water = parseInt(document.getElementById('goal-water').value) || 2000;
@@ -335,7 +335,6 @@
             await refreshScreen();
         }
 
-        // --- 4. ОНОВЛЕННЯ ІНПУТІВ ВАГИ/ЦІЛІ ---
         async function updateField(field) {
             const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
             const val = parseFloat(document.getElementById(inputId).value);
@@ -354,13 +353,15 @@
             await loadCharts();
         }
 
-        // --- 5. ДОСЯГНЕННЯ ТА ІНСАЙТИ ШІ ---
+        // --- 4. ДОСЯГНЕННЯ ТА АНАЛІЗ ШІ ---
         async function checkAchievements() {
             if (!userData) return;
+            
             if (userData.name) unlockAchievement('ach-newbie');
             
             const { count } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
             if (count >= 10) unlockAchievement('ach-foodie');
+            
             if (userData.water_today >= userGoals.water) unlockAchievement('ach-water');
         }
 
@@ -371,7 +372,7 @@
                 el.classList.add('unlocked');
             }
         }
-        
+
         function generateAIInsight(logs, water) {
             const el = document.getElementById('ai-insight');
             const textEl = document.getElementById('insight-text');
@@ -383,11 +384,11 @@
             } else if (water < userGoals.water) {
                 textEl.innerText = "Не забувайте пити воду! 💧 Це важливо для метаболізму.";
             } else {
-                textEl.innerText = "Чудовий прогрес! Продовжуйте в тому ж дусі! 🚀";
+                textEl.innerText = "Чудовий прогрес! Ви виконали всі норми. 🚀";
             }
         }
 
-        // --- 6. АДМІНКА ---
+        // --- 5. АДМІНКА ---
         async function checkAdmin() {
             if (currentUserId == 983710534) {
                 const adminEl = document.getElementById('admin-panel');
@@ -400,7 +401,7 @@
             }
         }
 
-        // --- 7. НАВІГАЦІЯ ТА XP ---
+        // --- 6. НАВІГАЦІЯ ТА XP ---
         function showPage(p) {
             document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -425,7 +426,7 @@
             await loadUserData();
         }
 
-        // --- 8. ВОДА ТА ДАТИ ---
+        // --- 7. ВОДА ТА ДАТИ ---
         async function addWater(ml) {
             const newVal = (userData.water_today || 0) + ml;
             await supabaseClient.from('users').update({ water_today: newVal }).eq('user_id', currentUserId);
@@ -510,7 +511,7 @@
             } 
         }
 
-        // --- 9. ГРАФІКИ ---
+        // --- 8. ГРАФІКИ (ВІДНОВЛЕНО ЛІНІЮ ЦІЛІ) ---
         function setWeightFilter(days) { 
             weightFilterDays = days; 
             document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active')); 
@@ -520,7 +521,6 @@
         }
 
         async function loadCharts() {
-            // Графік Ваги (з лінією цілі)
             const { data: weights } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(weightFilterDays);
             const wCanvas = document.getElementById('weightChart');
             
@@ -545,7 +545,6 @@
                 });
             }
             
-            // Графік Калорій
             const { data: cals } = await supabaseClient.from('nutrition_logs').select('calories, created_at').eq('user_id', currentUserId).gte('created_at', new Date(Date.now() - 7*86400000).toISOString());
             const cCanvas = document.getElementById('calorieChart');
             if (cals && cCanvas) {
@@ -564,7 +563,7 @@
             }
         }
 
-        // --- 10. PDF ТА РЕФЕРАЛКА ---
+        // --- 9. PDF ТА РЕФЕРАЛКА ---
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
             if (!prompt) return alert("Будь ласка, введіть запит!");
@@ -586,7 +585,7 @@
                     const splitText = doc.splitTextToSize(prompt, 170);
                     doc.text(splitText, 20, 56);
                     
-                    doc.text("Plan generated successfully.", 20, 100);
+                    doc.text("Plan generated and saved to your device.", 20, 100);
                     doc.save(`Workout_${userData.name}.pdf`);
                     
                     tg.HapticFeedback.notificationOccurred('success');
