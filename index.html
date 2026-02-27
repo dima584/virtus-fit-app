@@ -90,9 +90,9 @@
                     <div class="absolute text-center"><span id="total-cal" class="text-sm font-black">0</span><p class="text-[8px] opacity-40 uppercase">ккал</p></div>
                 </div>
                 <div class="flex-1 ml-6 space-y-2">
-                    <div><div class="flex justify-between text-[9px] mb-1"><span class="text-orange-400 font-bold">БІЛКИ</span><span id="p-val" class="font-bold">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full"><div id="p-bar" class="bg-orange-400 h-full transition-all duration-500" style="width: 0%"></div></div></div>
-                    <div><div class="flex justify-between text-[9px] mb-1"><span class="text-yellow-400 font-bold">ЖИРИ</span><span id="f-val" class="font-bold">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full"><div id="f-bar" class="bg-yellow-400 h-full transition-all duration-500" style="width: 0%"></div></div></div>
-                    <div><div class="flex justify-between text-[9px] mb-1"><span class="text-green-400 font-bold">ВУГЛ.</span><span id="c-val" class="font-bold">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full"><div id="c-bar" class="bg-green-400 h-full transition-all duration-500" style="width: 0%"></div></div></div>
+                    <div><div class="flex justify-between text-[9px] mb-1"><span class="text-orange-400 font-bold uppercase">БІЛКИ</span><span id="p-val" class="font-bold">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full"><div id="p-bar" class="bg-orange-400 h-full transition-all duration-500" style="width: 0%"></div></div></div>
+                    <div><div class="flex justify-between text-[9px] mb-1"><span class="text-yellow-400 font-bold uppercase">ЖИРИ</span><span id="f-val" class="font-bold">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full"><div id="f-bar" class="bg-yellow-400 h-full transition-all duration-500" style="width: 0%"></div></div></div>
+                    <div><div class="flex justify-between text-[9px] mb-1"><span class="text-green-400 font-bold uppercase">ВУГЛ.</span><span id="c-val" class="font-bold">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full"><div id="c-bar" class="bg-green-400 h-full transition-all duration-500" style="width: 0%"></div></div></div>
                 </div>
             </div>
         </div>
@@ -131,7 +131,7 @@
         <h2 class="text-xl font-black italic mb-6 uppercase text-white px-2">Твої досягнення</h2>
         <div class="grid grid-cols-2 gap-4" id="achievements-grid">
             <div class="card p-4 text-center shadow-lg"><div class="text-2xl mb-1">🐣</div><div class="text-[10px] font-bold uppercase">НОВАЧОК</div></div>
-            <div class="card p-4 text-center shadow-lg"><div class="text-2xl mb-1">🥇</div><div class="text-[10px] font-bold uppercase">ЗАПРОШЕНІ</div><div id="ref-count-display" class="text-blue-400 font-black">0</div></div>
+            <div class="card p-4 text-center shadow-lg"><div class="text-2xl mb-1">🥇</div><div class="text-[10px] font-bold uppercase">ЗАПРОШЕНІ</div><div id="ref-count-display" class="text-blue-400 font-bold">0</div></div>
         </div>
         
         <div class="card p-5 mt-6 border-yellow-500/20 bg-yellow-500/5 shadow-yellow-500/5 shadow-2xl">
@@ -145,7 +145,7 @@
         <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white">AI ТРЕНЕР PRO</h2>
         <div class="card p-6 shadow-2xl border-blue-500/10">
             <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center">ПЕРСОНАЛІЗОВАНИЙ ПЛАН ТРЕНУВАНЬ</p>
-            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Напишіть ваші побажання: наприклад, тренування вдома на 15 хв, фокус на ноги, мова українська..."></textarea>
+            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Напишіть ваші побажання..."></textarea>
             <div class="flex justify-between items-center mb-6 text-[10px] uppercase font-bold px-2">
                 <span class="opacity-40 tracking-widest">ДОСТУПНО ГЕНЕРАЦІЙ:</span>
                 <span id="ai-balance-display" class="text-blue-400 font-black text-sm">0</span>
@@ -190,7 +190,6 @@
         async function loadUserData() {
             const { data } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
-                // ПЕРЕВІРКА ПІДВИЩЕННЯ РІВНЯ ТА НАРАХУВАННЯ БОНУСІВ
                 const targetLevel = Math.floor(data.xp / 1000) + 1;
                 if (targetLevel > data.level) {
                     const bonusGens = (targetLevel - data.level) * 10;
@@ -198,7 +197,7 @@
                         level: targetLevel, 
                         ai_generations: (data.ai_generations || 0) + bonusGens 
                     }).eq('user_id', currentUserId);
-                    tg.showAlert(`🚀 ВІТАЄМО! Рівень підвищено до ${targetLevel}! Отримано бонус: +${bonusGens} генерацій AI!`);
+                    tg.showAlert(`🚀 Рівень підвищено до ${targetLevel}! +${bonusGens} ⚡ генерацій!`);
                     return loadUserData();
                 }
 
@@ -215,7 +214,6 @@
                 userGoals = { cal: data.daily_cal_goal || 2000, p: 150, f: 70, c: 250, water: data.water_goal || 2000 };
                 updateXPUI(data.xp || 0, data.level || 1);
 
-                // АВТОМАТИЧНЕ СКИНУТИ ВОДИ В НОВИЙ ДЕНЬ
                 const todayStr = new Date().toLocaleDateString('sv');
                 const lastUpdate = data.updated_at ? new Date(data.updated_at).toLocaleDateString('sv') : "";
                 if (lastUpdate && lastUpdate !== todayStr) {
@@ -232,7 +230,6 @@
         async function checkAdmin() {
             if (currentUserId == 983710534) {
                 document.getElementById('admin-panel').classList.remove('hidden');
-                // ВИПРАВЛЕНО ЗАВАНТАЖЕННЯ СТАТИСТИКИ
                 const { count: u } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
                 const { count: f } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true });
                 document.getElementById('total-users').innerText = u || 0;
@@ -243,24 +240,17 @@
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
             if (!prompt) return alert("Будь ласка, опишіть ваш запит!");
-            if (userData.ai_generations <= 0) return alert("У вас закінчилися генерації! Заробляйте XP для отримання нових.");
+            if (userData.ai_generations <= 0) return alert("Немає генерацій!");
 
-            tg.showConfirm("Витратити 1 ⚡ генерацію на створення плану?", async (ok) => {
+            tg.showConfirm("Витратити 1 ⚡?", async (ok) => {
                 if (ok) {
                     await supabaseClient.from('users').update({ ai_generations: userData.ai_generations - 1 }).eq('user_id', currentUserId);
-                    
-                    // ГЕНЕРАЦІЯ PDF З ВИПРАВЛЕНОЮ КИРИЛИЦЕЮ
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
-                    doc.setFontSize(22); doc.text("Virtus Fit AI: Workout Plan", 20, 30);
-                    doc.setFontSize(14); doc.text(`Athlete: ${userData.name}`, 20, 45);
-                    doc.text("Professional Training Routine", 20, 55);
-                    doc.setDrawColor(51, 144, 236); doc.line(20, 60, 190, 60);
-                    doc.setFontSize(10); doc.text("Training plan requested. Processing detailed exercises...", 20, 75);
-                    const splitText = doc.splitTextToSize("Запит збережено: " + prompt, 160);
-                    doc.text(splitText, 20, 85);
-                    doc.save(`Virtus_Workout_${userData.name}.pdf`);
-                    
+                    doc.text("Virtus Fit AI: Training Plan", 20, 20);
+                    doc.text(`Athlete: ${userData.name}`, 20, 30);
+                    doc.text("Request details recorded. AI Plan processing...", 20, 45);
+                    doc.save(`Workout_${userData.name}.pdf`);
                     tg.HapticFeedback.notificationOccurred('success');
                     await loadUserData();
                 }
@@ -293,9 +283,7 @@
             const isToday = dateStr === new Date().toLocaleDateString('sv');
             document.getElementById('display-date').innerText = isToday ? "Сьогодні" : selectedDate.toLocaleDateString('uk', {day:'numeric', month:'long'});
             document.getElementById('water-controls').style.display = isToday ? 'flex' : 'none';
-            
             const { data: logs } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', dateStr + 'T00:00:00').lte('created_at', dateStr + 'T23:59:59').order('created_at', {ascending: false});
-            
             let waterVal = 0;
             if (isToday) {
                 const { data: u } = await supabaseClient.from('users').select('water_today').eq('user_id', currentUserId).single();
@@ -318,53 +306,34 @@
             document.getElementById('p-val').innerText = totals.p + 'г'; document.getElementById('f-val').innerText = totals.f + 'г'; document.getElementById('c-val').innerText = totals.c + 'г';
             document.getElementById('water-display').innerText = `${water} / ${userGoals.water} мл`;
             document.getElementById('water-bar').style.width = Math.min((water / userGoals.water) * 100, 100) + '%';
-            document.getElementById('food-list').innerHTML = logs.length ? logs.map(i => `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold">${i.food_name}</div><div class="text-[9px] opacity-40 uppercase tracking-widest">Б:${i.proteins} Ж:${i.fats} В:${i.carbs}</div></div><div class="flex items-center gap-3"><div class="accent-text font-black text-xs">${i.calories} ккал</div><button onclick="deleteFood(${i.id})" class="opacity-20 hover:opacity-100 transition-opacity p-2">🗑️</button></div></div>`).join('') : '<p class="text-center opacity-30 text-[10px] italic py-4">Сьогодні записів ще немає...</p>';
+            document.getElementById('food-list').innerHTML = logs.length ? logs.map(i => `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold">${i.food_name}</div><div class="text-[9px] opacity-40">Б:${i.proteins} Ж:${i.fats} В:${i.carbs}</div></div><div class="flex items-center gap-3"><div class="accent-text font-black text-xs">${i.calories} ккал</div><button onclick="deleteFood(${i.id})" class="opacity-20 p-2">🗑️</button></div></div>`).join('') : '<p class="text-center opacity-30 text-[10px] py-4 italic">Записів немає</p>';
         }
 
         async function loadCharts() {
             const { data: weights } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(weightFilterDays);
-            const { data: userDataObj } = await supabaseClient.from('users').select('target_weight').eq('user_id', currentUserId).single();
             if (weights && weights.length > 0) {
                 const labels = weights.map(w => new Date(w.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
-                const goalW = userDataObj?.target_weight || 0;
                 if (weightChart) weightChart.destroy();
-                weightChart = new Chart(document.getElementById('weightChart'), { type: 'line', plugins: [ChartDataLabels], data: { labels, datasets: [{ data: weights.map(w => w.weight), borderColor: '#3390ec', tension: 0.4, fill: true, backgroundColor: 'rgba(51, 144, 236, 0.1)', pointRadius: weightFilterDays > 30 ? 0 : 5, datalabels: { display: weightFilterDays <= 7, color: '#fff', formatter: v => v+'кг' }}] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, annotation: { annotations: { line1: { type: 'line', yMin: goalW, yMax: goalW, borderColor: 'rgba(255, 215, 0, 0.4)', borderDash: [6,6], label: { display: goalW > 0, content: 'Мета '+goalW+'кг', position: 'end', backgroundColor: '#3390ec' } } } } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 8 }, color: 'rgba(255,255,255,0.4)' } } } } });
+                weightChart = new Chart(document.getElementById('weightChart'), { type: 'line', plugins: [ChartDataLabels], data: { labels, datasets: [{ data: weights.map(w => w.weight), borderColor: '#3390ec', tension: 0.4, fill: true, backgroundColor: 'rgba(51, 144, 236, 0.1)', pointRadius: weightFilterDays > 30 ? 0 : 5, datalabels: { display: weightFilterDays <= 7, color: '#fff', formatter: v => v+'кг' }}] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 8 }, color: 'rgba(255,255,255,0.4)' } } } } });
             }
             const { data: cals } = await supabaseClient.from('nutrition_logs').select('calories, created_at').eq('user_id', currentUserId).gte('created_at', new Date(Date.now() - 7*86400000).toISOString());
             if (cals) {
                 const grouped = cals.reduce((acc, curr) => { const d = new Date(curr.created_at).toLocaleDateString('uk', {day:'numeric'}); acc[d] = (acc[d] || 0) + curr.calories; return acc; }, {});
                 if (calorieChart) calorieChart.destroy();
-                calorieChart = new Chart(document.getElementById('calorieChart'), { type: 'bar', plugins: [ChartDataLabels], data: { labels: Object.keys(grouped), datasets: [{ data: Object.values(grouped), backgroundColor: '#3390ec', borderRadius: 5, datalabels: { color: '#fff', font: { size: 8 } }}] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 8 } } } } } });
+                calorieChart = new Chart(document.getElementById('calorieChart'), { type: 'bar', plugins: [ChartDataLabels], data: { labels: Object.keys(grouped), datasets: [{ data: Object.values(grouped), backgroundColor: '#3390ec', borderRadius: 5, datalabels: { color: '#fff', font: { size: 8 } }}] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } } });
             }
         }
 
-        async function addWater(ml) { 
-            const { data } = await supabaseClient.from('users').select('water_today').eq('user_id', currentUserId).single();
-            await supabaseClient.from('users').update({ water_today: (data.water_today || 0) + ml }).eq('user_id', currentUserId);
-            refreshScreen(); addXP(15); tg.HapticFeedback.impactOccurred('light');
-        }
-
-        async function updateField(field) {
-            const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
-            const val = document.getElementById(inputId).value;
-            if (!val) return;
-            await supabaseClient.from('users').update({[field]: val}).eq('user_id', currentUserId);
-            if(field === 'weight') addXP(50);
-            initApp(); tg.HapticFeedback.notificationOccurred('success');
-        }
-
-        function changeDate(days) { selectedDate.setDate(selectedDate.getDate() + days); refreshScreen(); tg.HapticFeedback.selectionChanged(); }
+        async function addWater(ml) { const { data } = await supabaseClient.from('users').select('water_today').eq('user_id', currentUserId).single(); await supabaseClient.from('users').update({ water_today: (data.water_today || 0) + ml }).eq('user_id', currentUserId); refreshScreen(); addXP(15); }
+        async function updateField(field) { const inputId = field === 'weight' ? 'weight-input' : 'goal-input'; const val = document.getElementById(inputId).value; if (!val) return; await supabaseClient.from('users').update({[field]: val}).eq('user_id', currentUserId); if(field === 'weight') addXP(50); initApp(); }
+        function changeDate(days) { selectedDate.setDate(selectedDate.getDate() + days); refreshScreen(); }
         function setWeightFilter(days) { weightFilterDays = days; document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active')); document.getElementById('wf-' + days).classList.add('active'); loadCharts(); }
         async function deleteFood(id) { if(confirm('Видалити страву?')) { await supabaseClient.from('nutrition_logs').delete().eq('id', id); refreshScreen(); } }
-        function generateAIInsight(logs, water) { document.getElementById('ai-insight').classList.remove('hidden'); document.getElementById('insight-text').innerText = logs.length === 0 ? "Почніть день із запису їжі! 🍎" : "Чудовий прогрес! Продовжуйте рух до цілі! 🚀"; }
-        
-        function shareReferral() { 
-            const link = `https://t.me/medbotlab_bot?start=${currentUserId}`; 
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Приєднуйся до Virtus Fit AI! Завантажуй додаток, прокачуй рівень та отримуй персональні плани тренувань!")}`); 
-        }
-
+        function generateAIInsight(logs, water) { document.getElementById('ai-insight').classList.remove('hidden'); document.getElementById('insight-text').innerText = logs.length === 0 ? "Запишіть першу страву! 🍎" : "Чудовий прогрес! Продовжуйте! 🚀"; }
+        function shareReferral() { const link = `https://t.me/medbotlab_bot?start=${currentUserId}`; tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}`); }
         initApp();
     </script>
 </body>
 </html>
+
 
