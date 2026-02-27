@@ -7,11 +7,9 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
-
     <style>
         body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); }
         .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 20px; }
@@ -20,7 +18,6 @@
         input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; padding: 5px; width: 65px; text-align: center; font-size: 14px; }
         .progress-ring { transition: stroke-dashoffset 0.5s ease; }
         .food-item { border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .food-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body class="p-4 font-sans select-none">
@@ -47,23 +44,28 @@
                     <circle id="cal-circle" cx="40" cy="40" r="35" stroke="#3390ec" stroke-width="8" fill="none" 
                             stroke-dasharray="220" stroke-dashoffset="220" stroke-linecap="round" class="progress-ring"/>
                 </svg>
-                <div class="absolute text-center transform rotate-90">
-                    <span class="text-sm font-black" id="total-cal">0</span>
+                <div class="absolute text-center"> <span class="text-sm font-black" id="total-cal">0</span>
                     <p class="text-[8px] opacity-40 uppercase">ккал</p>
                 </div>
             </div>
             <div class="flex-1 ml-6 space-y-2">
                 <div>
-                    <div class="flex justify-between text-[9px] mb-1"><span class="opacity-50 text-orange-400">Білки</span><span id="p-val">0г</span></div>
-                    <div class="w-full bg-white/5 h-1 rounded-full"><div id="p-bar" class="bg-orange-400 h-full rounded-full" style="width: 0%"></div></div>
+                    <div class="flex justify-between text-[9px] mb-1"><span class="opacity-50 text-orange-400 font-bold">Білки</span><span id="p-val" class="font-bold">0г</span></div>
+                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                        <div id="p-bar" class="bg-orange-400 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
                 </div>
                 <div>
-                    <div class="flex justify-between text-[9px] mb-1"><span class="opacity-50 text-yellow-400">Жири</span><span id="f-val">0г</span></div>
-                    <div class="w-full bg-white/5 h-1 rounded-full"><div id="f-bar" class="bg-yellow-400 h-full rounded-full" style="width: 0%"></div></div>
+                    <div class="flex justify-between text-[9px] mb-1"><span class="opacity-50 text-yellow-400 font-bold">Жири</span><span id="f-val" class="font-bold">0г</span></div>
+                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                        <div id="f-bar" class="bg-yellow-400 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
                 </div>
                 <div>
-                    <div class="flex justify-between text-[9px] mb-1"><span class="opacity-50 text-green-400">Вугл.</span><span id="c-val">0г</span></div>
-                    <div class="w-full bg-white/5 h-1 rounded-full"><div id="c-bar" class="bg-green-400 h-full rounded-full" style="width: 0%"></div></div>
+                    <div class="flex justify-between text-[9px] mb-1"><span class="opacity-50 text-green-400 font-bold">Вугл.</span><span id="c-val" class="font-bold">0г</span></div>
+                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                        <div id="c-bar" class="bg-green-400 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -116,7 +118,6 @@
                 document.getElementById('weight-display').innerText = data.weight + " кг";
                 document.getElementById('goal-display').innerText = data.goal ? data.goal + " кг" : "Не вказано";
                 document.getElementById('user-balance').innerText = data.balance ?? "0";
-                
                 if (data.goal && data.weight) {
                     const diff = Math.abs(data.weight - data.goal).toFixed(1);
                     document.getElementById('status-msg').innerText = data.weight > data.goal ? `Залишилося скинути: ${diff} кг` : `Залишилося набрати: ${diff} кг`;
@@ -126,9 +127,7 @@
 
         async function loadNutrition() {
             const today = new Date().toLocaleDateString('sv');
-            const { data } = await supabaseClient.from('nutrition_logs')
-                .select('*').eq('user_id', currentUserId).gte('created_at', today).order('created_at', { ascending: false });
-
+            const { data } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', today).order('created_at', { ascending: false });
             if (data) {
                 const totals = data.reduce((acc, curr) => ({
                     cal: acc.cal + (curr.calories || 0), p: acc.p + (curr.proteins || 0), f: acc.f + (curr.fats || 0), c: acc.c + (curr.carbs || 0)
@@ -138,18 +137,21 @@
                 const percent = Math.min((totals.cal / 2000) * 100, 100);
                 document.getElementById('cal-percent').innerText = Math.round(percent) + '%';
                 document.getElementById('cal-circle').style.strokeDashoffset = 220 - (220 * percent / 100);
+                
                 document.getElementById('p-val').innerText = totals.p + 'г';
                 document.getElementById('f-val').innerText = totals.f + 'г';
                 document.getElementById('c-val').innerText = totals.c + 'г';
+
+                // ОНОВЛЕННЯ ДИНАМІЧНИХ КОЛЬОРОВИХ БАРІВ
+                document.getElementById('p-bar').style.width = Math.min((totals.p / 100) * 100, 100) + '%';
+                document.getElementById('f-bar').style.width = Math.min((totals.f / 70) * 100, 100) + '%';
+                document.getElementById('c-bar').style.width = Math.min((totals.c / 250) * 100, 100) + '%';
 
                 const listContainer = document.getElementById('food-list');
                 if (data.length > 0) {
                     listContainer.innerHTML = data.map(item => `
                         <div class="food-item pb-2 flex justify-between items-center">
-                            <div>
-                                <div class="text-xs font-bold">${item.food_name || 'Страва'}</div>
-                                <div class="text-[9px] opacity-40 italic">Б:${item.proteins} Ж:${item.fats} В:${item.carbs}</div>
-                            </div>
+                            <div><div class="text-xs font-bold">${item.food_name || 'Страва'}</div><div class="text-[9px] opacity-40 italic">Б:${item.proteins} Ж:${item.fats} В:${item.carbs}</div></div>
                             <div class="accent-text font-black text-xs">${item.calories} ккал</div>
                         </div>
                     `).join('');
@@ -158,62 +160,33 @@
         }
 
         async function loadChart() {
-            const { data: userData } = await supabaseClient.from('users').select('goal').eq('user_id', currentUserId).maybeSingle();
-            const { data: history } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(10);
-
-            if (history && history.length > 0) {
-                // ВИПРАВЛЕНО: Дати тепер відображаються коректно для кожного дня
-                const labels = history.map(i => new Date(i.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
-                const weights = history.map(i => i.weight);
-                const goalW = parseFloat(userData?.goal) || 0;
-
-                if (chartInstance) { chartInstance.destroy(); }
-
-                const allVals = [...weights];
-                if (goalW > 0) allVals.push(goalW);
-                const minW = Math.min(...allVals) - 2, maxW = Math.max(...allVals) + 2;
-
-                const ctx = document.getElementById('weightChart').getContext('2d');
-                chartInstance = new Chart(ctx, {
-                    type: 'line', plugins: [ChartDataLabels],
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: weights, borderColor: '#3390ec', backgroundColor: 'rgba(51, 144, 236, 0.1)', borderWidth: 3, tension: 0.4, fill: true, pointRadius: 5,
-                            datalabels: { align: 'top', color: '#fff', font: { weight: 'bold' }, formatter: v => v+'кг' }
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { display: false },
-                            annotation: {
-                                annotations: {
-                                    line1: {
-                                        type: 'line', yMin: goalW, yMax: goalW,
-                                        borderColor: 'rgba(255, 215, 0, 0.4)', borderWidth: 2, borderDash: [6, 6],
-                                        label: { display: goalW > 0, content: 'Ціль ' + goalW + 'кг', position: 'end', backgroundColor: 'rgba(51, 144, 236, 0.8)', font: { size: 10 } }
-                                    }
-                                }
-                            }
-                        },
-                        scales: { y: { min: minW, max: maxW, display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } }
-                    }
-                });
-            }
+            try {
+                const { data: userData } = await supabaseClient.from('users').select('goal').eq('user_id', currentUserId).maybeSingle();
+                const { data: history } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(10);
+                if (history && history.length > 0) {
+                    const labels = history.map(i => new Date(i.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
+                    const weights = history.map(i => i.weight);
+                    const goalW = parseFloat(userData?.goal) || 0;
+                    if (chartInstance) chartInstance.destroy();
+                    const allVals = [...weights]; if (goalW > 0) allVals.push(goalW);
+                    const minW = Math.min(...allVals) - 2, maxW = Math.max(...allVals) + 2;
+                    chartInstance = new Chart(document.getElementById('weightChart').getContext('2d'), {
+                        type: 'line', plugins: [ChartDataLabels],
+                        data: { labels, datasets: [{ data: weights, borderColor: '#3390ec', backgroundColor: 'rgba(51, 144, 236, 0.1)', borderWidth: 3, tension: 0.4, fill: true, pointRadius: 5, datalabels: { align: 'top', color: '#fff', font: { weight: 'bold' }, formatter: v => v+'кг' }}] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, annotation: { annotations: { line1: { type: 'line', yMin: goalW, yMax: goalW, borderColor: 'rgba(255, 215, 0, 0.4)', borderWidth: 2, borderDash: [6, 6], label: { display: goalW > 0, content: 'Ціль ' + goalW + 'кг', position: 'end', backgroundColor: 'rgba(51, 144, 236, 0.8)', font: { size: 10 } } } } } }, scales: { y: { min: minW, max: maxW, display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } } }
+                    });
+                }
+            } catch (e) { console.error(e); }
         }
 
         async function updateField(field) {
             const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
             const val = document.getElementById(inputId).value;
             if (!val) return;
-
             const { error } = await supabaseClient.from('users').update({[field]: val}).eq('user_id', currentUserId);
             if (!error) {
                 document.getElementById(inputId).value = '';
-                // МИТТЄВЕ ОНОВЛЕННЯ
-                await loadData();
-                await loadChart();
+                await loadData(); await loadChart();
                 tg.HapticFeedback.notificationOccurred('success');
             }
         }
