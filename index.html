@@ -38,7 +38,7 @@
         <div class="flex justify-between items-center mb-2">
             <div class="flex items-center gap-2">
                 <span class="bg-blue-500 text-[10px] font-black px-2 py-0.5 rounded-full text-white shadow-lg">LVL <span id="user-level">1</span></span>
-                <span id="user-name-top" class="font-bold italic text-white">Завантаження...</span>
+                <span id="user-name-top" class="font-bold italic text-white">...</span>
             </div>
             <span class="text-[10px] opacity-50 font-bold text-white"><span id="current-xp">0</span> / 1000 XP</span>
         </div>
@@ -49,7 +49,6 @@
     </div>
 
     <div id="page-main" class="page-content">
-        
         <div id="admin-panel" class="hidden card p-4 mb-4 border-2 border-yellow-500/30 shadow-xl">
             <h3 class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest mb-3 text-center">🛡️ АДМІН-ЦЕНТР</h3>
             <div class="grid grid-cols-2 gap-4 text-center">
@@ -73,17 +72,11 @@
         </div>
 
         <div class="flex justify-between items-start mb-6 px-2">
-            <div>
-                <h1 class="text-2xl font-bold italic text-white">Привіт, <span id="user-name" class="accent-text">...</span>! 👋</h1>
-                <p id="status-msg" class="text-[10px] opacity-50 uppercase tracking-widest text-white">Синхронізація...</p>
-            </div>
-            <div class="card p-3 text-center min-w-[80px]">
-                <span class="text-[9px] opacity-50 uppercase font-bold text-white">БАЛАНС ІІ</span>
-                <div id="user-balance" class="text-lg font-black accent-text">--</div>
-            </div>
+            <div><h1 class="text-2xl font-bold italic text-white">Привіт, <span id="user-name" class="accent-text">...</span>! 👋</h1><p id="status-msg" class="text-[10px] opacity-50 uppercase tracking-widest text-white">Синхронізація...</p></div>
+            <div class="card p-3 text-center min-w-[80px]"><span class="text-[9px] opacity-50 uppercase font-bold text-white">БАЛАНС ІІ</span><div id="user-balance" class="text-lg font-black accent-text">--</div></div>
         </div>
 
-        <div class="card p-3 mb-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-3">
+        <div class="hint-box card p-3 mb-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-3">
             <span class="text-2xl">💡</span>
             <p class="text-[11px] leading-relaxed opacity-90 text-white">Щоб розрахувати калорії, просто надішліть боту <b>фото страви</b> або її <b>текст</b> у чат.</p>
         </div>
@@ -119,45 +112,23 @@
             <div class="flex justify-between items-center mb-3 text-[10px] font-bold text-blue-400 uppercase"><span>💧 ТРЕКЕР ВОДИ</span><span id="water-display" class="text-blue-400">0 / 2000 мл</span></div>
             <div class="flex items-center gap-4">
                 <div class="flex-1 bg-white/5 h-2 rounded-full overflow-hidden"><div id="water-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div></div>
-                <div id="water-controls" class="flex gap-2">
-                    <button onclick="addWater(250)" class="card p-2 active:scale-90 bg-blue-500/20 text-blue-400 text-xs font-bold shadow-lg shadow-blue-500/10">＋250</button>
-                    <button onclick="resetWater()" class="card p-2 active:scale-90 opacity-30 text-xs text-white">🔄</button>
-                </div>
+                <div id="water-controls" class="flex gap-2"><button onclick="addWater(250)" class="card p-2 active:scale-90 bg-blue-500/20 text-blue-400 text-xs font-bold shadow-lg shadow-blue-500/10">＋250</button><button onclick="resetWater()" class="card p-2 active:scale-90 opacity-30 text-xs text-white">🔄</button></div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 gap-3 mb-6">
             <div class="card p-4 flex justify-between items-center border border-white/5 shadow-xl">
-                <div>
-                    <span class="text-[10px] opacity-50 font-bold uppercase tracking-tighter text-white">ВАГА ЗАРАЗ</span>
-                    <div id="weight-display" class="text-2xl font-black text-white">-- кг</div>
-                </div>
-                <div class="flex gap-2">
-                    <input type="number" id="weight-input" step="0.1" placeholder="0.0" class="w-20 text-center">
-                    <button onclick="updateField('weight')" class="btn-main px-4 py-2 text-xs font-bold uppercase shadow-lg">ОК</button>
-                </div>
+                <div><span class="text-[10px] opacity-50 font-bold uppercase tracking-tighter text-white">ВАГА ЗАРАЗ</span><div id="weight-display" class="text-2xl font-black text-white">-- кг</div></div>
+                <div class="flex gap-2"><input type="number" id="weight-input" step="0.1" placeholder="0.0" class="w-20 text-center"><button onclick="updateField('weight')" class="btn-main px-4 py-2 text-xs font-bold uppercase shadow-lg">ОК</button></div>
             </div>
             <div class="card p-4 flex justify-between items-center border border-white/5">
-                <div>
-                    <span class="text-[10px] opacity-50 font-bold uppercase tracking-tighter text-white">ЦІЛЬОВА ВАГА</span>
-                    <div id="goal-display" class="text-sm font-bold italic accent-text">...</div>
-                </div>
-                <div class="flex gap-2">
-                    <input type="number" id="goal-input" step="0.1" placeholder="0.0" class="w-20 text-center">
-                    <button onclick="updateField('target_weight')" class="btn-main px-4 py-2 text-xs font-bold uppercase">ОК</button>
-                </div>
+                <div><span class="text-[10px] opacity-50 font-bold uppercase tracking-tighter text-white">ЦІЛЬОВА ВАГА</span><div id="goal-display" class="text-sm font-bold italic accent-text">...</div></div>
+                <div class="flex gap-2"><input type="number" id="goal-input" step="0.1" placeholder="0.0" class="w-20 text-center"><button onclick="updateField('target_weight')" class="btn-main px-4 py-2 text-xs font-bold uppercase">ОК</button></div>
             </div>
         </div>
 
         <div class="card p-5 mb-4 border border-white/5 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-[10px] font-bold opacity-40 uppercase text-white">АНАЛІТИКА ТРЕНДУ ВАГИ</h3>
-                <div class="flex gap-1" id="weight-filters">
-                    <button onclick="setWeightFilter(7)" id="wf-7" class="btn-filter active">7д</button>
-                    <button onclick="setWeightFilter(30)" id="wf-30" class="btn-filter">30д</button>
-                    <button onclick="setWeightFilter(365)" id="wf-365" class="btn-filter">Рік</button>
-                </div>
-            </div>
+            <div class="flex justify-between items-center mb-4"><h3 class="text-[10px] font-bold opacity-40 uppercase text-white">АНАЛІТИКА ТРЕНДУ ВАГИ</h3><div class="flex gap-1"><button onclick="setWeightFilter(7)" id="wf-7" class="btn-filter active">7д</button><button onclick="setWeightFilter(30)" id="wf-30" class="btn-filter">30д</button><button onclick="setWeightFilter(365)" id="wf-365" class="btn-filter">Рік</button></div></div>
             <div style="height: 140px; position: relative;"><canvas id="weightChart"></canvas></div>
         </div>
 
@@ -173,25 +144,25 @@
             <div id="ach-newbie" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🐣</div>
                 <div class="text-[10px] font-bold uppercase text-white">Новачок</div>
-                <div class="text-[7px] opacity-60 mb-1 leading-tight text-white">Просто зареєструйся</div>
+                <div class="text-[7px] opacity-60 mb-1 text-white">Просто зареєструйся</div>
                 <div class="text-[8px] text-blue-400 font-bold">+100 XP</div>
             </div>
             <div id="ach-streak" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🔥</div>
                 <div class="text-[10px] font-bold uppercase text-white">Стрік 3 дні</div>
-                <div class="text-[7px] opacity-60 mb-1 leading-tight text-white">Записуй дані 3 дні поспіль</div>
+                <div class="text-[7px] opacity-60 mb-1 text-white">Записуй дані 3 дні поспіль</div>
                 <div class="text-[8px] text-blue-400 font-bold">+300 XP</div>
             </div>
             <div id="ach-foodie" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🥦</div>
                 <div class="text-[10px] font-bold uppercase text-white">Здорове меню</div>
-                <div class="text-[7px] opacity-60 mb-1 leading-tight text-white">Запиши 10 страв</div>
+                <div class="text-[7px] opacity-60 mb-1 text-white">Запиши 10 страв</div>
                 <div class="text-[8px] text-blue-400 font-bold">+500 XP</div>
             </div>
             <div id="ach-water" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🐳</div>
                 <div class="text-[10px] font-bold uppercase text-white">Водний магнат</div>
-                <div class="text-[7px] opacity-60 mb-1 leading-tight text-white">Випий 2л води за день</div>
+                <div class="text-[7px] opacity-60 mb-1 text-white">Випий 2л води за день</div>
                 <div class="text-[8px] text-blue-400 font-bold">+400 XP</div>
             </div>
             <div class="card p-4 text-center achievement-card unlocked">
@@ -202,7 +173,7 @@
             </div>
         </div>
         
-        <div class="card p-5 mt-6 border border-yellow-500/20 bg-yellow-500/5 shadow-2xl">
+        <div class="card p-5 mt-6 border-yellow-500/20 bg-yellow-500/5 shadow-2xl">
             <h3 class="text-xs font-bold text-yellow-500 uppercase mb-2">РЕФЕРАЛЬНА ПРОГРАМА</h3>
             <p class="text-[10px] opacity-60 mb-4 leading-relaxed text-white">За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+10 AI генерацій</b>!</p>
             <button onclick="shareReferral()" class="w-full py-4 bg-yellow-500/20 text-yellow-500 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-yellow-500/30 active:scale-95 transition-all shadow-xl">ЗАПРОСИТИ ДРУГА</button>
@@ -211,17 +182,17 @@
 
     <div id="page-coach" class="page-content hidden">
         <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white">AI ТРЕНЕР PRO</h2>
-        <div class="card p-6 shadow-2xl border border-blue-500/10">
+        <div class="card p-6 shadow-2xl border-blue-500/10">
             <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center text-white">ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ</p>
-            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, фокус на прес..."></textarea>
+            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв..."></textarea>
             <div class="flex justify-between items-center mb-6 text-white text-[10px] font-bold px-1">
                 <span class="opacity-50 tracking-widest">БАЛАНС ГЕНЕРАЦІЙ:</span>
                 <span id="ai-balance-display" class="text-blue-400 text-sm">--</span>
             </div>
-            <button onclick="generateAIWorkout()" class="btn-main w-full py-5 font-black uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-blue-500/20">СФОРМУВАТИ PDF</button>
+            <button onclick="generateAIWorkout()" class="btn-main w-full py-5 font-black uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-blue-500/20">СФОРМУВАТИ PDF ПЛАН</button>
         </div>
-        
-        <div class="mt-8 card p-5 border border-white/5 shadow-xl">
+
+        <div class="mt-8 card p-5 border-white/5 shadow-xl">
             <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-center text-white">ККАЛ ЗА ОСТАННІЙ ТИЖДЕНЬ</h3>
             <div style="height: 140px; position: relative;"><canvas id="calorieChart"></canvas></div>
         </div>
@@ -243,13 +214,11 @@
         let selectedDate = new Date(), weightFilterDays = 7;
         let userGoals = { cal: 2000, p: 150, f: 70, c: 250, water: 2000 };
 
-        // Функція для безпечного оновлення тексту
         function setText(id, text) {
             const el = document.getElementById(id);
             if (el) el.innerText = text;
         }
 
-        // --- 1. ІНІЦІАЛІЗАЦІЯ ---
         async function initApp() {
             tg.ready(); tg.expand();
             const urlParams = new URLSearchParams(window.location.search);
@@ -267,11 +236,9 @@
             }
         }
 
-        // --- 2. ЗАВАНТАЖЕННЯ ДАНИХ (БЕЗПЕЧНЕ) ---
         async function loadUserData() {
             const { data, error } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
-                // Перевірка рівня
                 const targetLevel = Math.floor((data.xp || 0) / 1000) + 1;
                 if (targetLevel > (data.level || 1)) {
                     const bonusGens = (targetLevel - (data.level || 1)) * 10;
@@ -282,21 +249,19 @@
 
                 userData = data;
                 
-                // Зчитування норм
+                // ВІДНОВЛЕНО: Читання цілей з бази
                 userGoals.cal = data.daily_cal_goal || 2000;
                 userGoals.water = data.water_goal || 2000;
                 userGoals.p = data.p_goal || 150;
                 userGoals.f = data.f_goal || 70;
                 userGoals.c = data.c_goal || 250;
                 
-                // Заповнення інпутів норм
                 if(document.getElementById('goal-cal')) document.getElementById('goal-cal').value = userGoals.cal;
                 if(document.getElementById('goal-water')) document.getElementById('goal-water').value = userGoals.water;
                 if(document.getElementById('goal-p')) document.getElementById('goal-p').value = userGoals.p;
                 if(document.getElementById('goal-f')) document.getElementById('goal-f').value = userGoals.f;
                 if(document.getElementById('goal-c')) document.getElementById('goal-c').value = userGoals.c;
 
-                // Заповнення UI
                 setText('user-name', data.name || "Атлет");
                 setText('user-name-top', data.name || "Атлет");
                 setText('weight-display', (data.weight || 0) + " кг");
@@ -309,7 +274,6 @@
                 
                 updateXPUI(data.xp || 0, data.level || 1);
                 
-                // Скидання води на новий день
                 const todayStr = new Date().toLocaleDateString('sv');
                 const lastUpdate = data.updated_at ? new Date(data.updated_at).toLocaleDateString('sv') : "";
                 if (lastUpdate && lastUpdate !== todayStr) {
@@ -318,7 +282,7 @@
             }
         }
 
-        // --- 3. ЗБЕРЕЖЕННЯ НОРМ ТА ОНОВЛЕННЯ ІНПУТІВ ---
+        // ВІДНОВЛЕНО: Збереження норм у базу
         async function saveGoals() {
             const cal = parseInt(document.getElementById('goal-cal').value) || 2000;
             const water = parseInt(document.getElementById('goal-water').value) || 2000;
@@ -353,7 +317,6 @@
             await loadCharts();
         }
 
-        // --- 4. ДОСЯГНЕННЯ ТА АНАЛІЗ ШІ ---
         async function checkAchievements() {
             if (!userData) return;
             
@@ -373,6 +336,7 @@
             }
         }
 
+        // ВІДНОВЛЕНО: ІНСАЙТИ ШІ
         function generateAIInsight(logs, water) {
             const el = document.getElementById('ai-insight');
             const textEl = document.getElementById('insight-text');
@@ -388,7 +352,6 @@
             }
         }
 
-        // --- 5. АДМІНКА ---
         async function checkAdmin() {
             if (currentUserId == 983710534) {
                 const adminEl = document.getElementById('admin-panel');
@@ -401,7 +364,6 @@
             }
         }
 
-        // --- 6. НАВІГАЦІЯ ТА XP ---
         function showPage(p) {
             document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -426,7 +388,6 @@
             await loadUserData();
         }
 
-        // --- 7. ВОДА ТА ДАТИ ---
         async function addWater(ml) {
             const newVal = (userData.water_today || 0) + ml;
             await supabaseClient.from('users').update({ water_today: newVal }).eq('user_id', currentUserId);
@@ -475,6 +436,7 @@
             if(circle) circle.style.strokeDashoffset = 220 - (220 * calPercent / 100);
             setText('cal-percent', Math.round(calPercent) + '%');
             
+            // Кільця оновлюються за налаштованими нормами!
             const pBar = document.getElementById('p-bar'); if(pBar) pBar.style.width = Math.min((totals.p / userGoals.p) * 100, 100) + '%';
             const fBar = document.getElementById('f-bar'); if(fBar) fBar.style.width = Math.min((totals.f / userGoals.f) * 100, 100) + '%';
             const cBar = document.getElementById('c-bar'); if(cBar) cBar.style.width = Math.min((totals.c / userGoals.c) * 100, 100) + '%';
@@ -511,7 +473,6 @@
             } 
         }
 
-        // --- 8. ГРАФІКИ (ВІДНОВЛЕНО ЛІНІЮ ЦІЛІ) ---
         function setWeightFilter(days) { 
             weightFilterDays = days; 
             document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active')); 
@@ -521,6 +482,7 @@
         }
 
         async function loadCharts() {
+            // ВІДНОВЛЕНО: ЛІНІЯ ЦІЛІ НА ГРАФІКУ ВАГИ
             const { data: weights } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(weightFilterDays);
             const wCanvas = document.getElementById('weightChart');
             
@@ -563,7 +525,6 @@
             }
         }
 
-        // --- 9. PDF ТА РЕФЕРАЛКА ---
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
             if (!prompt) return alert("Будь ласка, введіть запит!");
@@ -585,7 +546,7 @@
                     const splitText = doc.splitTextToSize(prompt, 170);
                     doc.text(splitText, 20, 56);
                     
-                    doc.text("Plan generated and saved to your device.", 20, 100);
+                    doc.text("Plan generated successfully.", 20, 100);
                     doc.save(`Workout_${userData.name}.pdf`);
                     
                     tg.HapticFeedback.notificationOccurred('success');
@@ -600,7 +561,6 @@
             tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Прокачуй своє тіло разом зі мною у Virtus Fit AI!")}`); 
         }
 
-        // Запуск
         initApp();
     </script>
 </body>
