@@ -9,6 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.1"></script>
     <style>
         body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); }
         .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 20px; }
@@ -71,11 +72,15 @@
             <div><span class="text-[10px] opacity-50 uppercase font-bold">Вага зараз</span><div class="text-2xl font-black" id="weight-display">-- кг</div></div>
             <div class="flex gap-2"><input type="number" id="weight-input" step="0.1" placeholder="00.0"><button onclick="updateField('weight')" class="btn-main px-4 py-2 rounded-xl text-xs font-bold uppercase">ОК</button></div>
         </div>
+        <div class="card p-4 flex justify-between items-center border border-white/5">
+            <div><span class="text-[10px] opacity-50 uppercase font-bold">Цільова вага</span><div class="text-sm font-bold italic accent-text" id="goal-display">...</div></div>
+            <div class="flex gap-2"><input type="number" id="goal-input" step="0.1" placeholder="00.0"><button onclick="updateField('goal')" class="btn-main px-4 py-2 rounded-xl text-xs font-bold uppercase">ОК</button></div>
+        </div>
     </div>
 
     <div class="card p-5 mb-4 border border-white/5 shadow-2xl">
-        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Аналітика ваги</h3>
-        <div style="height: 140px;"><canvas id="weightChart"></canvas></div>
+        <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Аналітика прогресу</h3>
+        <div style="height: 160px;"><canvas id="weightChart"></canvas></div>
     </div>
 
     <div class="card p-5 mb-6 border border-white/5 shadow-lg">
@@ -107,8 +112,13 @@
             if (data) {
                 document.getElementById('user-name').innerText = data.name || "Атлет";
                 document.getElementById('weight-display').innerText = data.weight + " кг";
+                document.getElementById('goal-display').innerText = data.goal ? data.goal + " кг" : "Не вказано";
                 document.getElementById('user-balance').innerText = data.balance ?? "0";
-                document.getElementById('status-msg').innerText = "Оновлено";
+                
+                if (data.goal && data.weight) {
+                    const diff = Math.abs(data.weight - data.goal).toFixed(1);
+                    document.getElementById('status-msg').innerText = data.weight > data.goal ? `Залишилося скинути: ${diff} кг` : `Залишилося набрати: ${diff} кг`;
+                }
             }
         }
 
@@ -126,14 +136,12 @@
                 }), { cal: 0, p: 0, f: 0, c: 0 });
 
                 document.getElementById('total-cal').innerText = totals.cal;
-                document.getElementById('p-val').innerText = totals.p + 'г';
-                document.getElementById('f-val').innerText = totals.f + 'г';
-                document.getElementById('c-val').innerText = totals.c + 'г';
-
                 const percent = Math.min((totals.cal / 2000) * 100, 100);
                 document.getElementById('cal-percent').innerText = Math.round(percent) + '%';
                 document.getElementById('cal-circle').style.strokeDashoffset = 220 - (220 * percent / 100);
-                
+                document.getElementById('p-val').innerText = totals.p + 'г';
+                document.getElementById('f-val').innerText = totals.f + 'г';
+                document.getElementById('c-val').innerText = totals.c + 'г';
                 document.getElementById('p-bar').style.width = Math.min((totals.p / 100) * 100, 100) + '%';
                 document.getElementById('f-bar').style.width = Math.min((totals.f / 70) * 100, 100) + '%';
                 document.getElementById('c-bar').style.width = Math.min((totals.c / 250) * 100, 100) + '%';
@@ -154,36 +162,82 @@
         }
 
         async function loadChart() {
-            const { data } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(7);
-            if (data && data.length > 0) {
-                const labels = data.map(i => new Date(i.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
-                const weights = data.map(i => i.weight);
-                const minW = Math.min(...weights) - 1.5, maxW = Math.max(...weights) + 1.5;
-                if (chartInstance) chartInstance.destroy();
-                chartInstance = new Chart(document.getElementById('weightChart'), {
-                    type: 'line', plugins: [ChartDataLabels],
-                    data: { labels, datasets: [{ data: weights, borderColor: '#3390ec', backgroundColor: 'rgba(51, 144, 236, 0.1)', borderWidth: 3, tension: 0.4, fill: true, pointRadius: 5, pointBackgroundColor: '#3390ec', datalabels: { align: 'top', color: '#fff', font: { weight: 'bold' }, formatter: v => v+'кг' }}] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: minW, max: maxW, display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } } }
+            const { data: userData } = await supabaseClient.from('users').select('goal').eq('user_id', currentUserId).maybeSingle();
+            const { data: history } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(7);
+
+            if (history && history.length > 0) {
+                const labels = history.map(i => new Date(i.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
+                const weights = history.map(i => i.weight);
+                const goalW = parseFloat(userData?.goal) || 0;
+
+                // ВАЖЛИВО: Знищуємо старий графік перед малюванням нового                 if (chartInstance) {
+                    chartInstance.destroy();
+                }
+
+                const allVals = [...weights];
+                if (goalW > 0) allVals.push(goalW);
+                const minW = Math.min(...allVals) - 2, maxW = Math.max(...allVals) + 2;
+
+                const ctx = document.getElementById('weightChart').getContext('2d');
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    plugins: [ChartDataLabels],
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: weights,
+                            borderColor: '#3390ec',
+                            backgroundColor: 'rgba(51, 144, 236, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#3390ec',
+                            datalabels: { align: 'top', color: '#fff', font: { weight: 'bold' }, formatter: v => v+'кг' }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: false },
+                            annotation: {
+                                annotations: {
+                                    line1: {
+                                        type: 'line',
+                                        yMin: goalW, yMax: goalW,
+                                        borderColor: 'rgba(255, 215, 0, 0.3)', // Золотиста лінія цілі
+                                        borderWidth: 2, borderDash: [6, 6],
+                                        label: { display: goalW > 0, content: 'Ціль ' + goalW + 'кг', position: 'end', backgroundColor: 'rgba(51, 144, 236, 0.8)', font: { size: 10 } }
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: { min: minW, max: maxW, display: false },
+                            x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } }
+                        }
+                    }
                 });
             }
         }
 
-        // ОНОВЛЕНА ФУНКЦІЯ: МИТТЄВЕ ОНОВЛЕННЯ
         async function updateField(field) {
             const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
-            const value = document.getElementById(inputId).value;
-            if (!value) return;
+            const val = document.getElementById(inputId).value;
+            if (!val) return;
 
-            const { error } = await supabaseClient.from('users').update({[field]: value}).eq('user_id', currentUserId);
-
+            const { error } = await supabaseClient.from('users').update({[field]: val}).eq('user_id', currentUserId);
+            
             if (!error) {
                 document.getElementById(inputId).value = '';
-                // Перевантажуємо дані без перезавантаження сторінки
+                // Миттєво оновлюємо дані
                 await loadData();
                 await loadChart();
                 tg.HapticFeedback.notificationOccurred('success');
             }
         }
+
         initApp();
     </script>
 </body>
