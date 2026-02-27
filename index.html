@@ -22,6 +22,20 @@
     </style>
 </head>
 <body class="p-4 font-sans select-none">
+    <div id="admin-panel" class="hidden card p-4 mb-4 border-2 border-yellow-500/30 shadow-xl">
+        <h3 class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest mb-3">🛡️ Панель Адміністратора</h3>
+        <div class="grid grid-cols-2 gap-4 text-center">
+            <div class="card bg-white/5 p-2">
+                <p class="text-[8px] opacity-50 uppercase">Юзерів</p>
+                <span id="total-users" class="text-lg font-black italic">--</span>
+            </div>
+            <div class="card bg-white/5 p-2">
+                <p class="text-[8px] opacity-50 uppercase">Логів їжі</p>
+                <span id="total-food-logs" class="text-lg font-black italic">--</span>
+            </div>
+        </div>
+    </div>
+
     <div class="flex justify-between items-start mb-6">
         <div>
             <h1 class="text-2xl font-bold italic">Привіт, <span id="user-name" class="accent-text">...</span>! 👋</h1>
@@ -35,7 +49,7 @@
 
     <div class="hint-box p-3 mb-4 rounded-r-xl">
         <p class="text-[11px] leading-relaxed opacity-90">
-            <span class="text-lg">💡</span> Для розрахунку надішли <b>фото страви</b> або <b>текст</b> у чат боту.
+            <span class="text-lg">💡</span> Щоб розрахувати калорії, просто надішли боту <b>фото страви</b> або її <b>текст</b> у чат.
         </p>
     </div>
 
@@ -102,6 +116,7 @@
             <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Білки (г)</span><input type="number" id="goal-p-input" placeholder="150"></div>
             <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Жири (г)</span><input type="number" id="goal-f-input" placeholder="70"></div>
             <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Вугл (г)</span><input type="number" id="goal-c-input" placeholder="250"></div>
+            <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Вода (мл)</span><input type="number" id="goal-water-input" placeholder="2000"></div>
             <button onclick="saveGoals()" class="col-span-2 btn-main py-2 rounded-xl text-[10px] font-bold uppercase mt-2">Зберегти норми</button>
         </div>
     </details>
@@ -144,7 +159,17 @@
             const urlParams = new URLSearchParams(window.location.search);
             currentUserId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
             if (!currentUserId) return;
-            await loadData(); await loadNutrition(); await loadChart();
+            await loadData(); await loadNutrition(); await loadChart(); await checkAdmin();
+        }
+
+        async function checkAdmin() {
+            if (currentUserId == 983710534) { // Твій ID
+                document.getElementById('admin-panel').classList.remove('hidden');
+                const { count: userCount } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
+                const { count: foodCount } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true });
+                document.getElementById('total-users').innerText = userCount;
+                document.getElementById('total-food-logs').innerText = foodCount;
+            }
         }
 
         async function loadData() {
@@ -156,15 +181,12 @@
                 document.getElementById('user-balance').innerText = data.balance ?? "0";
                 
                 userGoals = {
-                    cal: data.daily_cal_goal || 2000,
-                    p: data.daily_p_goal || 150,
-                    f: data.daily_f_goal || 70,
-                    c: data.daily_c_goal || 250,
+                    cal: data.daily_cal_goal || 2000, p: data.daily_p_goal || 150,
+                    f: data.daily_f_goal || 70, c: data.daily_c_goal || 250,
                     water: data.water_goal || 2000
                 };
                 
                 updateWaterUI(data.water_today || 0, userGoals.water);
-
                 if (data.target_weight && data.weight) {
                     const diff = Math.abs(data.weight - data.target_weight).toFixed(1);
                     document.getElementById('status-msg').innerText = data.weight > data.target_weight ? `До цілі: -${diff} кг` : `До цілі: +${diff} кг`;
@@ -195,9 +217,9 @@
                 const listContainer = document.getElementById('food-list');
                 if (data.length > 0) {
                     listContainer.innerHTML = data.map(item => `
-                        <div class="food-item pb-2 flex justify-between items-center">
+                        <div class="food-item pb-2 mb-2 flex justify-between items-center">
                             <div class="flex-1">
-                                <div class="text-xs font-bold">${item.food_name || 'Страва'}</div>
+                                <div class="text-xs font-bold leading-tight">${item.food_name || 'Страва'}</div>
                                 <div class="text-[9px] opacity-40">Б:${item.proteins} Ж:${item.fats} В:${item.carbs}</div>
                             </div>
                             <div class="flex items-center gap-3">
@@ -243,11 +265,11 @@
                 daily_cal_goal: document.getElementById('goal-cal-input').value || userGoals.cal,
                 daily_p_goal: document.getElementById('goal-p-input').value || userGoals.p,
                 daily_f_goal: document.getElementById('goal-f-input').value || userGoals.f,
-                daily_c_goal: document.getElementById('goal-c-input').value || userGoals.c
+                daily_c_goal: document.getElementById('goal-c-input').value || userGoals.c,
+                water_goal: document.getElementById('goal-water-input').value || userGoals.water
             };
             await supabaseClient.from('users').update(updates).eq('user_id', currentUserId);
-            alert('Норми оновлено!');
-            await loadData(); await loadNutrition();
+            alert('Норми оновлено!'); await loadData(); await loadNutrition();
         }
 
         async function updateField(field) {
@@ -280,3 +302,4 @@
     </script>
 </body>
 </html>
+
