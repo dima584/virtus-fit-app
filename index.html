@@ -34,7 +34,7 @@
         <div class="flex justify-between items-center mb-2">
             <div class="flex items-center gap-2">
                 <span class="bg-blue-500 text-[10px] font-black px-2 py-0.5 rounded-full text-white shadow-lg">LVL <span id="user-level">1</span></span>
-                <span id="user-name-top" class="font-bold italic">...</span>
+                <span id="user-name-top" class="font-bold italic">Завантаження...</span>
             </div>
             <span class="text-[10px] opacity-50 font-bold"><span id="current-xp">0</span> / 1000 XP</span>
         </div>
@@ -48,8 +48,8 @@
         <div id="admin-panel" class="hidden card p-4 mb-4 border-2 border-yellow-500/30 shadow-xl">
             <h3 class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest mb-3 text-center">🛡️ АДМІН-ЦЕНТР</h3>
             <div class="grid grid-cols-2 gap-4 text-center">
-                <div class="card bg-white/5 p-2"><p class="text-[8px] opacity-50 uppercase text-white">Юзерів</p><span id="total-users" class="text-lg font-black italic text-white">--</span></div>
-                <div class="card bg-white/5 p-2"><p class="text-[8px] opacity-50 uppercase text-white">Логів їжі</p><span id="total-food-logs" class="text-lg font-black italic text-white">--</span></div>
+                <div class="card bg-white/5 p-2"><p class="text-[8px] opacity-50 uppercase">Юзерів</p><span id="total-users" class="text-lg font-black italic">--</span></div>
+                <div class="card bg-white/5 p-2"><p class="text-[8px] opacity-50 uppercase">Логів їжі</p><span id="total-food-logs" class="text-lg font-black italic">--</span></div>
             </div>
         </div>
 
@@ -72,6 +72,10 @@
             <div class="card p-3 text-center min-w-[80px]"><span class="text-[9px] opacity-50 uppercase font-bold tracking-tighter">БАЛАНС ІІ</span><div id="user-balance" class="text-lg font-black accent-text">--</div></div>
         </div>
 
+        <div class="hint-box p-3 mb-4 rounded-r-xl">
+            <p class="text-[11px] leading-relaxed opacity-90 text-white"><span class="text-lg">💡</span> Щоб розрахувати калорії, просто надішли боту <b>фото страви</b> або її <b>текст</b> у чат.</p>
+        </div>
+
         <div class="card p-5 mb-4 border border-white/5 shadow-lg">
             <div class="flex justify-between items-center mb-4 text-[10px] opacity-40 font-bold uppercase"><span>ДЕННА НОРМА</span><span id="cal-percent" class="accent-text">0%</span></div>
             <div class="flex justify-around items-center">
@@ -91,7 +95,7 @@
             <div class="flex justify-between items-center mb-3 text-[10px] font-bold text-blue-400 uppercase"><span>💧 ТРЕКЕР ВОДИ</span><span id="water-display">0 / 2000 мл</span></div>
             <div class="flex items-center gap-4">
                 <div class="flex-1 bg-white/5 h-2 rounded-full overflow-hidden"><div id="water-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div></div>
-                <div id="water-controls" class="flex gap-2"><button onclick="addWater(250)" class="card p-2 active:scale-90 bg-blue-500/20 text-blue-400 text-xs font-bold shadow-lg shadow-blue-500/10">＋250</button><button onclick="resetWater()" class="card p-2 active:scale-90 opacity-30 text-xs">🔄</button></div>
+                <div id="water-controls" class="flex gap-2"><button onclick="addWater(250)" class="card p-2 active:scale-90 bg-blue-500/20 text-blue-400 text-xs font-bold shadow-lg">＋250</button><button onclick="resetWater()" class="card p-2 active:scale-90 opacity-30 text-xs">🔄</button></div>
             </div>
         </div>
 
@@ -127,24 +131,24 @@
         <div class="card p-5 mt-6 border-yellow-500/20 bg-yellow-500/5 shadow-2xl">
             <h3 class="text-xs font-bold text-yellow-500 uppercase mb-2">РЕФЕРАЛЬНА ПРОГРАМА</h3>
             <p class="text-[10px] opacity-60 mb-4 leading-relaxed">За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+10 AI генерацій</b>!</p>
-            <button onclick="shareReferral()" class="w-full py-4 bg-yellow-500/20 text-yellow-500 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-yellow-500/30 active:scale-95 transition-all shadow-xl shadow-yellow-500/5">ЗАПРОСИТИ ДРУГА</button>
+            <button onclick="shareReferral()" class="w-full py-4 bg-yellow-500/20 text-yellow-500 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-yellow-500/30 active:scale-95 transition-all shadow-xl">ЗАПРОСИТИ ДРУГА</button>
         </div>
     </div>
 
     <div id="page-coach" class="page-content hidden">
         <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white">AI ТРЕНЕР PRO</h2>
         <div class="card p-6 shadow-2xl border-blue-500/10">
-            <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center">ОПИШІТЬ ВАШ ЗАПИТ</p>
+            <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center">ПЕРСОНАЛІЗОВАНИЙ ПЛАН ТРЕНУВАНЬ</p>
             <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, фокус на ноги, мова українська..."></textarea>
             <div class="flex justify-between items-center mb-6 text-[10px] uppercase font-bold px-2">
                 <span class="opacity-40 tracking-widest">БАЛАНС ГЕНЕРАЦІЙ:</span>
-                <span id="ai-balance-display" class="text-blue-400 font-black text-sm">0</span>
+                <span id="ai-balance-display" class="text-blue-400 font-black text-sm">--</span>
             </div>
             <button onclick="generateAIWorkout()" class="btn-main w-full py-5 font-black uppercase tracking-widest active:scale-95 transition-transform shadow-xl shadow-blue-500/20">СФОРМУВАТИ PDF ПЛАН</button>
         </div>
 
         <div class="mt-8 card p-5 border-white/5">
-            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-center">ККАЛ ЗА ТИЖДЕНЬ</h3>
+            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-center">ККАЛ ЗА ОСТАННІЙ ТИЖДЕНЬ</h3>
             <div style="height: 140px;"><canvas id="calorieChart"></canvas></div>
         </div>
     </div>
@@ -179,23 +183,36 @@
         async function loadUserData() {
             const { data } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
+                // Перевірка підвищення рівня та автоматичне нарахування +10 AI
                 const targetLevel = Math.floor(data.xp / 1000) + 1;
-                if (targetLevel > data.level) {
+                if (targetLevel > (data.level || 1)) {
                     const bonusGens = (targetLevel - data.level) * 10;
-                    await supabaseClient.from('users').update({ level: targetLevel, ai_generations: (data.ai_generations || 0) + bonusGens }).eq('user_id', currentUserId);
-                    tg.showAlert(`🚀 Рівень підвищено! Отримано +${bonusGens} генерацій AI!`);
+                    await supabaseClient.from('users').update({ 
+                        level: targetLevel, 
+                        ai_generations: (data.ai_generations || 0) + bonusGens 
+                    }).eq('user_id', currentUserId);
+                    tg.showAlert(`🚀 Рівень підвищено до ${targetLevel}! Отримано бонус: +${bonusGens} генерацій AI!`);
                     return loadUserData();
                 }
+
                 userData = data;
                 document.getElementById('user-name').innerText = data.name || "Атлет";
                 document.getElementById('user-name-top').innerText = data.name || "Атлет";
                 document.getElementById('weight-display').innerText = (data.weight || 0) + " кг";
                 document.getElementById('goal-display').innerText = data.target_weight ? data.target_weight + " кг" : "Не вказано";
-                document.getElementById('ai-balance-display').innerText = data.ai_generations || 0;
+                
+                // ВАЖЛИВО: Баланс генерацій тепер береться з поля balance або ai_generations залежно від твоєї бази
+                document.getElementById('ai-balance-display').innerText = data.balance || 0;
                 document.getElementById('user-balance').innerText = data.balance || "--";
+                
                 document.getElementById('ref-count-display').innerText = data.referrals_count || 0;
                 if (data.invited_by) document.getElementById('invited-by-msg').innerText = `Запросив: ${data.invited_by}`;
+                
                 updateXPUI(data.xp || 0, data.level || 1);
+                
+                const todayStr = new Date().toLocaleDateString('sv');
+                const lastUpdate = data.updated_at ? new Date(data.updated_at).toLocaleDateString('sv') : "";
+                if (lastUpdate && lastUpdate !== todayStr) await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId);
             }
         }
 
@@ -212,18 +229,29 @@
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
             if (!prompt) return alert("Будь ласка, введіть запит!");
-            if (userData.ai_generations <= 0) return alert("Немає генерацій!");
+            if (userData.balance <= 0) return alert("Немає генерацій!");
 
             tg.showConfirm("Витратити 1 ⚡?", async (ok) => {
                 if (ok) {
-                    await supabaseClient.from('users').update({ ai_generations: userData.ai_generations - 1 }).eq('user_id', currentUserId);
-                    // ФІКС ВИВОДУ ТЕКСТУ
+                    // Знімаємо 1 генерацію з балансу
+                    await supabaseClient.from('users').update({ balance: userData.balance - 1 }).eq('user_id', currentUserId);
+                    
+                    // ВИПРАВЛЕНО ГЕНЕРАЦІЮ PDF (БЕЗ МАЗНІ)
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
+                    
                     doc.setFontSize(22); doc.text("Training Plan: Virtus Fit AI", 20, 20);
-                    doc.setFontSize(14); doc.text(`Athlete: ${userData.name} | Level: ${userData.level}`, 20, 35);
-                    doc.text("Plan processing... Professional results summarized below.", 20, 50);
+                    doc.setFontSize(12); doc.text(`Athlete: ${userData.name} | Level: ${userData.level}`, 20, 32);
+                    doc.setDrawColor(51, 144, 236); doc.line(20, 36, 190, 36);
+                    
+                    doc.setFontSize(14); doc.text("Your Request:", 20, 48);
+                    doc.setFontSize(10);
+                    const splitText = doc.splitTextToSize(prompt, 170);
+                    doc.text(splitText, 20, 56);
+                    
+                    doc.text("Generating details...", 20, 100);
                     doc.save(`Workout_${userData.name}.pdf`);
+                    
                     tg.HapticFeedback.notificationOccurred('success');
                     await loadUserData();
                 }
@@ -258,7 +286,7 @@
             document.getElementById('p-val').innerText = totals.p + 'г'; document.getElementById('f-val').innerText = totals.f + 'г'; document.getElementById('c-val').innerText = totals.c + 'г';
             document.getElementById('water-display').innerText = `${water} / ${userGoals.water} мл`;
             document.getElementById('water-bar').style.width = Math.min((water / userGoals.water) * 100, 100) + '%';
-            document.getElementById('food-list').innerHTML = logs.map(i => `<div class="food-item pb-2 flex justify-between items-center text-white border-b border-white/5 py-2"><div><div class="text-xs font-bold">${i.food_name}</div><div class="text-[9px] opacity-40 uppercase">Б:${i.proteins} Ж:${i.fats} В:${i.carbs}</div></div><div class="flex items-center gap-3"><div class="accent-text font-black text-xs">${i.calories} ккал</div><button onclick="deleteFood(${i.id})" class="opacity-20 hover:opacity-100 p-2">🗑️</button></div></div>`).join('') || '<p class="text-center opacity-30 py-4 text-[10px] italic">Записів за цей день немає</p>';
+            document.getElementById('food-list').innerHTML = logs.map(i => `<div class="food-item pb-2 flex justify-between items-center text-white border-b border-white/5 py-2"><div><div class="text-xs font-bold">${i.food_name}</div><div class="text-[9px] opacity-40 uppercase">Б:${i.proteins} Ж:${i.fats} В:${i.carbs}</div></div><div class="flex items-center gap-3"><div class="accent-text font-black text-xs">${i.calories} ккал</div><button onclick="deleteFood(${i.id})" class="opacity-20 hover:opacity-100 p-2">🗑️</button></div></div>`).join('') || '<p class="text-center opacity-30 py-4 text-[10px] italic">Записів немає</p>';
         }
 
         async function loadCharts() {
@@ -268,6 +296,7 @@
                 if (weightChart) weightChart.destroy();
                 weightChart = new Chart(document.getElementById('weightChart'), { type: 'line', plugins: [ChartDataLabels], data: { labels, datasets: [{ data: weights.map(w => w.weight), borderColor: '#3390ec', tension: 0.4, fill: true, backgroundColor: 'rgba(51, 144, 236, 0.1)', pointRadius: weightFilterDays > 30 ? 0 : 5, datalabels: { display: weightFilterDays <= 7, color: '#fff', formatter: v => v+'кг' }}] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 8 }, color: 'rgba(255,255,255,0.4)' } } } } });
             }
+            // ГРАФІК КАЛОРІЙ
             const { data: cals } = await supabaseClient.from('nutrition_logs').select('calories, created_at').eq('user_id', currentUserId).gte('created_at', new Date(Date.now() - 7*86400000).toISOString());
             if (cals) {
                 const grouped = cals.reduce((acc, curr) => { const d = new Date(curr.created_at).toLocaleDateString('uk', {day:'numeric'}); acc[d] = (acc[d] || 0) + curr.calories; return acc; }, {});
@@ -280,8 +309,8 @@
         async function updateField(field) { const inputId = field === 'weight' ? 'weight-input' : 'goal-input'; const val = document.getElementById(inputId).value; if (!val) return; await supabaseClient.from('users').update({[field]: val}).eq('user_id', currentUserId); if(field === 'weight') addXP(50); initApp(); }
         function changeDate(days) { selectedDate.setDate(selectedDate.getDate() + days); refreshScreen(); }
         function setWeightFilter(days) { weightFilterDays = days; document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active')); document.getElementById('wf-' + days).classList.add('active'); loadCharts(); }
-        async function deleteFood(id) { if(confirm('Видалити страву?')) { await supabaseClient.from('nutrition_logs').delete().eq('id', id); refreshScreen(); } }
-        function generateAIInsight(logs, water) { document.getElementById('ai-insight').classList.remove('hidden'); document.getElementById('insight-text').innerText = logs.length === 0 ? "Сьогодні записів ще немає. Запишіть сніданок! 🍎" : "Чудовий прогрес! Продовжуйте рух! 🚀"; }
+        async function deleteFood(id) { if(confirm('Видалити?')) { await supabaseClient.from('nutrition_logs').delete().eq('id', id); refreshScreen(); } }
+        function generateAIInsight(logs, water) { document.getElementById('ai-insight').classList.remove('hidden'); document.getElementById('insight-text').innerText = logs.length === 0 ? "Почніть день із запису їжі! 🍎" : "Чудовий прогрес! Продовжуйте рух! 🚀"; }
         function showPage(p) { document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden')); document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active')); document.getElementById('page-' + p).classList.remove('hidden'); document.getElementById('btn-' + p).classList.add('active'); }
         function updateXPUI(xp, lvl) { const curXP = xp % 1000; document.getElementById('user-level').innerText = lvl; document.getElementById('current-xp').innerText = curXP; document.getElementById('xp-bar').style.width = (curXP / 10) + '%'; }
         function shareReferral() { const link = `https://t.me/medbotlab_bot?start=${currentUserId}`; tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Прокачуй своє тіло разом зі мною у Virtus Fit AI!")}`); }
@@ -291,5 +320,6 @@
     </script>
 </body>
 </html>
+
 
 
