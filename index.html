@@ -35,7 +35,7 @@
 
     <div class="hint-box p-3 mb-4 rounded-r-xl">
         <p class="text-[11px] leading-relaxed opacity-90">
-            <span class="text-lg">💡</span> Щоб розрахувати калорії, просто надішли боту <b>фото страви</b> або її <b>текстовий опис</b> у чат.
+            <span class="text-lg">💡</span> Для розрахунку надішли <b>фото страви</b> або <b>текст</b> у чат боту.
         </p>
     </div>
 
@@ -79,6 +79,17 @@
         </div>
     </div>
 
+    <details class="mb-4">
+        <summary class="text-[10px] opacity-40 uppercase font-bold tracking-widest cursor-pointer list-none text-center">⚙️ Налаштувати норми</summary>
+        <div class="card p-4 mt-2 grid grid-cols-2 gap-2 border border-white/5">
+            <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Ккал ціль</span><input type="number" id="goal-cal-input" placeholder="2000"></div>
+            <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Білки (г)</span><input type="number" id="goal-p-input" placeholder="150"></div>
+            <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Жири (г)</span><input type="number" id="goal-f-input" placeholder="70"></div>
+            <div class="flex flex-col gap-1"><span class="text-[8px] opacity-50 uppercase">Вугл (г)</span><input type="number" id="goal-c-input" placeholder="250"></div>
+            <button onclick="saveGoals()" class="col-span-2 btn-main py-2 rounded-xl text-[10px] font-bold uppercase mt-2">Зберегти норми</button>
+        </div>
+    </details>
+
     <div class="grid grid-cols-1 gap-3 mb-6">
         <div class="card p-4 flex justify-between items-center border border-white/5">
             <div><span class="text-[10px] opacity-50 uppercase font-bold">Вага зараз</span><div class="text-2xl font-black" id="weight-display">-- кг</div></div>
@@ -90,7 +101,7 @@
         </div>
     </div>
 
-    <div class="card p-5 mb-4 border border-white/5 shadow-2xl">
+    <div class="card p-5 mb-4 border border-white/5">
         <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Аналітика прогресу</h3>
         <div style="height: 160px;"><canvas id="weightChart"></canvas></div>
     </div>
@@ -98,7 +109,7 @@
     <div class="card p-5 mb-6 border border-white/5 shadow-lg">
         <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Архів їжі за сьогодні</h3>
         <div id="food-list" class="space-y-3">
-            <p class="text-[10px] opacity-30 italic text-center py-2">Сьогодні записів ще немає...</p>
+            <p class="text-[10px] opacity-30 italic text-center py-2">Завантаження...</p>
         </div>
     </div>
 
@@ -110,6 +121,7 @@
         const SUPABASE_KEY = "sb_publishable_Ir8nKEcq4o3ap05_4MIaPg_ZtJGPG1Z";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let currentUserId = null, chartInstance = null;
+        let userGoals = { cal: 2000, p: 150, f: 70, c: 250 };
 
         async function initApp() {
             tg.ready(); tg.expand();
@@ -126,6 +138,21 @@
                 document.getElementById('weight-display').innerText = data.weight + " кг";
                 document.getElementById('goal-display').innerText = data.target_weight ? data.target_weight + " кг" : "Не вказано";
                 document.getElementById('user-balance').innerText = data.balance ?? "0";
+                
+                // Оновлюємо цілі користувача
+                userGoals = {
+                    cal: data.daily_cal_goal || 2000,
+                    p: data.daily_p_goal || 150,
+                    f: data.daily_f_goal || 70,
+                    c: data.daily_c_goal || 250
+                };
+                
+                // Заповнюємо інпути налаштувань
+                document.getElementById('goal-cal-input').placeholder = userGoals.cal;
+                document.getElementById('goal-p-input').placeholder = userGoals.p;
+                document.getElementById('goal-f-input').placeholder = userGoals.f;
+                document.getElementById('goal-c-input').placeholder = userGoals.c;
+
                 if (data.target_weight && data.weight) {
                     const diff = Math.abs(data.weight - data.target_weight).toFixed(1);
                     document.getElementById('status-msg').innerText = data.weight > data.target_weight ? `До цілі: -${diff} кг` : `До цілі: +${diff} кг`;
@@ -142,25 +169,74 @@
                 }), { cal: 0, p: 0, f: 0, c: 0 });
 
                 document.getElementById('total-cal').innerText = totals.cal;
-                const percent = Math.min((totals.cal / 2000) * 100, 100);
+                const percent = Math.min((totals.cal / userGoals.cal) * 100, 100);
                 document.getElementById('cal-percent').innerText = Math.round(percent) + '%';
                 document.getElementById('cal-circle').style.strokeDashoffset = 220 - (220 * percent / 100);
+                
                 document.getElementById('p-val').innerText = totals.p + 'г';
                 document.getElementById('f-val').innerText = totals.f + 'г';
                 document.getElementById('c-val').innerText = totals.c + 'г';
-                document.getElementById('p-bar').style.width = Math.min((totals.p / 100) * 100, 100) + '%';
-                document.getElementById('f-bar').style.width = Math.min((totals.f / 70) * 100, 100) + '%';
-                document.getElementById('c-bar').style.width = Math.min((totals.c / 250) * 100, 100) + '%';
+
+                document.getElementById('p-bar').style.width = Math.min((totals.p / userGoals.p) * 100, 100) + '%';
+                document.getElementById('f-bar').style.width = Math.min((totals.f / userGoals.f) * 100, 100) + '%';
+                document.getElementById('c-bar').style.width = Math.min((totals.c / userGoals.c) * 100, 100) + '%';
 
                 const listContainer = document.getElementById('food-list');
                 if (data.length > 0) {
                     listContainer.innerHTML = data.map(item => `
                         <div class="food-item pb-2 flex justify-between items-center">
-                            <div><div class="text-xs font-bold">${item.food_name || 'Страва'}</div><div class="text-[9px] opacity-40 italic">Б:${item.proteins} Ж:${item.fats} В:${item.carbs}</div></div>
-                            <div class="accent-text font-black text-xs">${item.calories} ккал</div>
+                            <div>
+                                <div class="text-xs font-bold">${item.food_name || 'Страва'}</div>
+                                <div class="text-[9px] opacity-40 italic">Б:${item.proteins} Ж:${item.fats} В:${item.carbs}</div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="accent-text font-black text-xs">${item.calories} ккал</div>
+                                <button onclick="deleteFood(${item.id})" class="opacity-30 hover:opacity-100 text-sm">🗑️</button>
+                            </div>
                         </div>
                     `).join('');
+                } else {
+                    listContainer.innerHTML = `<p class="text-[10px] opacity-30 italic text-center py-2">Сьогодні записів ще немає...</p>`;
                 }
+            }
+        }
+
+        async function deleteFood(id) {
+            if(!confirm('Видалити цей запис?')) return;
+            const { error } = await supabaseClient.from('nutrition_logs').delete().eq('id', id);
+            if (!error) {
+                tg.HapticFeedback.notificationOccurred('warning');
+                await loadNutrition();
+            }
+        }
+
+        async function saveGoals() {
+            const cal = document.getElementById('goal-cal-input').value || userGoals.cal;
+            const p = document.getElementById('goal-p-input').value || userGoals.p;
+            const f = document.getElementById('goal-f-input').value || userGoals.f;
+            const c = document.getElementById('goal-c-input').value || userGoals.c;
+
+            const { error } = await supabaseClient.from('users').update({
+                daily_cal_goal: cal, daily_p_goal: p, daily_f_goal: f, daily_c_goal: c
+            }).eq('user_id', currentUserId);
+
+            if (!error) {
+                alert('Норми оновлено!');
+                await loadData();
+                await loadNutrition();
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+
+        async function updateField(field) {
+            const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
+            const val = document.getElementById(inputId).value;
+            if (!val) return;
+            const { error } = await supabaseClient.from('users').update({[field]: val}).eq('user_id', currentUserId);
+            if (!error) {
+                document.getElementById(inputId).value = '';
+                await loadData(); await loadChart();
+                tg.HapticFeedback.notificationOccurred('success');
             }
         }
 
@@ -184,17 +260,6 @@
             } catch (e) { console.error(e); }
         }
 
-        async function updateField(field) {
-            const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
-            const val = document.getElementById(inputId).value;
-            if (!val) return;
-            const { error } = await supabaseClient.from('users').update({[field]: val}).eq('user_id', currentUserId);
-            if (!error) {
-                document.getElementById(inputId).value = '';
-                await loadData(); await loadChart();
-                tg.HapticFeedback.notificationOccurred('success');
-            }
-        }
         initApp();
     </script>
 </body>
