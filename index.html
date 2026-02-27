@@ -18,14 +18,14 @@
         .accent-text { color: var(--tg-theme-button-color, #3390ec); }
         .btn-main { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); }
         input, textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 12px; padding: 10px; font-size: 14px; outline: none; transition: 0.3s; }
-        input:focus, textarea:focus { border-color: #3390ec; background: rgba(51, 144, 236, 0.05); }
         .progress-ring { transition: stroke-dashoffset 0.5s ease; }
         .btn-filter { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; background: rgba(255,255,255,0.05); opacity: 0.5; }
         .btn-filter.active { background: #3390ec; opacity: 1; }
         .tab-btn { opacity: 0.4; transition: 0.3s; font-size: 10px; font-weight: bold; text-align: center; }
         .tab-btn.active { opacity: 1; color: #3390ec; }
         .xp-bar-inner { transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
+        .achievement-locked { filter: grayscale(1); opacity: 0.3; }
     </style>
 </head>
 <body class="p-4 font-sans select-none pb-28">
@@ -34,7 +34,7 @@
         <div class="flex justify-between items-center mb-2">
             <div class="flex items-center gap-2">
                 <span class="bg-blue-500 text-[10px] font-black px-2 py-0.5 rounded-full text-white shadow-lg">LVL <span id="user-level">1</span></span>
-                <span id="user-name-top" class="font-bold italic text-white">Завантаження...</span>
+                <span id="user-name-top" class="font-bold italic text-white">...</span>
             </div>
             <span class="text-[10px] opacity-50 font-bold text-white"><span id="current-xp">0</span> / 1000 XP</span>
         </div>
@@ -54,12 +54,12 @@
         </div>
 
         <div class="flex justify-center items-center gap-4 mb-6 bg-white/5 py-3 rounded-2xl border border-white/5">
-            <button onclick="changeDate(-1)" class="p-2 opacity-50 active:scale-90">◀</button>
+            <button onclick="changeDate(-1)" class="p-2 opacity-50 active:scale-90 text-white">◀</button>
             <div class="text-center min-w-[140px]">
                 <div id="display-date" class="text-sm font-bold text-white">Сьогодні</div>
                 <div id="display-date-sub" class="text-[8px] opacity-40 uppercase tracking-widest text-white">Перегляд історії</div>
             </div>
-            <button onclick="changeDate(1)" class="p-2 opacity-50 active:scale-90">▶</button>
+            <button onclick="changeDate(1)" class="p-2 opacity-50 active:scale-90 text-white">▶</button>
         </div>
 
         <div id="ai-insight" class="card p-4 mb-4 border border-blue-500/30 bg-blue-500/5 hidden">
@@ -70,10 +70,6 @@
         <div class="flex justify-between items-start mb-6 px-2">
             <div><h1 class="text-2xl font-bold italic text-white">Привіт, <span id="user-name" class="accent-text">...</span>! 👋</h1><p id="status-msg" class="text-[10px] opacity-50 uppercase tracking-widest text-white">Синхронізація...</p></div>
             <div class="card p-3 text-center min-w-[80px]"><span class="text-[9px] opacity-50 uppercase font-bold tracking-tighter text-white">БАЛАНС ІІ</span><div id="user-balance" class="text-lg font-black accent-text">--</div></div>
-        </div>
-
-        <div class="hint-box p-3 mb-4 rounded-r-xl">
-            <p class="text-[11px] leading-relaxed opacity-90 text-white"><span class="text-lg">💡</span> Щоб розрахувати калорії, просто надішли боту <b>фото страви</b> або її <b>текст</b> у чат.</p>
         </div>
 
         <div class="card p-5 mb-4 border border-white/5 shadow-lg">
@@ -92,10 +88,10 @@
         </div>
 
         <div id="water-card" class="card p-5 mb-4 border border-white/5 shadow-lg">
-            <div class="flex justify-between items-center mb-3 text-[10px] font-bold text-blue-400 uppercase"><span>💧 ТРЕКЕР ВОДИ</span><span id="water-display" class="text-blue-400">0 / 2000 мл</span></div>
+            <div class="flex justify-between items-center mb-3 text-[10px] font-bold text-blue-400 uppercase"><span>💧 ТРЕКЕР ВОДИ</span><span id="water-display">0 / 2000 мл</span></div>
             <div class="flex items-center gap-4">
                 <div class="flex-1 bg-white/5 h-2 rounded-full overflow-hidden"><div id="water-bar" class="bg-blue-500 h-full transition-all duration-500" style="width: 0%"></div></div>
-                <div id="water-controls" class="flex gap-2"><button onclick="addWater(250)" class="card p-2 active:scale-90 bg-blue-500/20 text-blue-400 text-xs font-bold shadow-lg shadow-blue-500/10">＋250</button><button onclick="resetWater()" class="card p-2 active:scale-90 opacity-30 text-xs">🔄</button></div>
+                <div id="water-controls" class="flex gap-2"><button onclick="addWater(250)" class="card p-2 active:scale-90 bg-blue-500/20 text-blue-400 text-xs font-bold shadow-lg shadow-blue-500/10">＋250</button><button onclick="resetWater()" class="card p-2 active:scale-90 opacity-30 text-xs text-white">🔄</button></div>
             </div>
         </div>
 
@@ -121,17 +117,40 @@
         </div>
     </div>
 
-    <div id="page-achievements" class="page-content hidden px-2">
-        <h2 class="text-xl font-black italic mb-6 uppercase text-white">Твої досягнення</h2>
+    <div id="page-achievements" class="page-content hidden space-y-6">
+        <h2 class="text-xl font-black italic mb-6 uppercase text-white px-2">Твої досягнення</h2>
         <div class="grid grid-cols-2 gap-4" id="achievements-grid">
-            <div class="card p-4 text-center shadow-lg"><div class="text-2xl mb-1">🐣</div><div class="text-[10px] font-bold uppercase text-white">НОВАЧОК</div></div>
-            <div class="card p-4 text-center shadow-lg"><div class="text-2xl mb-1">🥇</div><div class="text-[10px] font-bold uppercase text-white">ЗАПРОШЕНІ</div><div id="ref-count-display" class="text-blue-400 font-bold">0</div></div>
+            <div id="ach-newbie" class="card p-4 text-center achievement-locked">
+                <div class="text-2xl mb-1">🐣</div>
+                <div class="text-[10px] font-bold uppercase text-white">Новачок</div>
+                <div class="text-[8px] text-blue-400 font-bold">+100 XP</div>
+            </div>
+            <div id="ach-streak" class="card p-4 text-center achievement-locked">
+                <div class="text-2xl mb-1">🔥</div>
+                <div class="text-[10px] font-bold uppercase text-white">Стрік 3 дні</div>
+                <div class="text-[8px] text-blue-400 font-bold">+300 XP</div>
+            </div>
+            <div id="ach-foodie" class="card p-4 text-center achievement-locked">
+                <div class="text-2xl mb-1">🥦</div>
+                <div class="text-[10px] font-bold uppercase text-white">Здорове меню</div>
+                <div class="text-[8px] text-blue-400 font-bold">+500 XP</div>
+            </div>
+            <div id="ach-water" class="card p-4 text-center achievement-locked">
+                <div class="text-2xl mb-1">🐳</div>
+                <div class="text-[10px] font-bold uppercase text-white">Водний магнат</div>
+                <div class="text-[8px] text-blue-400 font-bold">+400 XP</div>
+            </div>
+            <div class="card p-4 text-center">
+                <div class="text-2xl mb-1">🥇</div>
+                <div class="text-[10px] font-bold uppercase text-white">ЗАПРОШЕНІ</div>
+                <div id="ref-count-display" class="text-blue-400 font-bold">0</div>
+            </div>
         </div>
         
         <div class="card p-5 mt-6 border-yellow-500/20 bg-yellow-500/5 shadow-2xl">
             <h3 class="text-xs font-bold text-yellow-500 uppercase mb-2">РЕФЕРАЛЬНА ПРОГРАМА</h3>
             <p class="text-[10px] opacity-60 mb-4 leading-relaxed text-white">За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+10 AI генерацій</b>!</p>
-            <button onclick="shareReferral()" class="w-full py-4 bg-yellow-500/20 text-yellow-500 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-yellow-500/30 active:scale-95 transition-all shadow-xl shadow-yellow-500/5">ЗАПРОСИТИ ДРУГА</button>
+            <button onclick="shareReferral()" class="w-full py-4 bg-yellow-500/20 text-yellow-500 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-yellow-500/30 active:scale-95 transition-all shadow-xl">ЗАПРОСИТИ ДРУГА</button>
         </div>
     </div>
 
@@ -139,7 +158,7 @@
         <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white">AI ТРЕНЕР PRO</h2>
         <div class="card p-6 shadow-2xl border-blue-500/10">
             <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center text-white">ОПИШІТЬ ВАШ ЗАПИТ</p>
-            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, фокус на ноги, мова українська..."></textarea>
+            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв..."></textarea>
             <div class="flex justify-between items-center mb-6 text-[10px] uppercase font-bold px-2 text-white">
                 <span class="opacity-40 tracking-widest">БАЛАНС ГЕНЕРАЦІЙ:</span>
                 <span id="ai-balance-display" class="text-blue-400 font-black text-sm">--</span>
@@ -148,7 +167,7 @@
         </div>
 
         <div class="mt-8 card p-5 border-white/5">
-            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-center text-white">ККАЛ ЗА ТИЖДЕНЬ</h3>
+            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-center text-white">ККАЛ ЗА ОСТАННІЙ ТИЖДЕНЬ</h3>
             <div style="height: 140px;"><canvas id="calorieChart"></canvas></div>
         </div>
     </div>
@@ -156,7 +175,7 @@
     <div class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-2xl border-t border-white/5 p-4 flex justify-around items-center z-50">
         <button onclick="showPage('main')" id="btn-main" class="tab-btn active"><div class="text-xl mb-1 text-white">🏠</div><div class="text-white">ГОЛОВНА</div></button>
         <button onclick="showPage('achievements')" id="btn-achievements" class="tab-btn"><div class="text-xl mb-1 text-white">🏆</div><div class="text-white">УСПІХИ</div></button>
-        <button onclick="showPage('coach')" id="btn-coach" class="tab-btn"><div class="text-xl mb-1 text-white">📋</div><div class="text-white">ТРЕНЕР</div></button>
+        <button onclick="showPage('coach')" id="btn-coach" class="tab-btn"><div class="text-xl mb-1 text-white">📋</div><div>ТРЕНЕР</div></button>
     </div>
 
     <script>
@@ -177,6 +196,7 @@
             await loadUserData();
             await refreshScreen();
             await checkAdmin();
+            await checkAchievements();
             showPage('main');
         }
 
@@ -185,7 +205,7 @@
             if (data) {
                 const targetLevel = Math.floor(data.xp / 1000) + 1;
                 if (targetLevel > (data.level || 1)) {
-                    const bonusGens = (targetLevel - data.level) * 10;
+                    const bonusGens = (targetLevel - (data.level || 1)) * 10;
                     await supabaseClient.from('users').update({ 
                         level: targetLevel, 
                         balance: (data.balance || 0) + bonusGens 
@@ -199,14 +219,10 @@
                 document.getElementById('user-name-top').innerText = data.name || "Атлет";
                 document.getElementById('weight-display').innerText = (data.weight || 0) + " кг";
                 document.getElementById('goal-display').innerText = data.target_weight ? data.target_weight + " кг" : "Не вказано";
-                
-                // БАЛАНС ВІДОБРАЖАЄТЬСЯ З ПОЛЯ balance
                 document.getElementById('ai-balance-display').innerText = data.balance || 0;
                 document.getElementById('user-balance').innerText = data.balance || "--";
-                
                 document.getElementById('ref-count-display').innerText = data.referrals_count || 0;
                 if (data.invited_by) document.getElementById('invited-by-msg').innerText = `Запросив: ${data.invited_by}`;
-                
                 updateXPUI(data.xp || 0, data.level || 1);
                 
                 const todayStr = new Date().toLocaleDateString('sv');
@@ -215,8 +231,21 @@
             }
         }
 
+        // --- ЛОГІКА ДОСЯГНЕНЬ (НОВЕ) ---
+        async function checkAchievements() {
+            if (!userData) return;
+            if (userData.name) unlockAchievement('ach-newbie');
+            const { count: foodCount } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
+            if (foodCount >= 10) unlockAchievement('ach-foodie');
+        }
+
+        function unlockAchievement(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('achievement-locked');
+        }
+
         async function checkAdmin() {
-            if (currentUserId == 983710534) {
+            if (currentUserId == ADMIN_ID || currentUserId == 983710534) {
                 document.getElementById('admin-panel').classList.remove('hidden');
                 const { count: u } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
                 const { count: f } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true });
@@ -233,23 +262,13 @@
             tg.showConfirm("Витратити 1 ⚡?", async (ok) => {
                 if (ok) {
                     await supabaseClient.from('users').update({ balance: userData.balance - 1 }).eq('user_id', currentUserId);
-                    
-                    // ВИПРАВЛЕНО ГЕНЕРАЦІЮ PDF (ВРАХОВАНО wrap text)
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
-                    
                     doc.setFontSize(22); doc.text("Training Plan: Virtus Fit AI", 20, 20);
-                    doc.setFontSize(12); doc.text(`Athlete: ${userData.name} | Level: ${userData.level}`, 20, 32);
-                    doc.setDrawColor(51, 144, 236); doc.line(20, 36, 190, 36);
-                    
-                    doc.setFontSize(14); doc.text("Your Request:", 20, 48);
-                    doc.setFontSize(10);
-                    const splitText = doc.splitTextToSize(prompt, 170);
-                    doc.text(splitText, 20, 56);
-                    
-                    doc.text("Professional analysis finalized. Ready for progress.", 20, 100);
+                    doc.setFontSize(14); doc.text(`Athlete: ${userData.name} | Level: ${userData.level}`, 20, 35);
+                    const splitText = doc.splitTextToSize("Ваш запит: " + prompt, 170);
+                    doc.text(splitText, 20, 50);
                     doc.save(`Workout_${userData.name}.pdf`);
-                    
                     tg.HapticFeedback.notificationOccurred('success');
                     await loadUserData();
                 }
@@ -261,20 +280,6 @@
             document.getElementById('user-level').innerText = level;
             document.getElementById('current-xp').innerText = currentLevelXP;
             document.getElementById('xp-bar').style.width = (currentLevelXP / 10) + '%';
-        }
-
-        async function addXP(amount) {
-            const newXP = (userData.xp || 0) + amount;
-            await supabaseClient.from('users').update({ xp: newXP }).eq('user_id', currentUserId);
-            await loadUserData();
-        }
-
-        function showPage(pageId) {
-            document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.remove('hidden');
-            document.getElementById('btn-' + pageId).classList.add('active');
-            tg.HapticFeedback.selectionChanged();
         }
 
         async function refreshScreen() {
@@ -305,7 +310,7 @@
             document.getElementById('p-val').innerText = totals.p + 'г'; document.getElementById('f-val').innerText = totals.f + 'г'; document.getElementById('c-val').innerText = totals.c + 'г';
             document.getElementById('water-display').innerText = `${water} / ${userGoals.water} мл`;
             document.getElementById('water-bar').style.width = Math.min((water / userGoals.water) * 100, 100) + '%';
-            document.getElementById('food-list').innerHTML = logs.map(i => `<div class="food-item pb-2 flex justify-between items-center text-white border-b border-white/5 py-2"><div><div class="text-xs font-bold">${i.food_name}</div><div class="text-[9px] opacity-40 uppercase">Б:${i.proteins} Ж:${i.fats} В:${i.carbs}</div></div><div class="flex items-center gap-3"><div class="accent-text font-black text-xs">${i.calories} ккал</div><button onclick="deleteFood(${i.id})" class="opacity-20 hover:opacity-100 p-2">🗑️</button></div></div>`).join('') || '<p class="text-center opacity-30 py-4 text-[10px] italic">Записів немає</p>';
+            document.getElementById('food-list').innerHTML = logs.map(i => `<div class="food-item pb-2 flex justify-between items-center text-white border-b border-white/5 py-2"><div><div class="text-xs font-bold">${i.food_name}</div><div class="text-[9px] opacity-40 uppercase">Б:${i.proteins} Ж:${i.fats} В:${i.carbs}</div></div><div class="flex items-center gap-3"><div class="accent-text font-black text-xs">${i.calories} ккал</div><button onclick="deleteFood(${i.id})" class="opacity-20 hover:opacity-100 p-2">🗑️</button></div></div>`).join('') || '<p class="text-center opacity-30 py-4 text-[10px] italic text-white">Записів немає</p>';
         }
 
         async function loadCharts() {
@@ -313,14 +318,13 @@
             if (weights && weights.length > 0) {
                 const labels = weights.map(w => new Date(w.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
                 if (weightChart) weightChart.destroy();
-                weightChart = new Chart(document.getElementById('weightChart'), { type: 'line', plugins: [ChartDataLabels], data: { labels, datasets: [{ data: weights.map(w => w.weight), borderColor: '#3390ec', tension: 0.4, fill: true, backgroundColor: 'rgba(51, 144, 236, 0.1)', pointRadius: weightFilterDays > 30 ? 0 : 5, datalabels: { display: weightFilterDays <= 7, color: '#fff', formatter: v => v+'кг' }}] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 8 }, color: 'rgba(255,255,255,0.4)' } } } } });
+                weightChart = new Chart(document.getElementById('weightChart'), { type: 'line', plugins: [ChartDataLabels], data: { labels, datasets: [{ data: weights.map(w => w.weight), borderColor: '#3390ec', tension: 0.4, fill: true, backgroundColor: 'rgba(51, 144, 236, 0.1)', pointRadius: weightFilterDays > 30 ? 0 : 5, datalabels: { display: weightFilterDays <= 7, color: '#fff', formatter: v => v+'кг' }}] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 8 }, color: '#ffffff66' } } } } });
             }
-            // ПОВЕРНУТО ГРАФІК КАЛОРІЙ
             const { data: cals } = await supabaseClient.from('nutrition_logs').select('calories, created_at').eq('user_id', currentUserId).gte('created_at', new Date(Date.now() - 7*86400000).toISOString());
             if (cals) {
                 const grouped = cals.reduce((acc, curr) => { const d = new Date(curr.created_at).toLocaleDateString('uk', {day:'numeric'}); acc[d] = (acc[d] || 0) + curr.calories; return acc; }, {});
                 if (calorieChart) calorieChart.destroy();
-                calorieChart = new Chart(document.getElementById('calorieChart'), { type: 'bar', plugins: [ChartDataLabels], data: { labels: Object.keys(grouped), datasets: [{ data: Object.values(grouped), backgroundColor: '#3390ec', borderRadius: 5, datalabels: { color: '#fff', font: { size: 8 } }}] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } } });
+                calorieChart = new Chart(document.getElementById('calorieChart'), { type: 'bar', plugins: [ChartDataLabels], data: { labels: Object.keys(grouped), datasets: [{ data: Object.values(grouped), backgroundColor: '#3390ec', borderRadius: 5, datalabels: { color: '#fff', font: { size: 8 } }}] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: '#ffffff66' } } } } });
             }
         }
 
@@ -329,15 +333,14 @@
         function changeDate(days) { selectedDate.setDate(selectedDate.getDate() + days); refreshScreen(); }
         function setWeightFilter(days) { weightFilterDays = days; document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active')); document.getElementById('wf-' + days).classList.add('active'); loadCharts(); }
         async function deleteFood(id) { if(confirm('Видалити страву?')) { await supabaseClient.from('nutrition_logs').delete().eq('id', id); refreshScreen(); } }
-        function generateAIInsight(logs, water) { document.getElementById('ai-insight').classList.remove('hidden'); document.getElementById('insight-text').innerText = logs.length === 0 ? "Почніть день із запису їжі! 🍎" : "Чудовий прогрес! 🚀"; }
-        function showPage(p) { document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden')); document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active')); document.getElementById('page-' + p).classList.remove('hidden'); document.getElementById('btn-' + p).classList.add('active'); }
-        function shareReferral() { const link = `https://t.me/medbotlab_bot?start=${currentUserId}`; tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Прокачуй тіло разом зі мною!")}`); }
+        function generateAIInsight(logs, water) { document.getElementById('ai-insight').classList.remove('hidden'); document.getElementById('insight-text').innerText = logs.length === 0 ? "Запишіть першу страву! 🍎" : "Чудовий прогрес! 🚀"; }
+        function showPage(p) { document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden')); document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active')); document.getElementById('page-' + p).classList.remove('hidden'); document.getElementById('btn-' + p).classList.add('active'); if (p === 'coach') loadCharts(); }
+        function shareReferral() { const link = `https://t.me/medbotlab_bot?start=${currentUserId}`; tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Прокачуй тіло разом зі мною у Virtus Fit AI!")}`); }
         function resetWater() { if(confirm('Скинути воду?')) { supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId).then(() => refreshScreen()); } }
 
         initApp();
     </script>
 </body>
 </html>
-
 
 
