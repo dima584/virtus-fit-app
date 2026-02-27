@@ -18,6 +18,7 @@
         input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; padding: 5px; width: 65px; text-align: center; font-size: 14px; }
         .progress-ring { transition: stroke-dashoffset 0.5s ease; }
         .food-item { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .hint-box { background: rgba(51, 144, 236, 0.1); border-left: 3px solid #3390ec; }
     </style>
 </head>
 <body class="p-4 font-sans select-none">
@@ -32,6 +33,12 @@
         </div>
     </div>
 
+    <div class="hint-box p-3 mb-4 rounded-r-xl">
+        <p class="text-[11px] leading-relaxed opacity-90">
+            <span class="text-lg">💡</span> Щоб розрахувати калорії, просто надішли боту <b>фото страви</b> або її <b>текстовий опис</b> у чат.
+        </p>
+    </div>
+
     <div class="card p-5 mb-4 border border-white/5 shadow-lg">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest">Денна норма</h3>
@@ -44,7 +51,8 @@
                     <circle id="cal-circle" cx="40" cy="40" r="35" stroke="#3390ec" stroke-width="8" fill="none" 
                             stroke-dasharray="220" stroke-dashoffset="220" stroke-linecap="round" class="progress-ring"/>
                 </svg>
-                <div class="absolute text-center"> <span class="text-sm font-black" id="total-cal">0</span>
+                <div class="absolute text-center">
+                    <span class="text-sm font-black" id="total-cal">0</span>
                     <p class="text-[8px] opacity-40 uppercase">ккал</p>
                 </div>
             </div>
@@ -78,7 +86,7 @@
         </div>
         <div class="card p-4 flex justify-between items-center border border-white/5">
             <div><span class="text-[10px] opacity-50 uppercase font-bold">Цільова вага</span><div class="text-sm font-bold italic accent-text" id="goal-display">...</div></div>
-            <div class="flex gap-2"><input type="number" id="goal-input" step="0.1" placeholder="00.0"><button onclick="updateField('goal')" class="btn-main px-4 py-2 rounded-xl text-xs font-bold uppercase">ОК</button></div>
+            <div class="flex gap-2"><input type="number" id="goal-input" step="0.1" placeholder="00.0"><button onclick="updateField('target_weight')" class="btn-main px-4 py-2 rounded-xl text-xs font-bold uppercase">ОК</button></div>
         </div>
     </div>
 
@@ -116,11 +124,11 @@
             if (data) {
                 document.getElementById('user-name').innerText = data.name || "Атлет";
                 document.getElementById('weight-display').innerText = data.weight + " кг";
-                document.getElementById('goal-display').innerText = data.goal ? data.goal + " кг" : "Не вказано";
+                document.getElementById('goal-display').innerText = data.target_weight ? data.target_weight + " кг" : "Не вказано";
                 document.getElementById('user-balance').innerText = data.balance ?? "0";
-                if (data.goal && data.weight) {
-                    const diff = Math.abs(data.weight - data.goal).toFixed(1);
-                    document.getElementById('status-msg').innerText = data.weight > data.goal ? `Залишилося скинути: ${diff} кг` : `Залишилося набрати: ${diff} кг`;
+                if (data.target_weight && data.weight) {
+                    const diff = Math.abs(data.weight - data.target_weight).toFixed(1);
+                    document.getElementById('status-msg').innerText = data.weight > data.target_weight ? `До цілі: -${diff} кг` : `До цілі: +${diff} кг`;
                 }
             }
         }
@@ -137,12 +145,9 @@
                 const percent = Math.min((totals.cal / 2000) * 100, 100);
                 document.getElementById('cal-percent').innerText = Math.round(percent) + '%';
                 document.getElementById('cal-circle').style.strokeDashoffset = 220 - (220 * percent / 100);
-                
                 document.getElementById('p-val').innerText = totals.p + 'г';
                 document.getElementById('f-val').innerText = totals.f + 'г';
                 document.getElementById('c-val').innerText = totals.c + 'г';
-
-                // ОНОВЛЕННЯ ДИНАМІЧНИХ КОЛЬОРОВИХ БАРІВ
                 document.getElementById('p-bar').style.width = Math.min((totals.p / 100) * 100, 100) + '%';
                 document.getElementById('f-bar').style.width = Math.min((totals.f / 70) * 100, 100) + '%';
                 document.getElementById('c-bar').style.width = Math.min((totals.c / 250) * 100, 100) + '%';
@@ -161,19 +166,19 @@
 
         async function loadChart() {
             try {
-                const { data: userData } = await supabaseClient.from('users').select('goal').eq('user_id', currentUserId).maybeSingle();
+                const { data: userData } = await supabaseClient.from('users').select('target_weight').eq('user_id', currentUserId).maybeSingle();
                 const { data: history } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(10);
                 if (history && history.length > 0) {
                     const labels = history.map(i => new Date(i.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}));
                     const weights = history.map(i => i.weight);
-                    const goalW = parseFloat(userData?.goal) || 0;
+                    const goalW = parseFloat(userData?.target_weight) || 0;
                     if (chartInstance) chartInstance.destroy();
                     const allVals = [...weights]; if (goalW > 0) allVals.push(goalW);
                     const minW = Math.min(...allVals) - 2, maxW = Math.max(...allVals) + 2;
                     chartInstance = new Chart(document.getElementById('weightChart').getContext('2d'), {
                         type: 'line', plugins: [ChartDataLabels],
                         data: { labels, datasets: [{ data: weights, borderColor: '#3390ec', backgroundColor: 'rgba(51, 144, 236, 0.1)', borderWidth: 3, tension: 0.4, fill: true, pointRadius: 5, datalabels: { align: 'top', color: '#fff', font: { weight: 'bold' }, formatter: v => v+'кг' }}] },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, annotation: { annotations: { line1: { type: 'line', yMin: goalW, yMax: goalW, borderColor: 'rgba(255, 215, 0, 0.4)', borderWidth: 2, borderDash: [6, 6], label: { display: goalW > 0, content: 'Ціль ' + goalW + 'кг', position: 'end', backgroundColor: 'rgba(51, 144, 236, 0.8)', font: { size: 10 } } } } } }, scales: { y: { min: minW, max: maxW, display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } } }
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, annotation: { annotations: { line1: { type: 'line', yMin: goalW, yMax: goalW, borderColor: 'rgba(255, 215, 0, 0.4)', borderWidth: 2, borderDash: [6, 6], label: { display: goalW > 0, content: 'Мета ' + goalW + 'кг', position: 'end', backgroundColor: 'rgba(51, 144, 236, 0.8)', font: { size: 10 } } } } } }, scales: { y: { min: minW, max: maxW, display: false }, x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 9 } }, grid: { display: false } } } }
                     });
                 }
             } catch (e) { console.error(e); }
