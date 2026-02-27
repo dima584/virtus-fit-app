@@ -7,9 +7,11 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+
     <style>
         body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); }
         .card { background-color: var(--tg-theme-secondary-bg-color, #2d2d2d); border-radius: 20px; }
@@ -35,7 +37,7 @@
 
     <div class="hint-box p-3 mb-4 rounded-r-xl">
         <p class="text-[11px] leading-relaxed opacity-90">
-            <span class="text-lg">💡</span> Для розрахунку надішли <b>фото страви</b> або <b>текст</b> у чат боту.
+            <span class="text-lg">💡</span> Щоб розрахувати калорії, просто надішли боту <b>фото страви</b> або її <b>текст</b> у чат.
         </p>
     </div>
 
@@ -101,7 +103,7 @@
         </div>
     </div>
 
-    <div class="card p-5 mb-4 border border-white/5">
+    <div class="card p-5 mb-4 border border-white/5 shadow-2xl">
         <h3 class="text-[10px] font-bold opacity-40 uppercase tracking-widest mb-4">Аналітика прогресу</h3>
         <div style="height: 160px;"><canvas id="weightChart"></canvas></div>
     </div>
@@ -135,11 +137,10 @@
             const { data } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
                 document.getElementById('user-name').innerText = data.name || "Атлет";
-                document.getElementById('weight-display').innerText = data.weight + " кг";
+                document.getElementById('weight-display').innerText = (data.weight || 0) + " кг";
                 document.getElementById('goal-display').innerText = data.target_weight ? data.target_weight + " кг" : "Не вказано";
                 document.getElementById('user-balance').innerText = data.balance ?? "0";
                 
-                // Оновлюємо цілі користувача
                 userGoals = {
                     cal: data.daily_cal_goal || 2000,
                     p: data.daily_p_goal || 150,
@@ -147,7 +148,6 @@
                     c: data.daily_c_goal || 250
                 };
                 
-                // Заповнюємо інпути налаштувань
                 document.getElementById('goal-cal-input').placeholder = userGoals.cal;
                 document.getElementById('goal-p-input').placeholder = userGoals.p;
                 document.getElementById('goal-f-input').placeholder = userGoals.f;
@@ -184,14 +184,14 @@
                 const listContainer = document.getElementById('food-list');
                 if (data.length > 0) {
                     listContainer.innerHTML = data.map(item => `
-                        <div class="food-item pb-2 flex justify-between items-center">
-                            <div>
-                                <div class="text-xs font-bold">${item.food_name || 'Страва'}</div>
+                        <div class="food-item pb-2 mb-2 flex justify-between items-center">
+                            <div class="flex-1">
+                                <div class="text-xs font-bold leading-tight">${item.food_name || 'Страва'}</div>
                                 <div class="text-[9px] opacity-40 italic">Б:${item.proteins} Ж:${item.fats} В:${item.carbs}</div>
                             </div>
                             <div class="flex items-center gap-3">
-                                <div class="accent-text font-black text-xs">${item.calories} ккал</div>
-                                <button onclick="deleteFood(${item.id})" class="opacity-30 hover:opacity-100 text-sm">🗑️</button>
+                                <div class="accent-text font-black text-xs whitespace-nowrap">${item.calories} ккал</div>
+                                <button onclick="deleteFood(${item.id})" class="opacity-30 hover:opacity-100 transition-opacity p-2">🗑️</button>
                             </div>
                         </div>
                     `).join('');
@@ -203,11 +203,15 @@
 
         async function deleteFood(id) {
             if(!confirm('Видалити цей запис?')) return;
-            const { error } = await supabaseClient.from('nutrition_logs').delete().eq('id', id);
-            if (!error) {
-                tg.HapticFeedback.notificationOccurred('warning');
-                await loadNutrition();
-            }
+            try {
+                const { error } = await supabaseClient.from('nutrition_logs').delete().eq('id', id);
+                if (!error) {
+                    tg.HapticFeedback.notificationOccurred('warning');
+                    await loadNutrition(); // Миттєве оновлення списку та кільця
+                } else {
+                    alert('Помилка: ' + error.message);
+                }
+            } catch (e) { alert(e.message); }
         }
 
         async function saveGoals() {
@@ -222,8 +226,7 @@
 
             if (!error) {
                 alert('Норми оновлено!');
-                await loadData();
-                await loadNutrition();
+                await loadData(); await loadNutrition();
                 tg.HapticFeedback.notificationOccurred('success');
             }
         }
