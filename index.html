@@ -30,6 +30,10 @@
         .achievement-card { transition: 0.5s; border: 1px solid rgba(255,255,255,0.03); }
         .achievement-locked { filter: grayscale(1); opacity: 0.3; }
         .achievement-card.unlocked { filter: none !important; opacity: 1 !important; border-color: #3390ec !important; box-shadow: 0 0 15px rgba(51, 144, 236, 0.2); background: rgba(51, 144, 236, 0.05); }
+        
+        /* Прихований скролбар для шкали рівнів */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="p-4 pb-28">
@@ -146,7 +150,15 @@
     </div>
 
     <div id="page-achievements" class="page-content hidden space-y-6">
-        <h2 class="text-xl font-black italic mb-6 uppercase text-white px-2">Твої досягнення</h2>
+        
+        <div class="card p-4 shadow-xl border-blue-500/10 mb-6 relative overflow-hidden">
+            <h3 class="text-[10px] font-bold opacity-50 uppercase mb-3 text-white tracking-widest text-center">Шлях до Преміуму 👑</h3>
+            <div class="flex gap-3 overflow-x-auto pb-2 snap-x hide-scrollbar" id="level-roadmap">
+                </div>
+            <p class="text-[8px] opacity-40 text-center mt-2 italic text-white">* Свайпай вліво/вправо, щоб побачити всі нагороди</p>
+        </div>
+
+        <h2 class="text-xl font-black italic mb-4 uppercase text-white px-2">Твої досягнення</h2>
         
         <div class="grid grid-cols-2 gap-4" id="achievements-grid">
             <div id="ach-newbie" class="card p-4 text-center achievement-card achievement-locked">
@@ -238,6 +250,46 @@
             }
         }
 
+        // ВІДМАЛЬОВКА ШКАЛИ РІВНІВ
+        function renderRoadmap(currentLevel) {
+            const roadmapEl = document.getElementById('level-roadmap');
+            if (!roadmapEl) return;
+
+            let html = '';
+            for (let i = 2; i <= 10; i++) {
+                let statusClass = 'opacity-40 border-white/5'; // Заблоковано
+                let icon = '⚡';
+                let rewardText = '+5 ген.';
+
+                if (i === 5) { icon = '🎁'; rewardText = '+5 ген. + Бонус'; }
+                if (i === 10) { icon = '👑'; rewardText = 'БЕЗЛІМІТ PRO'; }
+
+                if (i < currentLevel) {
+                    // Пройдено
+                    statusClass = 'opacity-100 border-green-500/50 bg-green-500/10 text-green-400';
+                    icon = '✅';
+                } else if (i === currentLevel) {
+                    // Поточний
+                    statusClass = 'opacity-100 border-blue-500 bg-blue-500/20 shadow-lg shadow-blue-500/20 scale-105';
+                }
+
+                html += `
+                    <div class="flex-shrink-0 w-24 card p-3 text-center snap-center border transition-all duration-300 ${statusClass}">
+                        <div class="text-xs font-bold mb-1 ${i===currentLevel ? 'text-white' : ''}">LVL ${i}</div>
+                        <div class="text-2xl mb-1">${icon}</div>
+                        <div class="text-[8px] font-bold ${i===10 && i>=currentLevel ? 'text-yellow-400' : 'text-blue-400'} uppercase leading-tight">${rewardText}</div>
+                    </div>
+                `;
+            }
+            roadmapEl.innerHTML = html;
+
+            // Автоматичний скрол до поточного рівня
+            setTimeout(() => {
+                const activeEl = roadmapEl.querySelector('.border-blue-500');
+                if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }, 300);
+        }
+
         async function loadUserData() {
             const { data, error } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
@@ -262,6 +314,7 @@
                 }
 
                 userData = data;
+                renderRoadmap(data.level || 1); // Оновлюємо шкалу
                 
                 userGoals.cal = data.daily_cal_goal || 2000;
                 userGoals.water = data.water_goal || 2000;
@@ -314,9 +367,14 @@
 
             userGoals.cal = cal; userGoals.water = water; userGoals.p = p; userGoals.f = f; userGoals.c = c;
 
-            await supabaseClient.from('users').update({
+            const { error } = await supabaseClient.from('users').update({
                 daily_cal_goal: cal, water_goal: water, daily_p_goal: p, daily_f_goal: f, daily_c_goal: c
             }).eq('user_id', currentUserId);
+
+            if(error) {
+                tg.showAlert("Помилка збереження! Перевірте базу даних.");
+                return;
+            }
 
             tg.HapticFeedback.notificationOccurred('success');
             tg.showAlert("✅ Ваші норми успішно збережено!");
@@ -342,6 +400,7 @@
             await checkAchievements();
         }
 
+        // --- ДОСЯГНЕННЯ З НОВИМИ ПРАВИЛАМИ ---
         async function checkAchievements() {
             if (!userData) return;
             
@@ -533,12 +592,8 @@
             loadCharts(); 
         }
 
-        // --- ВИПРАВЛЕНО ДУБЛІ ВАГИ НА ГРАФІКУ ---
         async function loadCharts() {
-            const { data: weights } = await supabaseClient.from('weight_history')
-                .select('weight, created_at')
-                .eq('user_id', currentUserId)
-                .order('created_at', { ascending: true });
+            const { data: weights } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true });
             
             const wCanvas = document.getElementById('weightChart');
             
@@ -551,11 +606,10 @@
             }
 
             if (weights && weights.length > 0 && wCanvas) {
-                // Групуємо по днях, щоб не було дублів крапок
                 const groupedWeights = {};
                 weights.forEach(w => {
                     const d = new Date(w.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'});
-                    groupedWeights[d] = w.weight; // Останнє збереження за день перезапише попереднє
+                    groupedWeights[d] = w.weight;
                 });
 
                 const allLabels = Object.keys(groupedWeights);
@@ -602,7 +656,7 @@
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
             if (!prompt) return alert("Будь ласка, введіть запит!");
-            if (userData.balance <= 0) return alert("Немає генерацій! Поповніть баланс або запросіть друзів.");
+            if (userData.balance <= 0 && userData.balance <= 9000) return alert("Немає генерацій! Поповніть баланс або запросіть друзів.");
 
             tg.showConfirm("Витратити 1 ⚡?", async (ok) => {
                 if (ok) {
