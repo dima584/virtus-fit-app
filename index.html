@@ -238,7 +238,6 @@
             }
         }
 
-        // --- НОВА ЛОГІКА ПІДВИЩЕННЯ РІВНЯ ТА ПРЕМІУМУ ---
         async function loadUserData() {
             const { data, error } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
@@ -246,14 +245,13 @@
                 
                 if (targetLevel > (data.level || 1)) {
                     const levelDiff = targetLevel - (data.level || 1);
-                    let bonusGens = levelDiff * 5; // ПО 5 ГЕНЕРАЦІЙ ЗА РІВЕНЬ
+                    let bonusGens = levelDiff * 5; 
                     let newBalance = (data.balance || 0) + bonusGens;
                     let msg = `🚀 Рівень підвищено до ${targetLevel}! Отримано +${bonusGens} ⚡ генерацій!`;
 
-                    // БОНУСИ ЗА РІВНІ
                     if (targetLevel >= 10 && (data.level || 1) < 10) {
                         msg = `🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА на місяць та БЕЗЛІМІТ генерацій ШІ! 👑`;
-                        newBalance = 9999; // 9999 означає безліміт
+                        newBalance = 9999; 
                     } else if (targetLevel === 5 && (data.level || 1) < 5) {
                         msg += `\n🎁 Бонус: Ти на півшляху до Преміуму! Так тримати!`;
                     }
@@ -282,7 +280,6 @@
                 setText('weight-display', (data.weight || 0) + " кг");
                 setText('goal-display', data.target_weight ? data.target_weight + " кг" : "Не вказано");
                 
-                // ВІДОБРАЖЕННЯ БЕЗЛІМІТУ 
                 const displayBalance = (data.balance && data.balance > 9000) ? "Безліміт 👑" : (data.balance || 0);
                 setText('user-balance', displayBalance);
                 setText('ai-balance-display', displayBalance);
@@ -345,7 +342,6 @@
             await checkAchievements();
         }
 
-        // --- НОВА ЛОГІКА ДОСЯГНЕНЬ (ПОВНА) ---
         async function checkAchievements() {
             if (!userData) return;
             
@@ -363,31 +359,24 @@
                 }
             };
 
-            // 1. Новачок
             if (userData.name) unlock('ach-newbie', 'newbie', 100, 'Новачок');
 
-            // 2. Здорове меню
             const { count: foodCount } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
             if (foodCount >= 10) unlock('ach-foodie', 'foodie', 500, 'Здорове меню');
 
-            // 3. Водний магнат
             if (userData.water_today >= userGoals.water) unlock('ach-water', 'water', 400, 'Водний магнат');
 
-            // 4. Стрік 3 дні (Перевіряємо унікальні дні запису їжі)
             const { data: streakData } = await supabaseClient.from('nutrition_logs').select('created_at').eq('user_id', currentUserId);
             if (streakData && streakData.length > 0) {
                 const distinctDays = new Set(streakData.map(d => new Date(d.created_at).toLocaleDateString())).size;
                 if (distinctDays >= 3) unlock('ach-streak', 'streak', 300, 'Стрік 3 дні');
             }
 
-            // 5. Вагомий крок (Записав вагу 3 рази)
             const { count: weightCount } = await supabaseClient.from('weight_history').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
             if (weightCount >= 3) unlock('ach-weight', 'weight', 300, 'Вагомий крок');
 
-            // 6. Амбасадор
             if ((userData.referrals_count || 0) >= 1) unlock('ach-invite', 'invite', 500, 'Амбасадор');
 
-            // 7. ШІ-Атлет перевіряється по базі (видається при генерації)
             if (claimed.includes('ai_pro')) {
                 const el = document.getElementById('ach-ai');
                 if (el) { el.classList.remove('achievement-locked'); el.classList.add('unlocked'); }
@@ -544,8 +533,13 @@
             loadCharts(); 
         }
 
+        // --- ВИПРАВЛЕНО ДУБЛІ ВАГИ НА ГРАФІКУ ---
         async function loadCharts() {
-            const { data: weights } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(weightFilterDays);
+            const { data: weights } = await supabaseClient.from('weight_history')
+                .select('weight, created_at')
+                .eq('user_id', currentUserId)
+                .order('created_at', { ascending: true });
+            
             const wCanvas = document.getElementById('weightChart');
             
             let annotations = {};
@@ -557,13 +551,31 @@
             }
 
             if (weights && weights.length > 0 && wCanvas) {
+                // Групуємо по днях, щоб не було дублів крапок
+                const groupedWeights = {};
+                weights.forEach(w => {
+                    const d = new Date(w.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'});
+                    groupedWeights[d] = w.weight; // Останнє збереження за день перезапише попереднє
+                });
+
+                const allLabels = Object.keys(groupedWeights);
+                const allData = Object.values(groupedWeights);
+
+                let finalLabels = allLabels;
+                let finalData = allData;
+
+                if (weightFilterDays !== 365) {
+                    finalLabels = allLabels.slice(-weightFilterDays);
+                    finalData = allData.slice(-weightFilterDays);
+                }
+
                 if (weightChart) weightChart.destroy();
                 weightChart = new Chart(wCanvas, { 
                     type: 'line', 
                     plugins: [ChartDataLabels], 
                     data: { 
-                        labels: weights.map(w => new Date(w.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'})), 
-                        datasets: [{ data: weights.map(w => w.weight), borderColor: '#3390ec', tension: 0.4, fill: true, backgroundColor: 'rgba(51, 144, 236, 0.1)', pointRadius: weightFilterDays > 30 ? 0 : 5, datalabels: { display: weightFilterDays <= 7, color: '#fff', formatter: v => v+'кг' } }] 
+                        labels: finalLabels, 
+                        datasets: [{ data: finalData, borderColor: '#3390ec', tension: 0.4, fill: true, backgroundColor: 'rgba(51, 144, 236, 0.1)', pointRadius: weightFilterDays > 30 ? 0 : 5, datalabels: { display: weightFilterDays <= 7, color: '#fff', formatter: v => v+'кг' } }] 
                     }, 
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, annotation: { annotations: annotations } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 8 }, color: 'rgba(255,255,255,0.4)' } } } } 
                 });
@@ -587,7 +599,6 @@
             }
         }
 
-        // --- ГЕНЕРАЦІЯ PDF ТА ДОСЯГНЕННЯ ШІ ---
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
             if (!prompt) return alert("Будь ласка, введіть запит!");
@@ -598,7 +609,6 @@
                     let claimed = userData.achievements || "";
                     let xpBonus = 0;
                     
-                    // Перевірка досягнення ШІ-Атлет
                     if (!claimed.includes('ai_pro')) {
                         claimed += "ai_pro,";
                         xpBonus = 200;
@@ -606,7 +616,7 @@
                     }
 
                     const finalXp = (userData.xp || 0) + xpBonus;
-                    const newBal = userData.balance > 9000 ? userData.balance : userData.balance - 1; // Безліміт не списується
+                    const newBal = userData.balance > 9000 ? userData.balance : userData.balance - 1;
 
                     await supabaseClient.from('users').update({ 
                         balance: newBal, 
