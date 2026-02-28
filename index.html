@@ -125,17 +125,11 @@
 
         <div class="grid grid-cols-1 gap-3 mb-6">
             <div class="card p-4 flex justify-between items-center border border-white/5 shadow-xl">
-                <div>
-                    <span class="text-[10px] opacity-50 font-bold uppercase tracking-tighter text-white">ВАГА ЗАРАЗ</span>
-                    <div id="weight-display" class="text-2xl font-black text-white">-- кг</div>
-                </div>
+                <div><span class="text-[10px] opacity-50 font-bold uppercase tracking-tighter text-white">ВАГА ЗАРАЗ</span><div id="weight-display" class="text-2xl font-black text-white">-- кг</div></div>
                 <div class="flex gap-2"><input type="number" id="weight-input" step="0.1" placeholder="0.0" class="w-20 text-center"><button onclick="updateField('weight')" class="btn-main px-4 py-2 text-xs font-bold uppercase shadow-lg">ОК</button></div>
             </div>
             <div class="card p-4 flex justify-between items-center border border-white/5">
-                <div>
-                    <span class="text-[10px] opacity-50 font-bold uppercase tracking-tighter text-white">ЦІЛЬОВА ВАГА</span>
-                    <div id="goal-display" class="text-sm font-bold italic accent-text">...</div>
-                </div>
+                <div><span class="text-[10px] opacity-50 font-bold uppercase tracking-tighter text-white">ЦІЛЬОВА ВАГА</span><div id="goal-display" class="text-sm font-bold italic accent-text">...</div></div>
                 <div class="flex gap-2"><input type="number" id="goal-input" step="0.1" placeholder="0.0" class="w-20 text-center"><button onclick="updateField('target_weight')" class="btn-main px-4 py-2 text-xs font-bold uppercase">ОК</button></div>
             </div>
         </div>
@@ -213,7 +207,7 @@
 
     <div class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-2xl border-t border-white/5 p-4 flex justify-around items-center z-50">
         <button onclick="showPage('main')" id="btn-main" class="tab-btn active text-white"><div class="text-xl mb-1">🏠</div><div>ГОЛОВНА</div></button>
-        <button onclick="showPage('achievements')" id="btn-achievements" class="tab-btn text-white"><div class="text-xl mb-1">🏆</div><div>УСПІХИ</div></button>
+        <button onclick="showPage('achievements')" id="btn-achievements" class="tab-btn text-white"><div class="text-xl mb-1">🏆</div><div>УСПІХ</div></button>
         <button onclick="showPage('coach')" id="btn-coach" class="tab-btn text-white"><div class="text-xl mb-1">📋</div><div>ТРЕНЕР</div></button>
     </div>
 
@@ -252,6 +246,7 @@
         async function loadUserData() {
             const { data, error } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
+                // Перевірка рівня
                 const targetLevel = Math.floor((data.xp || 0) / 1000) + 1;
                 if (targetLevel > (data.level || 1)) {
                     const bonusGens = (targetLevel - (data.level || 1)) * 10;
@@ -262,7 +257,7 @@
 
                 userData = data;
                 
-                // Читання цілей з бази (ВІДРЕДАГОВАНО ПІД ТВОЇ НАЗВИ)
+                // Читання цілей з бази
                 userGoals.cal = data.daily_cal_goal || 2000;
                 userGoals.water = data.water_goal || 2000;
                 userGoals.p = data.daily_p_goal || 150;
@@ -302,7 +297,6 @@
             }
         }
 
-        // Збереження норм з миттєвим оновленням UI (ВІДРЕДАГОВАНО ПІД ТВОЇ НАЗВИ)
         async function saveGoals() {
             const cal = parseInt(document.getElementById('goal-cal').value) || 2000;
             const water = parseInt(document.getElementById('goal-water').value) || 2000;
@@ -348,22 +342,46 @@
             await loadCharts();
         }
 
+        // --- НОВА ЛОГІКА ДОСЯГНЕНЬ ІЗ РАЗОВИМ НАРАХУВАННЯМ XP ---
         async function checkAchievements() {
             if (!userData) return;
             
-            if (userData.name) unlockAchievement('ach-newbie');
+            // Зчитуємо вже отримані досягнення з бази (колонка achievements)
+            let claimed = userData.achievements || "";
+            let newXp = 0;
             
+            // 1. Новачок (+100 XP)
+            if (userData.name) {
+                document.getElementById('ach-newbie').classList.add('unlocked');
+                document.getElementById('ach-newbie').classList.remove('achievement-locked');
+                if (!claimed.includes('newbie')) { claimed += "newbie,"; newXp += 100; }
+            }
+            
+            // 2. Здорове меню (+500 XP)
             const { count } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
-            if (count >= 10) unlockAchievement('ach-foodie');
+            if (count >= 10) {
+                document.getElementById('ach-foodie').classList.add('unlocked');
+                document.getElementById('ach-foodie').classList.remove('achievement-locked');
+                if (!claimed.includes('foodie')) { claimed += "foodie,"; newXp += 500; }
+            }
             
-            if (userData.water_today >= userGoals.water) unlockAchievement('ach-water');
-        }
+            // 3. Водний магнат (+400 XP)
+            if (userData.water_today >= userGoals.water) {
+                document.getElementById('ach-water').classList.add('unlocked');
+                document.getElementById('ach-water').classList.remove('achievement-locked');
+                if (!claimed.includes('water')) { claimed += "water,"; newXp += 400; }
+            }
 
-        function unlockAchievement(id) {
-            const el = document.getElementById(id);
-            if (el) {
-                el.classList.remove('achievement-locked');
-                el.classList.add('unlocked');
+            // Якщо є нові досягнення - зберігаємо їх і видаємо XP
+            if (newXp > 0) {
+                const finalXp = (userData.xp || 0) + newXp;
+                await supabaseClient.from('users').update({ 
+                    xp: finalXp, 
+                    achievements: claimed 
+                }).eq('user_id', currentUserId);
+                
+                tg.showAlert(`🏆 Вітаємо! Отримано нове досягнення! +${newXp} XP`);
+                await loadUserData(); // Перезавантажуємо, щоб оновився рівень
             }
         }
 
@@ -424,7 +442,7 @@
             await addXP(15);
             await loadUserData(); 
             refreshScreen(); 
-            checkAchievements();
+            checkAchievements(); // Перевіряємо, чи не виконав він норму
         }
         
         async function resetWater() { 
