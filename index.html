@@ -302,10 +302,13 @@
                     let msg = `🚀 Рівень підвищено до ${targetLevel}! Отримано +${bonusGens} ⚡ генерацій!`;
 
                     if (targetLevel >= 10 && (data.level || 1) < 10) {
-                        msg = `🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА на місяць та БЕЗЛІМІТ генерацій ШІ! 👑`;
+                        msg = `🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА та БЕЗЛІМІТ генерацій ШІ! 👑`;
                         newBalance = 9999; 
                     } else if (targetLevel === 5 && (data.level || 1) < 5) {
-                        msg += `\n🎁 Бонус: Ти на півшляху до Преміуму! Так тримати!`;
+                        // 🎁 ДОДАЄМО РЕАЛЬНИЙ БОНУС: +20 додаткових генерацій (разом буде 25)
+                        bonusGens += 20; 
+                        newBalance = (data.balance || 0) + bonusGens;
+                        msg = `🎁 ЕКВАТОР ПРОЙДЕНО! 5 РІВЕНЬ! 🎁\nТи на півшляху до Преміуму! Замість 5 генерацій ти отримуєш мега-бонус: +${bonusGens} ⚡ генерацій!`;
                     }
 
                     await supabaseClient.from('users').update({ level: targetLevel, balance: newBalance }).eq('user_id', currentUserId);
@@ -710,3 +713,4 @@
     </script>
 </body>
 </html>
+
