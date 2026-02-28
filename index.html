@@ -49,6 +49,7 @@
     </div>
 
     <div id="page-main" class="page-content">
+        
         <div id="admin-panel" class="hidden card p-4 mb-4 border-2 border-yellow-500/30 shadow-xl">
             <h3 class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest mb-3 text-center">🛡️ АДМІН-ЦЕНТР</h3>
             <div class="grid grid-cols-2 gap-4 text-center">
@@ -72,13 +73,19 @@
         </div>
 
         <div class="flex justify-between items-start mb-6 px-2">
-            <div><h1 class="text-2xl font-bold italic text-white">Привіт, <span id="user-name" class="accent-text">...</span>! 👋</h1><p id="status-msg" class="text-[10px] opacity-50 uppercase tracking-widest text-white">Синхронізація...</p></div>
-            <div class="card p-3 text-center min-w-[80px]"><span class="text-[9px] opacity-50 uppercase font-bold text-white">БАЛАНС ІІ</span><div id="user-balance" class="text-lg font-black accent-text">--</div></div>
+            <div>
+                <h1 class="text-2xl font-bold italic text-white">Привіт, <span id="user-name" class="accent-text">...</span>! 👋</h1>
+                <p id="status-msg" class="text-[10px] opacity-50 uppercase tracking-widest text-white">Синхронізація...</p>
+            </div>
+            <div class="card p-3 text-center min-w-[80px]">
+                <span class="text-[9px] opacity-50 uppercase font-bold text-white">БАЛАНС ІІ</span>
+                <div id="user-balance" class="text-lg font-black accent-text">--</div>
+            </div>
         </div>
 
         <div class="hint-box card p-3 mb-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-3">
             <span class="text-2xl">💡</span>
-            <p class="text-[11px] leading-relaxed opacity-90 text-white">Щоб розрахувати калорії, просто надішліть боту <b>фото страви</b> или ее <b>текст</b> в чат.</p>
+            <p class="text-[11px] leading-relaxed opacity-90 text-white">Щоб розрахувати калорії, просто надішліть боту <b>фото страви</b> або її <b>текст</b> у чат.</p>
         </div>
 
         <div class="card p-5 mb-4 border border-white/5 shadow-lg">
@@ -162,7 +169,7 @@
             <div id="ach-water" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🐳</div>
                 <div class="text-[10px] font-bold uppercase text-white">Водний магнат</div>
-                <div class="text-[7px] opacity-60 mb-1 text-white">Випий 2л воды за день</div>
+                <div class="text-[7px] opacity-60 mb-1 text-white">Випий 2л води за день</div>
                 <div class="text-[8px] text-blue-400 font-bold">+400 XP</div>
             </div>
             <div class="card p-4 text-center achievement-card unlocked">
@@ -175,7 +182,7 @@
         
         <div class="card p-5 mt-6 border-yellow-500/20 bg-yellow-500/5 shadow-2xl">
             <h3 class="text-xs font-bold text-yellow-500 uppercase mb-2">РЕФЕРАЛЬНА ПРОГРАМА</h3>
-            <p class="text-[10px] opacity-60 mb-4 leading-relaxed text-white">За каждого друга получай <b>+200 XP</b>! <br>Каждый новый уровень дает <b>+10 AI генераций</b>!</p>
+            <p class="text-[10px] opacity-60 mb-4 leading-relaxed text-white">За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+10 AI генерацій</b>!</p>
             <button onclick="shareReferral()" class="w-full py-4 bg-yellow-500/20 text-yellow-500 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-yellow-500/30 active:scale-95 transition-all shadow-xl">ЗАПРОСИТИ ДРУГА</button>
         </div>
     </div>
@@ -223,12 +230,7 @@
             tg.ready(); tg.expand();
             const urlParams = new URLSearchParams(window.location.search);
             currentUserId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
-            
-            if (!currentUserId) {
-                alert("❌ Ошибка: Telegram не передал твой ID!");
-                setText('status-msg', "Ошибка ID");
-                return;
-            }
+            if (!currentUserId) return;
             
             try {
                 await loadUserData();
@@ -237,77 +239,64 @@
                 await checkAchievements();
                 showPage('main');
             } catch (err) {
-                alert("❌ Критическая ошибка: " + err.message);
-                console.error("Ошибка инициализации:", err);
+                console.error("Помилка ініціалізації:", err);
             }
         }
 
         async function loadUserData() {
             const { data, error } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
-            
-            if (error) {
-                alert("❌ Ошибка базы данных (RLS?): " + error.message);
-                setText('status-msg', "Ошибка БД");
-                return;
-            }
+            if (data) {
+                const targetLevel = Math.floor((data.xp || 0) / 1000) + 1;
+                if (targetLevel > (data.level || 1)) {
+                    const bonusGens = (targetLevel - (data.level || 1)) * 10;
+                    await supabaseClient.from('users').update({ level: targetLevel, balance: (data.balance || 0) + bonusGens }).eq('user_id', currentUserId);
+                    tg.showAlert(`🚀 Рівень підвищено до ${targetLevel}! +${bonusGens} ⚡ генерацій!`);
+                    return loadUserData();
+                }
 
-            if (!data) {
-                alert("❌ Твоего профиля нет в базе! Нажми /start в боте.");
-                setText('user-name', "Гость");
-                setText('user-name-top', "Гость");
-                setText('status-msg', "Напиши /start");
-                return;
-            }
+                userData = data;
+                
+                // Читання цілей з бази
+                userGoals.cal = data.daily_cal_goal || 2000;
+                userGoals.water = data.water_goal || 2000;
+                userGoals.p = data.p_goal || 150;
+                userGoals.f = data.f_goal || 70;
+                userGoals.c = data.c_goal || 250;
+                
+                if(document.getElementById('goal-cal')) document.getElementById('goal-cal').value = userGoals.cal;
+                if(document.getElementById('goal-water')) document.getElementById('goal-water').value = userGoals.water;
+                if(document.getElementById('goal-p')) document.getElementById('goal-p').value = userGoals.p;
+                if(document.getElementById('goal-f')) document.getElementById('goal-f').value = userGoals.f;
+                if(document.getElementById('goal-c')) document.getElementById('goal-c').value = userGoals.c;
 
-            const targetLevel = Math.floor((data.xp || 0) / 1000) + 1;
-            if (targetLevel > (data.level || 1)) {
-                const bonusGens = (targetLevel - (data.level || 1)) * 10;
-                await supabaseClient.from('users').update({ level: targetLevel, balance: (data.balance || 0) + bonusGens }).eq('user_id', currentUserId);
-                tg.showAlert(`🚀 Уровень повышен до ${targetLevel}! +${bonusGens} ⚡ генераций!`);
-                return loadUserData();
-            }
+                setText('user-name', data.name || "Атлет");
+                setText('user-name-top', data.name || "Атлет");
+                setText('weight-display', (data.weight || 0) + " кг");
+                setText('goal-display', data.target_weight ? data.target_weight + " кг" : "Не вказано");
+                setText('user-balance', data.balance || 0);
+                setText('ai-balance-display', data.balance || 0);
+                setText('ref-count-display', data.referrals_count || 0);
+                
+                if (data.target_weight && data.weight) {
+                    const diff = Math.abs(data.weight - data.target_weight).toFixed(1);
+                    setText('status-msg', data.weight > data.target_weight ? `До цілі: -${diff} кг` : `До цілі: +${diff} кг`);
+                } else {
+                    setText('status-msg', "Готовий до роботи 🚀");
+                }
 
-            userData = data;
-            
-            userGoals.cal = data.daily_cal_goal || 2000;
-            userGoals.water = data.water_goal || 2000;
-            userGoals.p = data.p_goal || 150;
-            userGoals.f = data.f_goal || 70;
-            userGoals.c = data.c_goal || 250;
-            
-            if(document.getElementById('goal-cal')) document.getElementById('goal-cal').value = userGoals.cal;
-            if(document.getElementById('goal-water')) document.getElementById('goal-water').value = userGoals.water;
-            if(document.getElementById('goal-p')) document.getElementById('goal-p').value = userGoals.p;
-            if(document.getElementById('goal-f')) document.getElementById('goal-f').value = userGoals.f;
-            if(document.getElementById('goal-c')) document.getElementById('goal-c').value = userGoals.c;
-
-            setText('user-name', data.name || "Атлет");
-            setText('user-name-top', data.name || "Атлет");
-            
-            if (data.target_weight && data.weight) {
-                const diff = Math.abs(data.weight - data.target_weight).toFixed(1);
-                setText('status-msg', data.weight > data.target_weight ? `До цели: -${diff} кг` : `До цели: +${diff} кг`);
-            } else {
-                setText('status-msg', "Готов к работе 🚀");
-            }
-
-            setText('weight-display', (data.weight || 0) + " кг");
-            setText('goal-display', data.target_weight ? data.target_weight + " кг" : "Не вказано");
-            setText('user-balance', data.balance || 0);
-            setText('ai-balance-display', data.balance || 0);
-            setText('ref-count-display', data.referrals_count || 0);
-            
-            if (data.invited_by) setText('invited-by-msg', `Запросив: ${data.invited_by}`);
-            
-            updateXPUI(data.xp || 0, data.level || 1);
-            
-            const todayStr = new Date().toLocaleDateString('sv');
-            const lastUpdate = data.updated_at ? new Date(data.updated_at).toLocaleDateString('sv') : "";
-            if (lastUpdate && lastUpdate !== todayStr) {
-                await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId);
+                if (data.invited_by) setText('invited-by-msg', `Запросив: ${data.invited_by}`);
+                
+                updateXPUI(data.xp || 0, data.level || 1);
+                
+                const todayStr = new Date().toLocaleDateString('sv');
+                const lastUpdate = data.updated_at ? new Date(data.updated_at).toLocaleDateString('sv') : "";
+                if (lastUpdate && lastUpdate !== todayStr) {
+                    await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId);
+                }
             }
         }
 
+        // --- ВІДНОВЛЕНО: Збереження норм з миттєвим оновленням UI ---
         async function saveGoals() {
             const cal = parseInt(document.getElementById('goal-cal').value) || 2000;
             const water = parseInt(document.getElementById('goal-water').value) || 2000;
@@ -315,17 +304,26 @@
             const f = parseInt(document.getElementById('goal-f').value) || 70;
             const c = parseInt(document.getElementById('goal-c').value) || 250;
 
+            // Миттєве оновлення локального об'єкта
+            userGoals.cal = cal;
+            userGoals.water = water;
+            userGoals.p = p;
+            userGoals.f = f;
+            userGoals.c = c;
+
             const { error } = await supabaseClient.from('users').update({
                 daily_cal_goal: cal, water_goal: water, p_goal: p, f_goal: f, c_goal: c
             }).eq('user_id', currentUserId);
 
-            if (error) {
-                alert("❌ Ошибка! Проверь колонки в Supabase: " + error.message);
+            if(error) {
+                tg.showAlert("Помилка збереження! Перевірте базу даних.");
                 return;
             }
 
             tg.HapticFeedback.notificationOccurred('success');
-            await loadUserData();
+            tg.showAlert("✅ Ваші норми успішно збережено!");
+            
+            // Відразу перемальовуємо кільця
             await refreshScreen();
         }
 
@@ -349,10 +347,12 @@
 
         async function checkAchievements() {
             if (!userData) return;
+            
             if (userData.name) unlockAchievement('ach-newbie');
             
             const { count } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
             if (count >= 10) unlockAchievement('ach-foodie');
+            
             if (userData.water_today >= userGoals.water) unlockAchievement('ach-water');
         }
 
@@ -371,11 +371,11 @@
             
             el.classList.remove('hidden');
             if (logs.length === 0) {
-                textEl.innerText = "Начни день с записи еды! 🍎 Отправь фото боту.";
+                textEl.innerText = "Почніть день із запису їжі! 🍎 Надішліть фото боту.";
             } else if (water < userGoals.water) {
-                textEl.innerText = "Не забывай пить воду! 💧 Это важно для метаболизма.";
+                textEl.innerText = "Не забувайте пити воду! 💧 Це важливо для метаболізму.";
             } else {
-                textEl.innerText = "Отличный прогресс! Так держать! 🚀";
+                textEl.innerText = "Чудовий прогрес! Ви виконали всі норми. 🚀";
             }
         }
 
@@ -425,7 +425,7 @@
         }
         
         async function resetWater() { 
-            if(confirm('Сбросить воду?')) { 
+            if(confirm('Скинути воду?')) { 
                 await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId);
                 await loadUserData(); 
                 refreshScreen();
@@ -501,92 +501,4 @@
 
         function setWeightFilter(days) { 
             weightFilterDays = days; 
-            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active')); 
-            const fBtn = document.getElementById('wf-' + days);
-            if(fBtn) fBtn.classList.add('active'); 
-            loadCharts(); 
-        }
-
-        async function loadCharts() {
-            const { data: weights } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(weightFilterDays);
-            const wCanvas = document.getElementById('weightChart');
-            
-            let annotations = {};
-            if (userData && userData.target_weight) {
-                annotations.targetLine = {
-                    type: 'line', yMin: userData.target_weight, yMax: userData.target_weight, borderColor: '#fbbf24', borderWidth: 2, borderDash: [5, 5],
-                    label: { display: true, content: `Мета ${userData.target_weight}кг`, position: 'end', backgroundColor: '#3390ec', color: 'white', font: { size: 9 } }
-                };
-            }
-
-            if (weights && weights.length > 0 && wCanvas) {
-                if (weightChart) weightChart.destroy();
-                weightChart = new Chart(wCanvas, { 
-                    type: 'line', 
-                    plugins: [ChartDataLabels], 
-                    data: { 
-                        labels: weights.map(w => new Date(w.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'})), 
-                        datasets: [{ data: weights.map(w => w.weight), borderColor: '#3390ec', tension: 0.4, fill: true, backgroundColor: 'rgba(51, 144, 236, 0.1)', pointRadius: weightFilterDays > 30 ? 0 : 5, datalabels: { display: weightFilterDays <= 7, color: '#fff', formatter: v => v+'кг' } }] 
-                    }, 
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, annotation: { annotations: annotations } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 8 }, color: 'rgba(255,255,255,0.4)' } } } } 
-                });
-            }
-            
-            const { data: cals } = await supabaseClient.from('nutrition_logs').select('calories, created_at').eq('user_id', currentUserId).gte('created_at', new Date(Date.now() - 7*86400000).toISOString());
-            const cCanvas = document.getElementById('calorieChart');
-            if (cals && cCanvas) {
-                const grouped = cals.reduce((acc, curr) => { 
-                    const d = new Date(curr.created_at).toLocaleDateString('uk', {day:'numeric'}); 
-                    acc[d] = (acc[d] || 0) + curr.calories; 
-                    return acc; 
-                }, {});
-                if (calorieChart) calorieChart.destroy();
-                calorieChart = new Chart(cCanvas, { 
-                    type: 'bar', 
-                    plugins: [ChartDataLabels], 
-                    data: { labels: Object.keys(grouped), datasets: [{ data: Object.values(grouped), backgroundColor: '#3390ec', borderRadius: 5, datalabels: { color: '#fff', font: { size: 8 } } }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.4)' } } } } 
-                });
-            }
-        }
-
-        async function generateAIWorkout() {
-            const prompt = document.getElementById('ai-request-box').value;
-            if (!prompt) return alert("Будь ласка, введіть запит!");
-            if (userData.balance <= 0) return alert("Немає генерацій! Поповніть баланс.");
-
-            tg.showConfirm("Витратити 1 ⚡?", async (ok) => {
-                if (ok) {
-                    await supabaseClient.from('users').update({ balance: userData.balance - 1 }).eq('user_id', currentUserId);
-                    
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    
-                    doc.setFontSize(22); doc.text("Training Plan: Virtus Fit AI", 20, 20);
-                    doc.setFontSize(12); doc.text(`Athlete: ${userData.name} | Level: ${userData.level}`, 20, 32);
-                    doc.setDrawColor(51, 144, 236); doc.line(20, 36, 190, 36);
-                    
-                    doc.setFontSize(14); doc.text("Your Request:", 20, 48);
-                    doc.setFontSize(10);
-                    const splitText = doc.splitTextToSize(prompt, 170);
-                    doc.text(splitText, 20, 56);
-                    
-                    doc.text("Plan generated successfully.", 20, 100);
-                    doc.save(`Workout_${userData.name}.pdf`);
-                    
-                    tg.HapticFeedback.notificationOccurred('success');
-                    document.getElementById('ai-request-box').value = ''; 
-                    await loadUserData();
-                }
-            });
-        }
-
-        function shareReferral() { 
-            const link = `https://t.me/medbotlab_bot?start=${currentUserId}`;
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Прокачуй своє тіло разом зі мною у Virtus Fit AI!")}`); 
-        }
-
-        initApp();
-    </script>
-</body>
-</html>
+            document.querySelectorAll('.btn-filter').forEach(
