@@ -11,6 +11,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); font-family: sans-serif; user-select: none; }
@@ -153,8 +154,7 @@
         
         <div class="card p-4 shadow-xl border-blue-500/10 mb-6 relative overflow-hidden">
             <h3 class="text-[10px] font-bold opacity-50 uppercase mb-3 text-white tracking-widest text-center">Шлях до Преміуму 👑</h3>
-            <div class="flex gap-3 overflow-x-auto pb-2 snap-x hide-scrollbar" id="level-roadmap">
-                </div>
+            <div class="flex gap-3 overflow-x-auto pb-2 snap-x hide-scrollbar" id="level-roadmap"></div>
             <p class="text-[8px] opacity-40 text-center mt-2 italic text-white">* Свайпай вліво/вправо, щоб побачити всі нагороди</p>
         </div>
 
@@ -198,7 +198,7 @@
         <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white">AI ТРЕНЕР PRO</h2>
         <div class="card p-6 shadow-2xl border-blue-500/10">
             <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center text-white">ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ</p>
-            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв..."></textarea>
+            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, фокус на ноги та прес, українською мовою..."></textarea>
             <div class="flex justify-between items-center mb-6 text-white text-[10px] font-bold px-1">
                 <span class="opacity-50 tracking-widest">БАЛАНС ГЕНЕРАЦІЙ:</span>
                 <span id="ai-balance-display" class="text-blue-400 text-sm">--</span>
@@ -250,14 +250,13 @@
             }
         }
 
-        // ВІДМАЛЬОВКА ШКАЛИ РІВНІВ
         function renderRoadmap(currentLevel) {
             const roadmapEl = document.getElementById('level-roadmap');
             if (!roadmapEl) return;
 
             let html = '';
             for (let i = 2; i <= 10; i++) {
-                let statusClass = 'opacity-40 border-white/5'; // Заблоковано
+                let statusClass = 'opacity-40 border-white/5'; 
                 let icon = '⚡';
                 let rewardText = '+5 ген.';
 
@@ -265,11 +264,9 @@
                 if (i === 10) { icon = '👑'; rewardText = 'БЕЗЛІМІТ PRO'; }
 
                 if (i < currentLevel) {
-                    // Пройдено
                     statusClass = 'opacity-100 border-green-500/50 bg-green-500/10 text-green-400';
                     icon = '✅';
                 } else if (i === currentLevel) {
-                    // Поточний
                     statusClass = 'opacity-100 border-blue-500 bg-blue-500/20 shadow-lg shadow-blue-500/20 scale-105';
                 }
 
@@ -283,7 +280,6 @@
             }
             roadmapEl.innerHTML = html;
 
-            // Автоматичний скрол до поточного рівня
             setTimeout(() => {
                 const activeEl = roadmapEl.querySelector('.border-blue-500');
                 if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
@@ -298,26 +294,25 @@
                 if (targetLevel > (data.level || 1)) {
                     const levelDiff = targetLevel - (data.level || 1);
                     let bonusGens = levelDiff * 5; 
-                    let newBalance = (data.balance || 0) + bonusGens;
+                    let newBalance = (data.ai_generations || 0) + bonusGens;
                     let msg = `🚀 Рівень підвищено до ${targetLevel}! Отримано +${bonusGens} ⚡ генерацій!`;
 
                     if (targetLevel >= 10 && (data.level || 1) < 10) {
-                        msg = `🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА та БЕЗЛІМІТ генерацій ШІ! 👑`;
+                        msg = `🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА на місяць та БЕЗЛІМІТ генерацій ШІ! 👑`;
                         newBalance = 9999; 
                     } else if (targetLevel === 5 && (data.level || 1) < 5) {
-                        // 🎁 ДОДАЄМО РЕАЛЬНИЙ БОНУС: +20 додаткових генерацій (разом буде 25)
                         bonusGens += 20; 
-                        newBalance = (data.balance || 0) + bonusGens;
+                        newBalance = (data.ai_generations || 0) + bonusGens;
                         msg = `🎁 ЕКВАТОР ПРОЙДЕНО! 5 РІВЕНЬ! 🎁\nТи на півшляху до Преміуму! Замість 5 генерацій ти отримуєш мега-бонус: +${bonusGens} ⚡ генерацій!`;
                     }
 
-                    await supabaseClient.from('users').update({ level: targetLevel, balance: newBalance }).eq('user_id', currentUserId);
+                    await supabaseClient.from('users').update({ level: targetLevel, ai_generations: newBalance }).eq('user_id', currentUserId);
                     tg.showAlert(msg);
                     return loadUserData();
                 }
 
                 userData = data;
-                renderRoadmap(data.level || 1); // Оновлюємо шкалу
+                renderRoadmap(data.level || 1); 
                 
                 userGoals.cal = data.daily_cal_goal || 2000;
                 userGoals.water = data.water_goal || 2000;
@@ -336,7 +331,7 @@
                 setText('weight-display', (data.weight || 0) + " кг");
                 setText('goal-display', data.target_weight ? data.target_weight + " кг" : "Не вказано");
                 
-                const displayBalance = (data.balance && data.balance > 9000) ? "Безліміт 👑" : (data.balance || 0);
+                const displayBalance = (data.ai_generations && data.ai_generations > 9000) ? "Безліміт 👑" : (data.ai_generations || 0);
                 setText('user-balance', displayBalance);
                 setText('ai-balance-display', displayBalance);
                 
@@ -403,7 +398,6 @@
             await checkAchievements();
         }
 
-        // --- ДОСЯГНЕННЯ З НОВИМИ ПРАВИЛАМИ ---
         async function checkAchievements() {
             if (!userData) return;
             
@@ -659,7 +653,8 @@
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
             if (!prompt) return alert("Будь ласка, введіть запит!");
-            if (userData.balance <= 0 && userData.balance <= 9000) return alert("Немає генерацій! Поповніть баланс або запросіть друзів.");
+            
+            if (userData.ai_generations <= 0 && userData.ai_generations <= 9000) return alert("Немає генерацій! Поповніть баланс або запросіть друзів.");
 
             tg.showConfirm("Витратити 1 ⚡?", async (ok) => {
                 if (ok) {
@@ -673,10 +668,10 @@
                     }
 
                     const finalXp = (userData.xp || 0) + xpBonus;
-                    const newBal = userData.balance > 9000 ? userData.balance : userData.balance - 1;
+                    const newBal = userData.ai_generations > 9000 ? userData.ai_generations : userData.ai_generations - 1;
 
                     await supabaseClient.from('users').update({ 
-                        balance: newBal, 
+                        ai_generations: newBal, 
                         xp: finalXp, 
                         achievements: claimed 
                     }).eq('user_id', currentUserId);
@@ -684,22 +679,43 @@
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
                     
-                    doc.setFontSize(22); doc.text("Training Plan: Virtus Fit AI", 20, 20);
-                    doc.setFontSize(12); doc.text(`Athlete: ${userData.name} | Level: ${userData.level}`, 20, 32);
-                    doc.setDrawColor(51, 144, 236); doc.line(20, 36, 190, 36);
+                    // Створюємо тимчасовий невидимий елемент для рендеру тексту кирилицею
+                    const printDiv = document.createElement('div');
+                    printDiv.style.width = '600px';
+                    printDiv.style.padding = '40px';
+                    printDiv.style.background = 'white';
+                    printDiv.style.color = 'black';
+                    printDiv.style.fontFamily = 'sans-serif';
+                    printDiv.style.position = 'absolute';
+                    printDiv.style.left = '-9999px'; 
                     
-                    doc.setFontSize(14); doc.text("Your Request:", 20, 48);
-                    doc.setFontSize(10);
-                    const splitText = doc.splitTextToSize(prompt, 170);
-                    doc.text(splitText, 20, 56);
-                    
-                    doc.text("Plan generated successfully.", 20, 100);
-                    doc.save(`Workout_${userData.name}.pdf`);
-                    
-                    tg.HapticFeedback.notificationOccurred('success');
-                    document.getElementById('ai-request-box').value = ''; 
-                    await loadUserData();
-                    await checkAchievements();
+                    printDiv.innerHTML = `
+                        <h1 style="font-size: 28px; margin-bottom: 5px; color: #1a1a1a;">Персональний план: Virtus Fit AI</h1>
+                        <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Атлет: <b>${userData.name || 'User'}</b> | Рівень: <b>${userData.level || 1}</b></p>
+                        <div style="width: 100%; height: 2px; background: #3390ec; margin-bottom: 20px;"></div>
+                        <h2 style="font-size: 18px; margin-bottom: 10px; color: #1a1a1a;">Ваш запит:</h2>
+                        <p style="font-size: 14px; line-height: 1.6; color: #333; white-space: pre-wrap;">${prompt}</p>
+                        <br><br>
+                        <p style="font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 10px;">Згенеровано у Virtus Fit AI Ultimate Elite</p>
+                    `;
+                    document.body.appendChild(printDiv);
+
+                    // Робимо скріншот і генеруємо PDF
+                    html2canvas(printDiv, { scale: 2 }).then(canvas => {
+                        const imgData = canvas.toDataURL('image/png');
+                        const imgWidth = 210; 
+                        const imgHeight = canvas.height * imgWidth / canvas.width;
+                        
+                        doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                        doc.save(`Workout_${userData.name || 'Plan'}.pdf`);
+                        
+                        document.body.removeChild(printDiv); 
+                        
+                        tg.HapticFeedback.notificationOccurred('success');
+                        document.getElementById('ai-request-box').value = ''; 
+                        loadUserData();
+                        checkAchievements();
+                    });
                 }
             });
         }
@@ -713,4 +729,3 @@
     </script>
 </body>
 </html>
-
