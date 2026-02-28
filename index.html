@@ -125,11 +125,17 @@
 
         <div class="grid grid-cols-1 gap-3 mb-6">
             <div class="card p-4 flex justify-between items-center border border-white/5 shadow-xl">
-                <div><span class="text-[10px] opacity-50 font-bold uppercase tracking-tighter text-white">ВАГА ЗАРАЗ</span><div id="weight-display" class="text-2xl font-black text-white">-- кг</div></div>
+                <div>
+                    <span class="text-[10px] opacity-50 font-bold uppercase tracking-tighter text-white">ВАГА ЗАРАЗ</span>
+                    <div id="weight-display" class="text-2xl font-black text-white">-- кг</div>
+                </div>
                 <div class="flex gap-2"><input type="number" id="weight-input" step="0.1" placeholder="0.0" class="w-20 text-center"><button onclick="updateField('weight')" class="btn-main px-4 py-2 text-xs font-bold uppercase shadow-lg">ОК</button></div>
             </div>
             <div class="card p-4 flex justify-between items-center border border-white/5">
-                <div><span class="text-[10px] opacity-50 font-bold uppercase tracking-tighter text-white">ЦІЛЬОВА ВАГА</span><div id="goal-display" class="text-sm font-bold italic accent-text">...</div></div>
+                <div>
+                    <span class="text-[10px] opacity-50 font-bold uppercase tracking-tighter text-white">ЦІЛЬОВА ВАГА</span>
+                    <div id="goal-display" class="text-sm font-bold italic accent-text">...</div>
+                </div>
                 <div class="flex gap-2"><input type="number" id="goal-input" step="0.1" placeholder="0.0" class="w-20 text-center"><button onclick="updateField('target_weight')" class="btn-main px-4 py-2 text-xs font-bold uppercase">ОК</button></div>
             </div>
         </div>
@@ -256,12 +262,12 @@
 
                 userData = data;
                 
-                // Читання цілей з бази
+                // Читання цілей з бази (ВІДРЕДАГОВАНО ПІД ТВОЇ НАЗВИ)
                 userGoals.cal = data.daily_cal_goal || 2000;
                 userGoals.water = data.water_goal || 2000;
-                userGoals.p = data.p_goal || 150;
-                userGoals.f = data.f_goal || 70;
-                userGoals.c = data.c_goal || 250;
+                userGoals.p = data.daily_p_goal || 150;
+                userGoals.f = data.daily_f_goal || 70;
+                userGoals.c = data.daily_c_goal || 250;
                 
                 if(document.getElementById('goal-cal')) document.getElementById('goal-cal').value = userGoals.cal;
                 if(document.getElementById('goal-water')) document.getElementById('goal-water').value = userGoals.water;
@@ -296,7 +302,7 @@
             }
         }
 
-        // --- ВІДНОВЛЕНО: Збереження норм з миттєвим оновленням UI ---
+        // Збереження норм з миттєвим оновленням UI (ВІДРЕДАГОВАНО ПІД ТВОЇ НАЗВИ)
         async function saveGoals() {
             const cal = parseInt(document.getElementById('goal-cal').value) || 2000;
             const water = parseInt(document.getElementById('goal-water').value) || 2000;
@@ -304,7 +310,6 @@
             const f = parseInt(document.getElementById('goal-f').value) || 70;
             const c = parseInt(document.getElementById('goal-c').value) || 250;
 
-            // Миттєве оновлення локального об'єкта
             userGoals.cal = cal;
             userGoals.water = water;
             userGoals.p = p;
@@ -312,7 +317,7 @@
             userGoals.c = c;
 
             const { error } = await supabaseClient.from('users').update({
-                daily_cal_goal: cal, water_goal: water, p_goal: p, f_goal: f, c_goal: c
+                daily_cal_goal: cal, water_goal: water, daily_p_goal: p, daily_f_goal: f, daily_c_goal: c
             }).eq('user_id', currentUserId);
 
             if(error) {
@@ -322,8 +327,6 @@
 
             tg.HapticFeedback.notificationOccurred('success');
             tg.showAlert("✅ Ваші норми успішно збережено!");
-            
-            // Відразу перемальовуємо кільця
             await refreshScreen();
         }
 
@@ -501,4 +504,92 @@
 
         function setWeightFilter(days) { 
             weightFilterDays = days; 
-            document.querySelectorAll('.btn-filter').forEach(
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active')); 
+            const fBtn = document.getElementById('wf-' + days);
+            if(fBtn) fBtn.classList.add('active'); 
+            loadCharts(); 
+        }
+
+        async function loadCharts() {
+            const { data: weights } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true }).limit(weightFilterDays);
+            const wCanvas = document.getElementById('weightChart');
+            
+            let annotations = {};
+            if (userData && userData.target_weight) {
+                annotations.targetLine = {
+                    type: 'line', yMin: userData.target_weight, yMax: userData.target_weight, borderColor: '#fbbf24', borderWidth: 2, borderDash: [5, 5],
+                    label: { display: true, content: `Мета ${userData.target_weight}кг`, position: 'end', backgroundColor: '#3390ec', color: 'white', font: { size: 9 } }
+                };
+            }
+
+            if (weights && weights.length > 0 && wCanvas) {
+                if (weightChart) weightChart.destroy();
+                weightChart = new Chart(wCanvas, { 
+                    type: 'line', 
+                    plugins: [ChartDataLabels], 
+                    data: { 
+                        labels: weights.map(w => new Date(w.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'})), 
+                        datasets: [{ data: weights.map(w => w.weight), borderColor: '#3390ec', tension: 0.4, fill: true, backgroundColor: 'rgba(51, 144, 236, 0.1)', pointRadius: weightFilterDays > 30 ? 0 : 5, datalabels: { display: weightFilterDays <= 7, color: '#fff', formatter: v => v+'кг' } }] 
+                    }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, annotation: { annotations: annotations } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 8 }, color: 'rgba(255,255,255,0.4)' } } } } 
+                });
+            }
+            
+            const { data: cals } = await supabaseClient.from('nutrition_logs').select('calories, created_at').eq('user_id', currentUserId).gte('created_at', new Date(Date.now() - 7*86400000).toISOString());
+            const cCanvas = document.getElementById('calorieChart');
+            if (cals && cCanvas) {
+                const grouped = cals.reduce((acc, curr) => { 
+                    const d = new Date(curr.created_at).toLocaleDateString('uk', {day:'numeric'}); 
+                    acc[d] = (acc[d] || 0) + curr.calories; 
+                    return acc; 
+                }, {});
+                if (calorieChart) calorieChart.destroy();
+                calorieChart = new Chart(cCanvas, { 
+                    type: 'bar', 
+                    plugins: [ChartDataLabels], 
+                    data: { labels: Object.keys(grouped), datasets: [{ data: Object.values(grouped), backgroundColor: '#3390ec', borderRadius: 5, datalabels: { color: '#fff', font: { size: 8 } } }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.4)' } } } } 
+                });
+            }
+        }
+
+        async function generateAIWorkout() {
+            const prompt = document.getElementById('ai-request-box').value;
+            if (!prompt) return alert("Будь ласка, введіть запит!");
+            if (userData.balance <= 0) return alert("Немає генерацій! Поповніть баланс.");
+
+            tg.showConfirm("Витратити 1 ⚡?", async (ok) => {
+                if (ok) {
+                    await supabaseClient.from('users').update({ balance: userData.balance - 1 }).eq('user_id', currentUserId);
+                    
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    
+                    doc.setFontSize(22); doc.text("Training Plan: Virtus Fit AI", 20, 20);
+                    doc.setFontSize(12); doc.text(`Athlete: ${userData.name} | Level: ${userData.level}`, 20, 32);
+                    doc.setDrawColor(51, 144, 236); doc.line(20, 36, 190, 36);
+                    
+                    doc.setFontSize(14); doc.text("Your Request:", 20, 48);
+                    doc.setFontSize(10);
+                    const splitText = doc.splitTextToSize(prompt, 170);
+                    doc.text(splitText, 20, 56);
+                    
+                    doc.text("Plan generated and saved to your device.", 20, 100);
+                    doc.save(`Workout_${userData.name}.pdf`);
+                    
+                    tg.HapticFeedback.notificationOccurred('success');
+                    document.getElementById('ai-request-box').value = ''; 
+                    await loadUserData();
+                }
+            });
+        }
+
+        function shareReferral() { 
+            const link = `https://t.me/medbotlab_bot?start=${currentUserId}`;
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Прокачуй своє тіло разом зі мною у Virtus Fit AI!")}`); 
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
