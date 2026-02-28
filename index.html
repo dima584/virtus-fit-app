@@ -29,7 +29,7 @@
         .hidden { display: none !important; }
         .achievement-card { transition: 0.5s; border: 1px solid rgba(255,255,255,0.03); }
         .achievement-locked { filter: grayscale(1); opacity: 0.3; }
-        .achievement-card.unlocked { filter: none !important; opacity: 1 !important; border-color: #3390ec !important; box-shadow: 0 0 15px rgba(51, 144, 236, 0.2); }
+        .achievement-card.unlocked { filter: none !important; opacity: 1 !important; border-color: #3390ec !important; box-shadow: 0 0 15px rgba(51, 144, 236, 0.2); background: rgba(51, 144, 236, 0.05); }
     </style>
 </head>
 <body class="p-4 pb-28">
@@ -79,7 +79,7 @@
             </div>
             <div class="card p-3 text-center min-w-[80px]">
                 <span class="text-[9px] opacity-50 uppercase font-bold text-white">БАЛАНС ІІ</span>
-                <div id="user-balance" class="text-lg font-black accent-text">--</div>
+                <div id="user-balance" class="text-sm font-black accent-text mt-1">--</div>
             </div>
         </div>
 
@@ -147,42 +147,37 @@
 
     <div id="page-achievements" class="page-content hidden space-y-6">
         <h2 class="text-xl font-black italic mb-6 uppercase text-white px-2">Твої досягнення</h2>
+        
         <div class="grid grid-cols-2 gap-4" id="achievements-grid">
             <div id="ach-newbie" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🐣</div>
-                <div class="text-[10px] font-bold uppercase text-white">Новачок</div>
-                <div class="text-[7px] opacity-60 mb-1 text-white">Просто зареєструйся</div>
-                <div class="text-[8px] text-blue-400 font-bold">+100 XP</div>
+                <div class="text-2xl mb-1">🐣</div><div class="text-[10px] font-bold uppercase text-white">Новачок</div><div class="text-[7px] opacity-60 mb-1 text-white">Просто зареєструйся</div><div class="text-[8px] text-blue-400 font-bold">+100 XP</div>
             </div>
             <div id="ach-streak" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🔥</div>
-                <div class="text-[10px] font-bold uppercase text-white">Стрік 3 дні</div>
-                <div class="text-[7px] opacity-60 mb-1 text-white">Записуй дані 3 дні поспіль</div>
-                <div class="text-[8px] text-blue-400 font-bold">+300 XP</div>
+                <div class="text-2xl mb-1">🔥</div><div class="text-[10px] font-bold uppercase text-white">Стрік 3 дні</div><div class="text-[7px] opacity-60 mb-1 text-white">Записуй дані 3 дні поспіль</div><div class="text-[8px] text-blue-400 font-bold">+300 XP</div>
             </div>
             <div id="ach-foodie" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🥦</div>
-                <div class="text-[10px] font-bold uppercase text-white">Здорове меню</div>
-                <div class="text-[7px] opacity-60 mb-1 text-white">Запиши 10 страв</div>
-                <div class="text-[8px] text-blue-400 font-bold">+500 XP</div>
+                <div class="text-2xl mb-1">🥦</div><div class="text-[10px] font-bold uppercase text-white">Здорове меню</div><div class="text-[7px] opacity-60 mb-1 text-white">Запиши 10 страв</div><div class="text-[8px] text-blue-400 font-bold">+500 XP</div>
             </div>
             <div id="ach-water" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🐳</div>
-                <div class="text-[10px] font-bold uppercase text-white">Водний магнат</div>
-                <div class="text-[7px] opacity-60 mb-1 text-white">Випий 2л води за день</div>
-                <div class="text-[8px] text-blue-400 font-bold">+400 XP</div>
+                <div class="text-2xl mb-1">🐳</div><div class="text-[10px] font-bold uppercase text-white">Водний магнат</div><div class="text-[7px] opacity-60 mb-1 text-white">Виконай норму води</div><div class="text-[8px] text-blue-400 font-bold">+400 XP</div>
+            </div>
+            <div id="ach-weight" class="card p-4 text-center achievement-card achievement-locked">
+                <div class="text-2xl mb-1">⚖️</div><div class="text-[10px] font-bold uppercase text-white">Вагомий крок</div><div class="text-[7px] opacity-60 mb-1 text-white">Запиши вагу 3 рази</div><div class="text-[8px] text-blue-400 font-bold">+300 XP</div>
+            </div>
+            <div id="ach-ai" class="card p-4 text-center achievement-card achievement-locked">
+                <div class="text-2xl mb-1">🏋️‍♂️</div><div class="text-[10px] font-bold uppercase text-white">ШІ-Атлет</div><div class="text-[7px] opacity-60 mb-1 text-white">Згенеруй 1 план</div><div class="text-[8px] text-blue-400 font-bold">+200 XP</div>
+            </div>
+            <div id="ach-invite" class="card p-4 text-center achievement-card achievement-locked">
+                <div class="text-2xl mb-1">🤝</div><div class="text-[10px] font-bold uppercase text-white">Амбасадор</div><div class="text-[7px] opacity-60 mb-1 text-white">Запроси 1 друга</div><div class="text-[8px] text-blue-400 font-bold">+500 XP</div>
             </div>
             <div class="card p-4 text-center achievement-card unlocked">
-                <div class="text-2xl mb-1">🥇</div>
-                <div class="text-[10px] font-bold uppercase text-white">ЗАПРОШЕНІ</div>
-                <div class="text-[7px] opacity-60 mb-1 text-white">Приводь друзів у бот</div>
-                <div id="ref-count-display" class="text-blue-400 font-black text-sm">0</div>
+                <div class="text-2xl mb-1">🥇</div><div class="text-[10px] font-bold uppercase text-white">СТАТИСТИКА ЗАПРОШЕНЬ</div><div id="ref-count-display" class="text-blue-400 font-black text-lg mt-1">0</div>
             </div>
         </div>
         
         <div class="card p-5 mt-6 border-yellow-500/20 bg-yellow-500/5 shadow-2xl">
             <h3 class="text-xs font-bold text-yellow-500 uppercase mb-2">РЕФЕРАЛЬНА ПРОГРАМА</h3>
-            <p class="text-[10px] opacity-60 mb-4 leading-relaxed text-white">За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+10 AI генерацій</b>!</p>
+            <p class="text-[10px] opacity-60 mb-4 leading-relaxed text-white">За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+5 AI генерацій</b>! А на 10 рівні тебе чекає <b>Преміум</b>!</p>
             <button onclick="shareReferral()" class="w-full py-4 bg-yellow-500/20 text-yellow-500 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-yellow-500/30 active:scale-95 transition-all shadow-xl">ЗАПРОСИТИ ДРУГА</button>
         </div>
     </div>
@@ -207,7 +202,7 @@
 
     <div class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-2xl border-t border-white/5 p-4 flex justify-around items-center z-50">
         <button onclick="showPage('main')" id="btn-main" class="tab-btn active text-white"><div class="text-xl mb-1">🏠</div><div>ГОЛОВНА</div></button>
-        <button onclick="showPage('achievements')" id="btn-achievements" class="tab-btn text-white"><div class="text-xl mb-1">🏆</div><div>УСПІХ</div></button>
+        <button onclick="showPage('achievements')" id="btn-achievements" class="tab-btn text-white"><div class="text-xl mb-1">🏆</div><div>УСПІХИ</div></button>
         <button onclick="showPage('coach')" id="btn-coach" class="tab-btn text-white"><div class="text-xl mb-1">📋</div><div>ТРЕНЕР</div></button>
     </div>
 
@@ -243,21 +238,33 @@
             }
         }
 
+        // --- НОВА ЛОГІКА ПІДВИЩЕННЯ РІВНЯ ТА ПРЕМІУМУ ---
         async function loadUserData() {
             const { data, error } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
-                // Перевірка рівня
                 const targetLevel = Math.floor((data.xp || 0) / 1000) + 1;
+                
                 if (targetLevel > (data.level || 1)) {
-                    const bonusGens = (targetLevel - (data.level || 1)) * 10;
-                    await supabaseClient.from('users').update({ level: targetLevel, balance: (data.balance || 0) + bonusGens }).eq('user_id', currentUserId);
-                    tg.showAlert(`🚀 Рівень підвищено до ${targetLevel}! +${bonusGens} ⚡ генерацій!`);
+                    const levelDiff = targetLevel - (data.level || 1);
+                    let bonusGens = levelDiff * 5; // ПО 5 ГЕНЕРАЦІЙ ЗА РІВЕНЬ
+                    let newBalance = (data.balance || 0) + bonusGens;
+                    let msg = `🚀 Рівень підвищено до ${targetLevel}! Отримано +${bonusGens} ⚡ генерацій!`;
+
+                    // БОНУСИ ЗА РІВНІ
+                    if (targetLevel >= 10 && (data.level || 1) < 10) {
+                        msg = `🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА на місяць та БЕЗЛІМІТ генерацій ШІ! 👑`;
+                        newBalance = 9999; // 9999 означає безліміт
+                    } else if (targetLevel === 5 && (data.level || 1) < 5) {
+                        msg += `\n🎁 Бонус: Ти на півшляху до Преміуму! Так тримати!`;
+                    }
+
+                    await supabaseClient.from('users').update({ level: targetLevel, balance: newBalance }).eq('user_id', currentUserId);
+                    tg.showAlert(msg);
                     return loadUserData();
                 }
 
                 userData = data;
                 
-                // Читання цілей з бази
                 userGoals.cal = data.daily_cal_goal || 2000;
                 userGoals.water = data.water_goal || 2000;
                 userGoals.p = data.daily_p_goal || 150;
@@ -274,8 +281,12 @@
                 setText('user-name-top', data.name || "Атлет");
                 setText('weight-display', (data.weight || 0) + " кг");
                 setText('goal-display', data.target_weight ? data.target_weight + " кг" : "Не вказано");
-                setText('user-balance', data.balance || 0);
-                setText('ai-balance-display', data.balance || 0);
+                
+                // ВІДОБРАЖЕННЯ БЕЗЛІМІТУ 
+                const displayBalance = (data.balance && data.balance > 9000) ? "Безліміт 👑" : (data.balance || 0);
+                setText('user-balance', displayBalance);
+                setText('ai-balance-display', displayBalance);
+                
                 setText('ref-count-display', data.referrals_count || 0);
                 
                 if (data.target_weight && data.weight) {
@@ -304,20 +315,11 @@
             const f = parseInt(document.getElementById('goal-f').value) || 70;
             const c = parseInt(document.getElementById('goal-c').value) || 250;
 
-            userGoals.cal = cal;
-            userGoals.water = water;
-            userGoals.p = p;
-            userGoals.f = f;
-            userGoals.c = c;
+            userGoals.cal = cal; userGoals.water = water; userGoals.p = p; userGoals.f = f; userGoals.c = c;
 
-            const { error } = await supabaseClient.from('users').update({
+            await supabaseClient.from('users').update({
                 daily_cal_goal: cal, water_goal: water, daily_p_goal: p, daily_f_goal: f, daily_c_goal: c
             }).eq('user_id', currentUserId);
-
-            if(error) {
-                tg.showAlert("Помилка збереження! Перевірте базу даних.");
-                return;
-            }
 
             tg.HapticFeedback.notificationOccurred('success');
             tg.showAlert("✅ Ваші норми успішно збережено!");
@@ -340,48 +342,62 @@
             tg.HapticFeedback.notificationOccurred('success');
             await loadUserData();
             await loadCharts();
+            await checkAchievements();
         }
 
-        // --- НОВА ЛОГІКА ДОСЯГНЕНЬ ІЗ РАЗОВИМ НАРАХУВАННЯМ XP ---
+        // --- НОВА ЛОГІКА ДОСЯГНЕНЬ (ПОВНА) ---
         async function checkAchievements() {
             if (!userData) return;
             
-            // Зчитуємо вже отримані досягнення з бази (колонка achievements)
             let claimed = userData.achievements || "";
             let newXp = 0;
-            
-            // 1. Новачок (+100 XP)
-            if (userData.name) {
-                document.getElementById('ach-newbie').classList.add('unlocked');
-                document.getElementById('ach-newbie').classList.remove('achievement-locked');
-                if (!claimed.includes('newbie')) { claimed += "newbie,"; newXp += 100; }
-            }
-            
-            // 2. Здорове меню (+500 XP)
-            const { count } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
-            if (count >= 10) {
-                document.getElementById('ach-foodie').classList.add('unlocked');
-                document.getElementById('ach-foodie').classList.remove('achievement-locked');
-                if (!claimed.includes('foodie')) { claimed += "foodie,"; newXp += 500; }
-            }
-            
-            // 3. Водний магнат (+400 XP)
-            if (userData.water_today >= userGoals.water) {
-                document.getElementById('ach-water').classList.add('unlocked');
-                document.getElementById('ach-water').classList.remove('achievement-locked');
-                if (!claimed.includes('water')) { claimed += "water,"; newXp += 400; }
+            let alerts = [];
+
+            const unlock = (id, key, xp, name) => {
+                const el = document.getElementById(id);
+                if (el) { el.classList.remove('achievement-locked'); el.classList.add('unlocked'); }
+                if (!claimed.includes(key)) {
+                    claimed += key + ",";
+                    newXp += xp;
+                    alerts.push(`"${name}" (+${xp} XP)`);
+                }
+            };
+
+            // 1. Новачок
+            if (userData.name) unlock('ach-newbie', 'newbie', 100, 'Новачок');
+
+            // 2. Здорове меню
+            const { count: foodCount } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
+            if (foodCount >= 10) unlock('ach-foodie', 'foodie', 500, 'Здорове меню');
+
+            // 3. Водний магнат
+            if (userData.water_today >= userGoals.water) unlock('ach-water', 'water', 400, 'Водний магнат');
+
+            // 4. Стрік 3 дні (Перевіряємо унікальні дні запису їжі)
+            const { data: streakData } = await supabaseClient.from('nutrition_logs').select('created_at').eq('user_id', currentUserId);
+            if (streakData && streakData.length > 0) {
+                const distinctDays = new Set(streakData.map(d => new Date(d.created_at).toLocaleDateString())).size;
+                if (distinctDays >= 3) unlock('ach-streak', 'streak', 300, 'Стрік 3 дні');
             }
 
-            // Якщо є нові досягнення - зберігаємо їх і видаємо XP
+            // 5. Вагомий крок (Записав вагу 3 рази)
+            const { count: weightCount } = await supabaseClient.from('weight_history').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
+            if (weightCount >= 3) unlock('ach-weight', 'weight', 300, 'Вагомий крок');
+
+            // 6. Амбасадор
+            if ((userData.referrals_count || 0) >= 1) unlock('ach-invite', 'invite', 500, 'Амбасадор');
+
+            // 7. ШІ-Атлет перевіряється по базі (видається при генерації)
+            if (claimed.includes('ai_pro')) {
+                const el = document.getElementById('ach-ai');
+                if (el) { el.classList.remove('achievement-locked'); el.classList.add('unlocked'); }
+            }
+
             if (newXp > 0) {
                 const finalXp = (userData.xp || 0) + newXp;
-                await supabaseClient.from('users').update({ 
-                    xp: finalXp, 
-                    achievements: claimed 
-                }).eq('user_id', currentUserId);
-                
-                tg.showAlert(`🏆 Вітаємо! Отримано нове досягнення! +${newXp} XP`);
-                await loadUserData(); // Перезавантажуємо, щоб оновився рівень
+                await supabaseClient.from('users').update({ xp: finalXp, achievements: claimed }).eq('user_id', currentUserId);
+                tg.showAlert(`🏆 ВІТАЄМО! Отримано нові досягнення:\n${alerts.join('\n')}`);
+                await loadUserData();
             }
         }
 
@@ -442,7 +458,7 @@
             await addXP(15);
             await loadUserData(); 
             refreshScreen(); 
-            checkAchievements(); // Перевіряємо, чи не виконав він норму
+            checkAchievements();
         }
         
         async function resetWater() { 
@@ -571,14 +587,32 @@
             }
         }
 
+        // --- ГЕНЕРАЦІЯ PDF ТА ДОСЯГНЕННЯ ШІ ---
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
             if (!prompt) return alert("Будь ласка, введіть запит!");
-            if (userData.balance <= 0) return alert("Немає генерацій! Поповніть баланс.");
+            if (userData.balance <= 0) return alert("Немає генерацій! Поповніть баланс або запросіть друзів.");
 
             tg.showConfirm("Витратити 1 ⚡?", async (ok) => {
                 if (ok) {
-                    await supabaseClient.from('users').update({ balance: userData.balance - 1 }).eq('user_id', currentUserId);
+                    let claimed = userData.achievements || "";
+                    let xpBonus = 0;
+                    
+                    // Перевірка досягнення ШІ-Атлет
+                    if (!claimed.includes('ai_pro')) {
+                        claimed += "ai_pro,";
+                        xpBonus = 200;
+                        tg.showAlert(`🏆 Досягнення "ШІ-Атлет" розблоковано! +200 XP`);
+                    }
+
+                    const finalXp = (userData.xp || 0) + xpBonus;
+                    const newBal = userData.balance > 9000 ? userData.balance : userData.balance - 1; // Безліміт не списується
+
+                    await supabaseClient.from('users').update({ 
+                        balance: newBal, 
+                        xp: finalXp, 
+                        achievements: claimed 
+                    }).eq('user_id', currentUserId);
                     
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
@@ -592,12 +626,13 @@
                     const splitText = doc.splitTextToSize(prompt, 170);
                     doc.text(splitText, 20, 56);
                     
-                    doc.text("Plan generated and saved to your device.", 20, 100);
+                    doc.text("Plan generated successfully.", 20, 100);
                     doc.save(`Workout_${userData.name}.pdf`);
                     
                     tg.HapticFeedback.notificationOccurred('success');
                     document.getElementById('ai-request-box').value = ''; 
                     await loadUserData();
+                    await checkAchievements();
                 }
             });
         }
