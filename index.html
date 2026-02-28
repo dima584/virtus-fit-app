@@ -31,8 +31,6 @@
         .achievement-card { transition: 0.5s; border: 1px solid rgba(255,255,255,0.03); }
         .achievement-locked { filter: grayscale(1); opacity: 0.3; }
         .achievement-card.unlocked { filter: none !important; opacity: 1 !important; border-color: #3390ec !important; box-shadow: 0 0 15px rgba(51, 144, 236, 0.2); background: rgba(51, 144, 236, 0.05); }
-        
-        /* Прихований скролбар для шкали рівнів */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -54,7 +52,6 @@
     </div>
 
     <div id="page-main" class="page-content">
-        
         <div id="admin-panel" class="hidden card p-4 mb-4 border-2 border-yellow-500/30 shadow-xl">
             <h3 class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest mb-3 text-center">🛡️ АДМІН-ЦЕНТР</h3>
             <div class="grid grid-cols-2 gap-4 text-center">
@@ -294,7 +291,8 @@
                 if (targetLevel > (data.level || 1)) {
                     const levelDiff = targetLevel - (data.level || 1);
                     let bonusGens = levelDiff * 5; 
-                    let newBalance = (data.ai_generations || 0) + bonusGens;
+                    // ПОВЕРНУТО ДО BALANCE
+                    let newBalance = (data.balance || 0) + bonusGens;
                     let msg = `🚀 Рівень підвищено до ${targetLevel}! Отримано +${bonusGens} ⚡ генерацій!`;
 
                     if (targetLevel >= 10 && (data.level || 1) < 10) {
@@ -302,11 +300,11 @@
                         newBalance = 9999; 
                     } else if (targetLevel === 5 && (data.level || 1) < 5) {
                         bonusGens += 20; 
-                        newBalance = (data.ai_generations || 0) + bonusGens;
+                        newBalance = (data.balance || 0) + bonusGens;
                         msg = `🎁 ЕКВАТОР ПРОЙДЕНО! 5 РІВЕНЬ! 🎁\nТи на півшляху до Преміуму! Замість 5 генерацій ти отримуєш мега-бонус: +${bonusGens} ⚡ генерацій!`;
                     }
 
-                    await supabaseClient.from('users').update({ level: targetLevel, ai_generations: newBalance }).eq('user_id', currentUserId);
+                    await supabaseClient.from('users').update({ level: targetLevel, balance: newBalance }).eq('user_id', currentUserId);
                     tg.showAlert(msg);
                     return loadUserData();
                 }
@@ -331,7 +329,8 @@
                 setText('weight-display', (data.weight || 0) + " кг");
                 setText('goal-display', data.target_weight ? data.target_weight + " кг" : "Не вказано");
                 
-                const displayBalance = (data.ai_generations && data.ai_generations > 9000) ? "Безліміт 👑" : (data.ai_generations || 0);
+                // ПОВЕРНУТО ДО BALANCE
+                const displayBalance = (data.balance && data.balance > 9000) ? "Безліміт 👑" : (data.balance || 0);
                 setText('user-balance', displayBalance);
                 setText('ai-balance-display', displayBalance);
                 
@@ -441,7 +440,7 @@
             if (newXp > 0) {
                 const finalXp = (userData.xp || 0) + newXp;
                 await supabaseClient.from('users').update({ xp: finalXp, achievements: claimed }).eq('user_id', currentUserId);
-                tg.showAlert(`🏆 ВІТАЄМО! Отримано нові досягнення:\n${alerts.join('\n')}`);
+                if(alerts.length > 0) tg.showAlert(`🏆 ВІТАЄМО! Отримано нові досягнення:\n${alerts.join('\n')}`);
                 await loadUserData();
             }
         }
@@ -650,11 +649,13 @@
             }
         }
 
+        // --- ВІДРЕМОНТОВАНА ГЕНЕРАЦІЯ PDF БУДЬ-ЯКОЮ МОВОЮ (ЧЕРЕЗ КАРТИНКУ) ---
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
             if (!prompt) return alert("Будь ласка, введіть запит!");
             
-            if (userData.ai_generations <= 0 && userData.ai_generations <= 9000) return alert("Немає генерацій! Поповніть баланс або запросіть друзів.");
+            // ПОВЕРНУТО ДО BALANCE
+            if (userData.balance <= 0) return alert("Немає генерацій! Поповніть баланс або запросіть друзів.");
 
             tg.showConfirm("Витратити 1 ⚡?", async (ok) => {
                 if (ok) {
@@ -668,48 +669,50 @@
                     }
 
                     const finalXp = (userData.xp || 0) + xpBonus;
-                    const newBal = userData.ai_generations > 9000 ? userData.ai_generations : userData.ai_generations - 1;
+                    const newBal = userData.balance > 9000 ? userData.balance : userData.balance - 1;
 
                     await supabaseClient.from('users').update({ 
-                        ai_generations: newBal, 
+                        balance: newBal, 
                         xp: finalXp, 
                         achievements: claimed 
                     }).eq('user_id', currentUserId);
                     
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    
-                    // Створюємо тимчасовий невидимий елемент для рендеру тексту кирилицею
+                    // --- НОВИЙ МЕТОД: МАЛЮЄМО HTML ТА ЗБЕРІГАЄМО ЯК ПДФ ---
                     const printDiv = document.createElement('div');
-                    printDiv.style.width = '600px';
+                    printDiv.style.width = '800px';
                     printDiv.style.padding = '40px';
                     printDiv.style.background = 'white';
                     printDiv.style.color = 'black';
                     printDiv.style.fontFamily = 'sans-serif';
-                    printDiv.style.position = 'absolute';
-                    printDiv.style.left = '-9999px'; 
+                    printDiv.style.position = 'fixed'; // Ховаємо від юзера, але даємо відмалюватися
+                    printDiv.style.top = '-9999px';
                     
                     printDiv.innerHTML = `
-                        <h1 style="font-size: 28px; margin-bottom: 5px; color: #1a1a1a;">Персональний план: Virtus Fit AI</h1>
-                        <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Атлет: <b>${userData.name || 'User'}</b> | Рівень: <b>${userData.level || 1}</b></p>
-                        <div style="width: 100%; height: 2px; background: #3390ec; margin-bottom: 20px;"></div>
-                        <h2 style="font-size: 18px; margin-bottom: 10px; color: #1a1a1a;">Ваш запит:</h2>
-                        <p style="font-size: 14px; line-height: 1.6; color: #333; white-space: pre-wrap;">${prompt}</p>
-                        <br><br>
-                        <p style="font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 10px;">Згенеровано у Virtus Fit AI Ultimate Elite</p>
+                        <h1 style="font-size: 32px; color: #1a1a1a; margin-bottom: 10px;">План Тренувань: Virtus Fit AI</h1>
+                        <p style="font-size: 18px; color: #666; margin-bottom: 20px;">Атлет: <b>${userData.name || 'User'}</b> | Рівень: <b>${userData.level || 1}</b></p>
+                        <div style="width: 100%; height: 3px; background-color: #3390ec; margin-bottom: 30px;"></div>
+                        <h2 style="font-size: 22px; color: #1a1a1a; margin-bottom: 15px;">Ваш запит:</h2>
+                        <p style="font-size: 16px; line-height: 1.6; color: #333; white-space: pre-wrap;">${prompt}</p>
+                        <br><br><br>
+                        <div style="border-top: 1px solid #ccc; padding-top: 15px;">
+                            <p style="font-size: 12px; color: #999;">Згенеровано у Virtus Fit AI Ultimate</p>
+                        </div>
                     `;
                     document.body.appendChild(printDiv);
 
-                    // Робимо скріншот і генеруємо PDF
+                    // Робимо скріншот і конвертуємо у PDF
                     html2canvas(printDiv, { scale: 2 }).then(canvas => {
-                        const imgData = canvas.toDataURL('image/png');
-                        const imgWidth = 210; 
-                        const imgHeight = canvas.height * imgWidth / canvas.width;
+                        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF('p', 'mm', 'a4');
                         
-                        doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                        const imgWidth = 210; // Ширина А4
+                        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                        
+                        doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
                         doc.save(`Workout_${userData.name || 'Plan'}.pdf`);
                         
-                        document.body.removeChild(printDiv); 
+                        document.body.removeChild(printDiv);
                         
                         tg.HapticFeedback.notificationOccurred('success');
                         document.getElementById('ai-request-box').value = ''; 
