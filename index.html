@@ -31,6 +31,7 @@
         .achievement-card { transition: 0.5s; border: 1px solid rgba(255,255,255,0.03); }
         .achievement-locked { filter: grayscale(1); opacity: 0.3; }
         .achievement-card.unlocked { filter: none !important; opacity: 1 !important; border-color: #3390ec !important; box-shadow: 0 0 15px rgba(51, 144, 236, 0.2); background: rgba(51, 144, 236, 0.05); }
+        
         .custom-scroll { overflow-x: scroll !important; scrollbar-width: thin; scrollbar-color: #3390ec rgba(255,255,255,0.05); }
         .custom-scroll::-webkit-scrollbar { height: 8px; display: block !important; }
         .custom-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
@@ -212,7 +213,7 @@
         <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white">AI ТРЕНЕР PRO</h2>
         <div class="card p-6 shadow-2xl border-blue-500/10">
             <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center text-white">ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ</p>
-            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, фокус на ноги та прес..."></textarea>
+            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, фокус на ноги та прес, українською мовою..."></textarea>
             <div class="flex justify-between items-center mb-6 text-white text-[10px] font-bold px-1">
                 <span class="opacity-50 tracking-widest">БАЛАНС ГЕНЕРАЦІЙ:</span>
                 <span id="ai-balance-display" class="text-blue-400 text-sm">--</span>
@@ -335,7 +336,6 @@
                     tg.showAlert(`🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА на 1 МІСЯЦЬ та БЕЗЛІМІТ генерацій ШІ! 👑`);
                 }
 
-                // === ЛОГІКА ПРЕСТИЖУ ЗІ СПРАВЖНІМ ОБНУЛЕННЯМ (ЗБЕРЕЖЕННЯ ОФСЕТІВ) ===
                 if (currentXp >= 10000) {
                     currentXp = currentXp % 10000; 
                     targetLevel = Math.floor(currentXp / 1000) + 1;
@@ -497,7 +497,7 @@
             if (pTimeISO) foodQuery = foodQuery.gte('created_at', pTimeISO);
             const { count: rawFoodCount } = await foodQuery;
             
-            let actualFoodCount = (rawFoodCount || 0); // pFood вже враховано фільтром gte, але залишимо для сумісності
+            let actualFoodCount = (rawFoodCount || 0); 
             if (actualFoodCount >= 10) unlock('ach-foodie', 'foodie', 500, 'Здорове меню');
             if (actualFoodCount >= 50) unlock('ach-foodie50', 'foodie50', 1000, 'Шеф-кухар');
             if (actualFoodCount >= 100) unlock('ach-foodie100', 'foodie100', 2000, 'Експерт з харчування');
@@ -749,37 +749,47 @@
                        .replace(/\n/g, '<br>');
         }
 
-        // --- СПРАВЖНІЙ ШІ (API GEMINI) ДЛЯ ГЕНЕРАЦІЇ ПДФ ---
+        // --- БЕЗПЕЧНА РОБОТА З БАЗОЮ ЧЕРЕЗ ai_requests ---
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
             if (!prompt) return alert("Будь ласка, введіть запит!");
-            
             if (userData.ai_generations <= 0 && userData.ai_generations <= 9000) return alert("Немає генерацій! Поповніть баланс або запросіть друзів.");
 
             tg.showConfirm("Витратити 1 ⚡ на генерацію плану?", async (ok) => {
                 if (ok) {
-                    // Анімація кнопки під час роботи ШІ
                     tg.MainButton.text = "ГЕНЕРУЮ ПЛАН... ⏳";
                     tg.MainButton.show();
                     tg.MainButton.showProgress();
 
                     try {
-                        // 1. ВИКЛИК API GOOGLE GEMINI
-                        const GEMINI_API_KEY = "AIzaSyAT3JJeNe4SIBsK3wPJVCft8tMd17wOGXk"; // ВАЖЛИВО: ВСТАВ СВІЙ КЛЮЧ!
-                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                contents: [{ parts: [{ text: `Ти професійний фітнес-тренер та дієтолог. Склади детальний, структурований план. Відповідай мовою запиту користувача. Запит користувача: ${prompt}` }] }]
-                            })
-                        });
+                        // 1. Відправляємо запит у Supabase
+                        const { data: newReq, error: insertErr } = await supabaseClient.from('ai_requests').insert({
+                            user_id: currentUserId, prompt: prompt, status: 'pending'
+                        }).select().single();
 
-                        if (!response.ok) throw new Error("Помилка зв'язку з ШІ");
-                        const aiData = await response.json();
-                        const aiResponseText = aiData.candidates[0].content.parts[0].text;
-                        const formattedAI = formatMarkdown(aiResponseText); // Робимо жирний текст красивим
+                        if (insertErr) throw new Error("Помилка відправки запиту: " + insertErr.message);
 
-                        // 2. СПИСАННЯ БАЛАНСУ ТА ДОСЯГНЕННЯ
+                        // 2. Чекаємо відповіді від Python-бота (до 60 секунд)
+                        let aiResponseText = "";
+                        let attempts = 0;
+                        while(attempts < 20) {
+                            await new Promise(r => setTimeout(r, 3000));
+                            const { data: checkData } = await supabaseClient.from('ai_requests').select('*').eq('id', newReq.id).single();
+                            
+                            if (checkData && checkData.status === 'completed') {
+                                aiResponseText = checkData.response;
+                                break;
+                            }
+                            if (checkData && checkData.status === 'error') throw new Error("ШІ-бот не зміг згенерувати відповідь.");
+                            attempts++;
+                        }
+                        
+                        if(!aiResponseText) throw new Error("Час очікування минув. Перевір, чи запущений Python-бот.");
+
+                        // Видаляємо запит з бази після успіху
+                        await supabaseClient.from('ai_requests').delete().eq('id', newReq.id);
+
+                        // 3. Списання балансу
                         let claimed = userData.achievements || "";
                         let xpBonus = 0;
                         if (!claimed.includes('ai_pro')) {
@@ -789,12 +799,10 @@
                         }
                         const finalXp = (userData.xp || 0) + xpBonus;
                         const newBal = userData.ai_generations > 9000 ? userData.ai_generations : userData.ai_generations - 1;
-
-                        await supabaseClient.from('users').update({ 
-                            ai_generations: newBal, xp: finalXp, achievements: claimed 
-                        }).eq('user_id', currentUserId);
+                        await supabaseClient.from('users').update({ ai_generations: newBal, xp: finalXp, achievements: claimed }).eq('user_id', currentUserId);
                         
-                        // 3. ГЕНЕРАЦІЯ PDF-ДОКУМЕНТУ ІЗ ВІДПОВІДДЮ ШІ
+                        // 4. Малюємо PDF
+                        const formattedAI = formatMarkdown(aiResponseText);
                         const printDiv = document.createElement('div');
                         printDiv.style.width = '800px';
                         printDiv.style.padding = '40px';
@@ -809,34 +817,25 @@
                             <h1 style="font-size: 32px; color: #1a1a1a; margin-bottom: 10px;">План від ШІ-Тренера: Virtus Fit</h1>
                             <p style="font-size: 18px; color: #666; margin-bottom: 20px;">Атлет: <b>${userData.name || 'User'}</b></p>
                             <div style="width: 100%; height: 3px; background-color: #3390ec; margin-bottom: 30px;"></div>
-                            
                             <div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #3390ec; margin-bottom: 25px;">
                                 <p style="font-size: 14px; color: #555; margin: 0;"><b>Ваш запит:</b> ${prompt}</p>
                             </div>
-                            
-                            <div style="font-size: 16px; line-height: 1.6; color: #222;">
-                                ${formattedAI}
-                            </div>
-                            
+                            <div style="font-size: 16px; line-height: 1.6; color: #222;">${formattedAI}</div>
                             <br><br><br>
                             <div style="border-top: 1px solid #eee; padding-top: 15px; text-align: center;">
-                                <p style="font-size: 12px; color: #aaa;">Згенеровано Штучним Інтелектом у додатку Virtus Fit AI Ultimate Elite</p>
+                                <p style="font-size: 12px; color: #aaa;">Згенеровано Штучним Інтелектом у додатку Virtus Fit AI</p>
                             </div>
                         `;
                         document.body.appendChild(printDiv);
 
-                        // Динамічний розмір сторінки під довжину тексту!
                         html2canvas(printDiv, { scale: 2, useCORS: true }).then(canvas => {
                             const imgData = canvas.toDataURL('image/jpeg', 1.0);
                             const imgWidth = 210; 
                             const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                            
                             const { jsPDF } = window.jspdf;
-                            const doc = new jsPDF('p', 'mm', [imgWidth, imgHeight]); // Адаптивна довжина!
-                            
+                            const doc = new jsPDF('p', 'mm', [imgWidth, imgHeight]); 
                             doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
                             doc.save(`VirtusFit_Plan_${userData.name || 'AI'}.pdf`);
-                            
                             document.body.removeChild(printDiv);
                             tg.HapticFeedback.notificationOccurred('success');
                             document.getElementById('ai-request-box').value = ''; 
@@ -845,7 +844,7 @@
                         });
 
                     } catch (error) {
-                        alert("Виникла помилка: " + error.message);
+                        alert(error.message);
                     } finally {
                         tg.MainButton.hide();
                     }
