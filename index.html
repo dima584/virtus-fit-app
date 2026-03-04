@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Virtus Fit AI Ultimate Elite</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="[https://telegram.org/js/telegram-web-app.js](https://telegram.org/js/telegram-web-app.js)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js](https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js)"></script>
+    <script defer src="[https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0](https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0)"></script>
+    <script defer src="[https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1](https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1)"></script>
+    <script src="[https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js](https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js)"></script>
+    <script src="[https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js](https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js)"></script>
 
     <style>
         body { background-color: var(--tg-theme-bg-color, #1a1a1a); color: var(--tg-theme-text-color, #ffffff); font-family: sans-serif; user-select: none; }
@@ -204,7 +204,7 @@
         
         <div class="card p-5 mt-6 border-yellow-500/20 bg-yellow-500/5 shadow-2xl">
             <h3 class="text-xs font-bold text-yellow-500 uppercase mb-2" id="lang-ref-title">РЕФЕРАЛЬНА ПРОГРАМА</h3>
-            <p class="text-[10px] opacity-60 mb-4 leading-relaxed text-white" id="lang-ref-desc">За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+5 AI генерацій</b>! А за проходження 10 рівня тебе чекає <b>Преміум на 1 МІСЯЦЬ</b>!</p>
+            <p class="text-[10px] opacity-60 mb-4 leading-relaxed text-white" id="lang-ref-desc">За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+5 AI генерацій</b>!</p>
             <button onclick="shareReferral()" class="w-full py-4 bg-yellow-500/20 text-yellow-500 font-bold rounded-xl text-[10px] uppercase tracking-widest border border-yellow-500/30 active:scale-95 transition-all shadow-xl" id="lang-invite-btn">ЗАПРОСИТИ ДРУГА</button>
         </div>
     </div>
@@ -213,7 +213,7 @@
         <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white" id="lang-coach-title">AI ТРЕНЕР PRO</h2>
         <div class="card p-6 shadow-2xl border-blue-500/10">
             <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center text-white" id="lang-coach-prompt">ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ</p>
-            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв..."></textarea>
+            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, фокус на ноги та прес..."></textarea>
             <div class="flex justify-between items-center mb-6 text-white text-[10px] font-bold px-1">
                 <span class="opacity-50 tracking-widest" id="lang-coach-balance">БАЛАНС ГЕНЕРАЦІЙ:</span>
                 <span id="ai-balance-display" class="text-blue-400 text-sm">--</span>
@@ -235,7 +235,7 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        const SUPABASE_URL = "https://ckokeseagvvghxpmulwp.supabase.co";
+        const SUPABASE_URL = "[https://ckokeseagvvghxpmulwp.supabase.co](https://ckokeseagvvghxpmulwp.supabase.co)";
         const SUPABASE_KEY = "sb_publishable_Ir8nKEcq4o3ap05_4MIaPg_ZtJGPG1Z";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
@@ -600,11 +600,25 @@
 
         function changeDate(days) { selectedDate.setDate(selectedDate.getDate() + days); refreshScreen(); }
 
+        // === ФІКС ЧАСОВОГО ПОЯСУ (Вирішує баг з 00:08 ночі) ===
         async function refreshScreen() {
             const dateStr = selectedDate.toLocaleDateString('sv'); const isToday = dateStr === new Date().toLocaleDateString('sv');
             setText('display-date', isToday ? (currentLang === 'en' ? "Today" : "Сьогодні") : selectedDate.toLocaleDateString(currentLang==='en'?'en-US':'uk', {day:'numeric', month:'long'}));
             const waterControls = document.getElementById('water-controls'); if(waterControls) waterControls.style.display = isToday ? 'flex' : 'none';
-            const { data: logs } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', dateStr + 'T00:00:00').lte('created_at', dateStr + 'T23:59:59').order('created_at', {ascending: false});
+            
+            // Створюємо правильні рамки для ЛОКАЛЬНОГО дня
+            let startOfDay = new Date(selectedDate);
+            startOfDay.setHours(0, 0, 0, 0);
+            let endOfDay = new Date(selectedDate);
+            endOfDay.setHours(23, 59, 59, 999);
+
+            const { data: logs } = await supabaseClient.from('nutrition_logs')
+                .select('*')
+                .eq('user_id', currentUserId)
+                .gte('created_at', startOfDay.toISOString()) // Правильний UTC-еквівалент опівночі
+                .lte('created_at', endOfDay.toISOString())   // Правильний UTC-еквівалент кінця дня
+                .order('created_at', {ascending: false});
+            
             let waterVal = isToday ? (userData?.water_today || 0) : 0;
             updateUI(logs || [], waterVal); await loadCharts(); generateAIInsight(logs || [], waterVal);
         }
@@ -715,7 +729,6 @@
                     tg.MainButton.show(); tg.MainButton.showProgress();
 
                     try {
-                        // === ОНОВЛЕНО: НАКАЗУЄМО ШІ ВІДПОВІДАТИ ПРАВИЛЬНОЮ МОВОЮ ===
                         let aiLangCommand = "";
                         if (currentLang === 'en') {
                             aiLangCommand = "CRITICAL INSTRUCTION: You MUST write your ENTIRE response STRICTLY in English! Do not use Ukrainian or Russian. ";
