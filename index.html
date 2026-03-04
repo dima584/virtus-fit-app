@@ -210,7 +210,7 @@
         <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white">AI ТРЕНЕР PRO</h2>
         <div class="card p-6 shadow-2xl border-blue-500/10">
             <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center text-white">ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ</p>
-            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, фокус на ноги та прес, українською мовою..."></textarea>
+            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв..."></textarea>
             <div class="flex justify-between items-center mb-6 text-white text-[10px] font-bold px-1">
                 <span class="opacity-50 tracking-widest">БАЛАНС ГЕНЕРАЦІЙ:</span>
                 <span id="ai-balance-display" class="text-blue-400 text-sm">--</span>
@@ -298,7 +298,6 @@
             }, 300);
         }
 
-        // --- ЛОГІКА ПРЕСТИЖУ (1 МІСЯЦЬ БЕЗЛІМІТУ) ТА ПІДВИЩЕННЯ РІВНЯ ---
         async function loadUserData() {
             const { data, error } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
@@ -309,7 +308,6 @@
                 let claimedAchievements = data.achievements || "";
                 let needsUpdate = false;
 
-                // Перевірка терміну дії Безліміту (на 1 місяць)
                 let premiumMatch = claimedAchievements.match(/premium_expires:(\d+)/);
                 let isPremium = false;
                 
@@ -317,64 +315,60 @@
                     let expireTime = parseInt(premiumMatch[1]);
                     if (Date.now() < expireTime) {
                         isPremium = true;
-                        newGenerations = 9999; // Підтримуємо статус безліміту, поки час не вийшов
+                        newGenerations = 9999;
                     } else {
-                        // Час вийшов! Забираємо Безліміт
                         claimedAchievements = claimedAchievements.replace(/premium_expires:\d+,?/g, '');
-                        newGenerations = (newGenerations > 9000) ? 5 : newGenerations; // Даємо 5 генерацій як базу
+                        newGenerations = (newGenerations > 9000) ? 5 : newGenerations;
                         needsUpdate = true;
-                        tg.showAlert("⏳ Термін дії вашої Преміум-підписки (Безліміт) закінчився. Заробляйте досвід, щоб отримати її знову!");
+                        tg.showAlert("⏳ Термін дії вашої Преміум-підписки закінчився!");
                     }
                 }
 
-                // ПЕРЕВІРКА НА ПРЕСТИЖ (ДОСЯГЛИ КІНЦЯ 10-ГО РІВНЯ: 10,000 XP)
-                if (currentXp >= 10000) {
-                    currentXp = currentXp % 10000; // Залишаємо надлишок досвіду
-                    targetLevel = Math.floor(currentXp / 1000) + 1;
-                    
-                    // Ставимо таймер на 30 днів (у мілісекундах)
+                // ПРИМУСОВИЙ ПРЕМІУМ НА 10 РІВНІ
+                if (targetLevel >= 10 && !isPremium && !claimedAchievements.includes('premium_expires')) {
                     let expireTime = Date.now() + (30 * 24 * 60 * 60 * 1000); 
-                    
-                    // Обнуляємо досягнення, залишаючи тільки мітку преміуму
-                    claimedAchievements = `premium_expires:${expireTime},`; 
-                    newGenerations = 9999; // Даємо безліміт
+                    claimedAchievements += `premium_expires:${expireTime},`;
+                    newGenerations = 9999;
+                    isPremium = true;
                     needsUpdate = true;
-                    
-                    tg.showAlert(`🌟 ЛЕГЕНДА! Ти пройшов гру і отримав ПРЕМІУМ (Безліміт) на 1 МІСЯЦЬ!\nТвій рівень і досягнення скинуто, щоб ти міг заробляти нагороди знову. Гра продовжується! 👑`);
+                    tg.showAlert(`🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА на 1 МІСЯЦЬ та БЕЗЛІМІТ генерацій ШІ! 👑`);
+                }
+
+                // ПРЕСТИЖ (10000+ XP)
+                if (currentXp >= 10000) {
+                    currentXp = currentXp % 10000; 
+                    targetLevel = Math.floor(currentXp / 1000) + 1;
+                    let expireMatch = claimedAchievements.match(/premium_expires:\d+,?/);
+                    claimedAchievements = expireMatch ? expireMatch[0] : ""; 
+                    needsUpdate = true;
+                    tg.showAlert(`🌟 ЛЕГЕНДА! Ти повністю пройшов гру!\nТвій рівень і досягнення скинуто, щоб ти міг заробляти нагороди знову. Преміум залишається з тобою! 👑`);
                 } 
-                // ЗВИЧАЙНЕ ПІДВИЩЕННЯ РІВНЯ
-                else if (targetLevel > currentLevel && targetLevel <= 10) {
+                else if (targetLevel > currentLevel && targetLevel < 10) {
                     const levelDiff = targetLevel - currentLevel;
                     let bonusGens = levelDiff * 5; 
-                    
                     if (targetLevel === 5) {
                         bonusGens += 20; 
-                        tg.showAlert(`🎁 ЕКВАТОР ПРОЙДЕНО! 5 РІВЕНЬ! 🎁\nТи на півшляху до Преміуму! Замість 5 генерацій ти отримуєш мега-бонус: +${bonusGens} ⚡ генерацій!`);
+                        tg.showAlert(`🎁 ЕКВАТОР ПРОЙДЕНО! 5 РІВЕНЬ! 🎁\nЗамість 5 генерацій ти отримуєш мега-бонус: +${bonusGens} ⚡ генерацій!`);
                     } else {
                         tg.showAlert(`🚀 Рівень підвищено до ${targetLevel}! Отримано +${bonusGens} ⚡ генерацій!`);
                     }
-
-                    // Додаємо генерації тільки якщо юзер НЕ преміум
-                    if (!isPremium) {
-                        newGenerations += bonusGens;
-                    }
+                    if (!isPremium) newGenerations += bonusGens;
                     needsUpdate = true;
                 }
 
-                // ЗАХИСТ ВІД ЗБОЮ (Якщо рівень 10, але баланс 0)
                 if (currentLevel === 10 && newGenerations <= 0) {
-                    newGenerations = 5; // Захист від нуля на високих рівнях
+                    newGenerations = 9999; 
                     needsUpdate = true;
                 }
 
-                if (needsUpdate) {
+                if (needsUpdate || targetLevel !== currentLevel) {
                     await supabaseClient.from('users').update({ 
                         level: targetLevel, 
                         ai_generations: newGenerations,
                         xp: currentXp,
                         achievements: claimedAchievements
                     }).eq('user_id', currentUserId);
-                    return loadUserData(); // Перезавантажуємо після оновлення
+                    return loadUserData(); 
                 }
 
                 userData = data;
@@ -397,7 +391,6 @@
                 setText('weight-display', (data.weight || 0) + " кг");
                 setText('goal-display', data.target_weight ? data.target_weight + " кг" : "Не вказано");
                 
-                // ВІДОБРАЖЕННЯ БЕЗЛІМІТУ
                 const displayBalance = (data.ai_generations && data.ai_generations > 9000) ? "Безліміт 👑" : (data.ai_generations || 0);
                 setText('user-balance', displayBalance);
                 setText('ai-balance-display', displayBalance);
