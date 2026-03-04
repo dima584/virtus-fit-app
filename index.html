@@ -164,8 +164,17 @@
             <div id="ach-streak" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🔥</div><div class="text-[10px] font-bold uppercase text-white">Стрік 3 дні</div><div class="text-[7px] opacity-60 mb-1 text-white">Записуй дані 3 дні поспіль</div><div class="text-[8px] text-blue-400 font-bold">+300 XP</div>
             </div>
+            <div id="ach-streak7" class="card p-4 text-center achievement-card achievement-locked">
+                <div class="text-2xl mb-1">🛡️</div><div class="text-[10px] font-bold uppercase text-white">Залізна воля</div><div class="text-[7px] opacity-60 mb-1 text-white">Записуй дані 7 днів поспіль</div><div class="text-[8px] text-blue-400 font-bold">+1000 XP</div>
+            </div>
             <div id="ach-foodie" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🥦</div><div class="text-[10px] font-bold uppercase text-white">Здорове меню</div><div class="text-[7px] opacity-60 mb-1 text-white">Запиши 10 страв</div><div class="text-[8px] text-blue-400 font-bold">+500 XP</div>
+            </div>
+            <div id="ach-foodie50" class="card p-4 text-center achievement-card achievement-locked">
+                <div class="text-2xl mb-1">👨‍🍳</div><div class="text-[10px] font-bold uppercase text-white">Шеф-кухар</div><div class="text-[7px] opacity-60 mb-1 text-white">Запиши 50 страв</div><div class="text-[8px] text-blue-400 font-bold">+1000 XP</div>
+            </div>
+            <div id="ach-foodie100" class="card p-4 text-center achievement-card achievement-locked">
+                <div class="text-2xl mb-1">🥗</div><div class="text-[10px] font-bold uppercase text-white">Експерт</div><div class="text-[7px] opacity-60 mb-1 text-white">Запиши 100 страв</div><div class="text-[8px] text-blue-400 font-bold">+2000 XP</div>
             </div>
             <div id="ach-water" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🐳</div><div class="text-[10px] font-bold uppercase text-white">Водний магнат</div><div class="text-[7px] opacity-60 mb-1 text-white">Виконай норму води</div><div class="text-[8px] text-blue-400 font-bold">+400 XP</div>
@@ -173,14 +182,20 @@
             <div id="ach-weight" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">⚖️</div><div class="text-[10px] font-bold uppercase text-white">Вагомий крок</div><div class="text-[7px] opacity-60 mb-1 text-white">Запиши вагу 3 рази</div><div class="text-[8px] text-blue-400 font-bold">+300 XP</div>
             </div>
+            <div id="ach-weight10" class="card p-4 text-center achievement-card achievement-locked">
+                <div class="text-2xl mb-1">🦋</div><div class="text-[10px] font-bold uppercase text-white">Трансформація</div><div class="text-[7px] opacity-60 mb-1 text-white">Запиши вагу 10 разів</div><div class="text-[8px] text-blue-400 font-bold">+800 XP</div>
+            </div>
             <div id="ach-ai" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🏋️‍♂️</div><div class="text-[10px] font-bold uppercase text-white">ШІ-Атлет</div><div class="text-[7px] opacity-60 mb-1 text-white">Згенеруй 1 план</div><div class="text-[8px] text-blue-400 font-bold">+200 XP</div>
             </div>
             <div id="ach-invite" class="card p-4 text-center achievement-card achievement-locked">
                 <div class="text-2xl mb-1">🤝</div><div class="text-[10px] font-bold uppercase text-white">Амбасадор</div><div class="text-[7px] opacity-60 mb-1 text-white">Запроси 1 друга</div><div class="text-[8px] text-blue-400 font-bold">+500 XP</div>
             </div>
-            <div class="card p-4 text-center achievement-card unlocked">
-                <div class="text-2xl mb-1">🥇</div><div class="text-[10px] font-bold uppercase text-white">СТАТИСТИКА ЗАПРОШЕНЬ</div><div id="ref-count-display" class="text-blue-400 font-black text-lg mt-1">0</div>
+            <div id="ach-influencer" class="card p-4 text-center achievement-card achievement-locked">
+                <div class="text-2xl mb-1">🗣️</div><div class="text-[10px] font-bold uppercase text-white">Лідер думок</div><div class="text-[7px] opacity-60 mb-1 text-white">Запроси 5 друзів</div><div class="text-[8px] text-blue-400 font-bold">+1500 XP</div>
+            </div>
+            <div class="card p-4 text-center achievement-card unlocked col-span-2">
+                <div class="text-2xl mb-1">🥇</div><div class="text-[10px] font-bold uppercase text-white">СТАТИСТИКА ЗАПРОШЕНЬ</div><div id="ref-count-display" class="text-blue-400 font-black text-xl mt-1">0</div>
             </div>
         </div>
         
@@ -195,7 +210,7 @@
         <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white">AI ТРЕНЕР PRO</h2>
         <div class="card p-6 shadow-2xl border-blue-500/10">
             <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center text-white">ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ</p>
-            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, фокус на ноги та прес, українською мовою..."></textarea>
+            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, українською мовою..."></textarea>
             <div class="flex justify-between items-center mb-6 text-white text-[10px] font-bold px-1">
                 <span class="opacity-50 tracking-widest">БАЛАНС ГЕНЕРАЦІЙ:</span>
                 <span id="ai-balance-display" class="text-blue-400 text-sm">--</span>
@@ -291,8 +306,7 @@
                 if (targetLevel > (data.level || 1)) {
                     const levelDiff = targetLevel - (data.level || 1);
                     let bonusGens = levelDiff * 5; 
-                    // ПОВЕРНУТО ДО BALANCE
-                    let newBalance = (data.balance || 0) + bonusGens;
+                    let newBalance = (data.ai_generations || 0) + bonusGens;
                     let msg = `🚀 Рівень підвищено до ${targetLevel}! Отримано +${bonusGens} ⚡ генерацій!`;
 
                     if (targetLevel >= 10 && (data.level || 1) < 10) {
@@ -300,11 +314,11 @@
                         newBalance = 9999; 
                     } else if (targetLevel === 5 && (data.level || 1) < 5) {
                         bonusGens += 20; 
-                        newBalance = (data.balance || 0) + bonusGens;
+                        newBalance = (data.ai_generations || 0) + bonusGens;
                         msg = `🎁 ЕКВАТОР ПРОЙДЕНО! 5 РІВЕНЬ! 🎁\nТи на півшляху до Преміуму! Замість 5 генерацій ти отримуєш мега-бонус: +${bonusGens} ⚡ генерацій!`;
                     }
 
-                    await supabaseClient.from('users').update({ level: targetLevel, balance: newBalance }).eq('user_id', currentUserId);
+                    await supabaseClient.from('users').update({ level: targetLevel, ai_generations: newBalance }).eq('user_id', currentUserId);
                     tg.showAlert(msg);
                     return loadUserData();
                 }
@@ -329,8 +343,7 @@
                 setText('weight-display', (data.weight || 0) + " кг");
                 setText('goal-display', data.target_weight ? data.target_weight + " кг" : "Не вказано");
                 
-                // ПОВЕРНУТО ДО BALANCE
-                const displayBalance = (data.balance && data.balance > 9000) ? "Безліміт 👑" : (data.balance || 0);
+                const displayBalance = (data.ai_generations && data.ai_generations > 9000) ? "Безліміт 👑" : (data.ai_generations || 0);
                 setText('user-balance', displayBalance);
                 setText('ai-balance-display', displayBalance);
                 
@@ -397,6 +410,7 @@
             await checkAchievements();
         }
 
+        // --- ДОСЯГНЕННЯ: СТАРІ ТА 5 НОВИХ ---
         async function checkAchievements() {
             if (!userData) return;
             
@@ -418,6 +432,8 @@
 
             const { count: foodCount } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
             if (foodCount >= 10) unlock('ach-foodie', 'foodie', 500, 'Здорове меню');
+            if (foodCount >= 50) unlock('ach-foodie50', 'foodie50', 1000, 'Шеф-кухар');
+            if (foodCount >= 100) unlock('ach-foodie100', 'foodie100', 2000, 'Експерт з харчування');
 
             if (userData.water_today >= userGoals.water) unlock('ach-water', 'water', 400, 'Водний магнат');
 
@@ -425,12 +441,15 @@
             if (streakData && streakData.length > 0) {
                 const distinctDays = new Set(streakData.map(d => new Date(d.created_at).toLocaleDateString())).size;
                 if (distinctDays >= 3) unlock('ach-streak', 'streak', 300, 'Стрік 3 дні');
+                if (distinctDays >= 7) unlock('ach-streak7', 'streak7', 1000, 'Залізна воля');
             }
 
             const { count: weightCount } = await supabaseClient.from('weight_history').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
             if (weightCount >= 3) unlock('ach-weight', 'weight', 300, 'Вагомий крок');
+            if (weightCount >= 10) unlock('ach-weight10', 'weight10', 800, 'Трансформація');
 
             if ((userData.referrals_count || 0) >= 1) unlock('ach-invite', 'invite', 500, 'Амбасадор');
+            if ((userData.referrals_count || 0) >= 5) unlock('ach-influencer', 'influencer', 1500, 'Лідер думок');
 
             if (claimed.includes('ai_pro')) {
                 const el = document.getElementById('ach-ai');
@@ -440,7 +459,7 @@
             if (newXp > 0) {
                 const finalXp = (userData.xp || 0) + newXp;
                 await supabaseClient.from('users').update({ xp: finalXp, achievements: claimed }).eq('user_id', currentUserId);
-                if(alerts.length > 0) tg.showAlert(`🏆 ВІТАЄМО! Отримано нові досягнення:\n${alerts.join('\n')}`);
+                tg.showAlert(`🏆 ВІТАЄМО! Отримано нові досягнення:\n${alerts.join('\n')}`);
                 await loadUserData();
             }
         }
@@ -649,13 +668,11 @@
             }
         }
 
-        // --- ВІДРЕМОНТОВАНА ГЕНЕРАЦІЯ PDF БУДЬ-ЯКОЮ МОВОЮ (ЧЕРЕЗ КАРТИНКУ) ---
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
             if (!prompt) return alert("Будь ласка, введіть запит!");
             
-            // ПОВЕРНУТО ДО BALANCE
-            if (userData.balance <= 0) return alert("Немає генерацій! Поповніть баланс або запросіть друзів.");
+            if (userData.ai_generations <= 0 && userData.ai_generations <= 9000) return alert("Немає генерацій! Поповніть баланс або запросіть друзів.");
 
             tg.showConfirm("Витратити 1 ⚡?", async (ok) => {
                 if (ok) {
@@ -669,22 +686,24 @@
                     }
 
                     const finalXp = (userData.xp || 0) + xpBonus;
-                    const newBal = userData.balance > 9000 ? userData.balance : userData.balance - 1;
+                    const newBal = userData.ai_generations > 9000 ? userData.ai_generations : userData.ai_generations - 1;
 
                     await supabaseClient.from('users').update({ 
-                        balance: newBal, 
+                        ai_generations: newBal, 
                         xp: finalXp, 
                         achievements: claimed 
                     }).eq('user_id', currentUserId);
                     
-                    // --- НОВИЙ МЕТОД: МАЛЮЄМО HTML ТА ЗБЕРІГАЄМО ЯК ПДФ ---
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    
                     const printDiv = document.createElement('div');
                     printDiv.style.width = '800px';
                     printDiv.style.padding = '40px';
                     printDiv.style.background = 'white';
                     printDiv.style.color = 'black';
                     printDiv.style.fontFamily = 'sans-serif';
-                    printDiv.style.position = 'fixed'; // Ховаємо від юзера, але даємо відмалюватися
+                    printDiv.style.position = 'fixed'; 
                     printDiv.style.top = '-9999px';
                     
                     printDiv.innerHTML = `
@@ -695,18 +714,17 @@
                         <p style="font-size: 16px; line-height: 1.6; color: #333; white-space: pre-wrap;">${prompt}</p>
                         <br><br><br>
                         <div style="border-top: 1px solid #ccc; padding-top: 15px;">
-                            <p style="font-size: 12px; color: #999;">Згенеровано у Virtus Fit AI Ultimate</p>
+                            <p style="font-size: 12px; color: #999;">Згенеровано у Virtus Fit AI Ultimate Elite</p>
                         </div>
                     `;
                     document.body.appendChild(printDiv);
 
-                    // Робимо скріншот і конвертуємо у PDF
                     html2canvas(printDiv, { scale: 2 }).then(canvas => {
                         const imgData = canvas.toDataURL('image/jpeg', 1.0);
                         const { jsPDF } = window.jspdf;
                         const doc = new jsPDF('p', 'mm', 'a4');
                         
-                        const imgWidth = 210; // Ширина А4
+                        const imgWidth = 210; 
                         const imgHeight = (canvas.height * imgWidth) / canvas.width;
                         
                         doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
