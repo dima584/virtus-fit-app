@@ -32,11 +32,24 @@
         .achievement-locked { filter: grayscale(1); opacity: 0.3; }
         .achievement-card.unlocked { filter: none !important; opacity: 1 !important; border-color: #3390ec !important; box-shadow: 0 0 15px rgba(51, 144, 236, 0.2); background: rgba(51, 144, 236, 0.05); }
         
-        /* Видимий красивий скролбар для ПК і зручного свайпу */
-        .custom-scroll::-webkit-scrollbar { height: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(51, 144, 236, 0.5); border-radius: 10px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(51, 144, 236, 0.8); }
+        /* === ВИДИМИЙ СКРОЛБАР ДЛЯ ПК === */
+        .custom-scroll {
+            overflow-x: scroll !important; /* Примусовий скрол */
+            scrollbar-width: thin;
+            scrollbar-color: #3390ec rgba(255,255,255,0.05);
+        }
+        .custom-scroll::-webkit-scrollbar {
+            height: 8px;
+            display: block !important; /* Робимо видимим у Chrome/Edge */
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(51, 144, 236, 0.8);
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body class="p-4 pb-28">
@@ -155,7 +168,7 @@
         
         <div class="card p-4 shadow-xl border-blue-500/10 mb-6 relative overflow-hidden">
             <h3 class="text-[10px] font-bold opacity-50 uppercase mb-3 text-white tracking-widest text-center">Шлях до Преміуму 👑</h3>
-            <div class="flex gap-3 overflow-x-auto pb-4 snap-x custom-scroll" id="level-roadmap"></div>
+            <div class="flex gap-3 pb-4 snap-x custom-scroll" id="level-roadmap"></div>
             <p class="text-[8px] opacity-40 text-center mt-2 italic text-white">* Гортай, щоб побачити всі нагороди</p>
         </div>
 
@@ -214,7 +227,7 @@
         <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white">AI ТРЕНЕР PRO</h2>
         <div class="card p-6 shadow-2xl border-blue-500/10">
             <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center text-white">ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ</p>
-            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, фокус на ноги та прес, українською мовою..."></textarea>
+            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, фокус на ноги та прес..."></textarea>
             <div class="flex justify-between items-center mb-6 text-white text-[10px] font-bold px-1">
                 <span class="opacity-50 tracking-widest">БАЛАНС ГЕНЕРАЦІЙ:</span>
                 <span id="ai-balance-display" class="text-blue-400 text-sm">--</span>
@@ -328,7 +341,6 @@
                     }
                 }
 
-                // ПРИМУСОВИЙ ПРЕМІУМ НА 10 РІВНІ
                 if (targetLevel >= 10 && !isPremium && !claimedAchievements.includes('premium_expires')) {
                     let expireTime = Date.now() + (30 * 24 * 60 * 60 * 1000); 
                     claimedAchievements += `premium_expires:${expireTime},`;
@@ -338,22 +350,25 @@
                     tg.showAlert(`🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА на 1 МІСЯЦЬ та БЕЗЛІМІТ генерацій ШІ! 👑`);
                 }
 
-                // --- НОВА ЛОГІКА ПРЕСТИЖУ (ЗБЕРІГАННЯ ЧАСУ ПЕРЕЗАПУСКУ) ---
+                // === ЛОГІКА ПРЕСТИЖУ ЗІ СПРАВЖНІМ ОБНУЛЕННЯМ (ЗБЕРЕЖЕННЯ ОФСЕТІВ) ===
                 if (currentXp >= 10000) {
                     currentXp = currentXp % 10000; 
                     targetLevel = Math.floor(currentXp / 1000) + 1;
                     
+                    // Отримуємо статистику на момент Престижу, щоб віднімати її потім
+                    const { count: fCount } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
+                    const { count: wCount } = await supabaseClient.from('weight_history').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
+                    let bRefs = data.referrals_count || 0;
+                    let pTime = Date.now();
+                    
                     let expireMatch = claimedAchievements.match(/premium_expires:\d+,?/);
                     let expireStr = expireMatch ? expireMatch[0] : `premium_expires:${Date.now() + (30 * 24 * 60 * 60 * 1000)},`;
                     
-                    let prestigeTime = Date.now();
-                    let baseRefs = data.referrals_count || 0;
-
-                    // Очищаємо всі нагороди, АЛЕ залишаємо Преміум, додаємо час престижу і початкових рефералів
-                    claimedAchievements = `${expireStr}prestige_time:${prestigeTime},base_refs:${baseRefs},`; 
+                    // Обнуляємо досягнення, залишаючи Преміум та записуючи "точку відліку"
+                    claimedAchievements = `${expireStr}p_food:${fCount||0},p_weight:${wCount||0},p_refs:${bRefs},p_time:${pTime},`; 
                     newGenerations = 9999;
                     needsUpdate = true;
-                    tg.showAlert(`🌟 ЛЕГЕНДА! Ти повністю пройшов гру!\nТвій рівень скинуто до 1, щоб заробляти нагороди знову. Преміум залишається! Починаємо новий цикл! 👑`);
+                    tg.showAlert(`🌟 ЛЕГЕНДА! Ти повністю пройшов гру!\nТвій рівень скинуто до 1, щоб заробляти нагороди знову (тепер рахуватимуться тільки нові записи). Преміум залишається! 👑`);
                 } 
                 else if (targetLevel > currentLevel && targetLevel < 10) {
                     const levelDiff = targetLevel - currentLevel;
@@ -470,7 +485,7 @@
             await checkAchievements();
         }
 
-        // --- ВІДФІЛЬТРОВАНІ ДОСЯГНЕННЯ ПІСЛЯ ПРЕСТИЖУ ---
+        // === ЧЕСНА ПЕРЕВІРКА ДОСЯГНЕНЬ (З ВІДНІМАННЯМ СТАРИХ ДАНИХ) ===
         async function checkAchievements() {
             if (!userData) return;
             
@@ -478,12 +493,12 @@
             let newXp = 0;
             let alerts = [];
 
-            // Дізнаємося, коли був престиж, щоб не рахувати старі дані
-            let pTimeMatch = claimed.match(/prestige_time:(\d+)/);
+            // Дізнаємося точку відліку (якщо був Престиж)
+            let pFood = claimed.match(/p_food:(\d+)/) ? parseInt(claimed.match(/p_food:(\d+)/)[1]) : 0;
+            let pWeight = claimed.match(/p_weight:(\d+)/) ? parseInt(claimed.match(/p_weight:(\d+)/)[1]) : 0;
+            let pRefs = claimed.match(/p_refs:(\d+)/) ? parseInt(claimed.match(/p_refs:(\d+)/)[1]) : 0;
+            let pTimeMatch = claimed.match(/p_time:(\d+)/);
             let pTimeISO = pTimeMatch ? new Date(parseInt(pTimeMatch[1])).toISOString() : null;
-
-            let bRefMatch = claimed.match(/base_refs:(\d+)/);
-            let baseRefs = bRefMatch ? parseInt(bRefMatch[1]) : 0;
 
             const unlock = (id, key, xp, name) => {
                 const el = document.getElementById(id);
@@ -495,19 +510,19 @@
                 }
             };
 
+            // Новачок дається одразу
             if (userData.name) unlock('ach-newbie', 'newbie', 100, 'Новачок');
 
-            // Запити до БД з фільтром по даті престижу
-            let foodQuery = supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
-            if (pTimeISO) foodQuery = foodQuery.gte('created_at', pTimeISO);
-            const { count: foodCount } = await foodQuery;
-
-            if (foodCount >= 10) unlock('ach-foodie', 'foodie', 500, 'Здорове меню');
-            if (foodCount >= 50) unlock('ach-foodie50', 'foodie50', 1000, 'Шеф-кухар');
-            if (foodCount >= 100) unlock('ach-foodie100', 'foodie100', 2000, 'Експерт з харчування');
+            // Їжа (Рахуємо тільки нові записи)
+            const { count: rawFoodCount } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
+            let actualFoodCount = (rawFoodCount || 0) - pFood;
+            if (actualFoodCount >= 10) unlock('ach-foodie', 'foodie', 500, 'Здорове меню');
+            if (actualFoodCount >= 50) unlock('ach-foodie50', 'foodie50', 1000, 'Шеф-кухар');
+            if (actualFoodCount >= 100) unlock('ach-foodie100', 'foodie100', 2000, 'Експерт з харчування');
 
             if (userData.water_today >= userGoals.water) unlock('ach-water', 'water', 400, 'Водний магнат');
 
+            // Стрік (Шукаємо тільки записи ПІСЛЯ часу Престижу)
             let streakQuery = supabaseClient.from('nutrition_logs').select('created_at').eq('user_id', currentUserId);
             if (pTimeISO) streakQuery = streakQuery.gte('created_at', pTimeISO);
             const { data: streakData } = await streakQuery;
@@ -518,16 +533,16 @@
                 if (distinctDays >= 7) unlock('ach-streak7', 'streak7', 1000, 'Залізна воля');
             }
 
-            let weightQuery = supabaseClient.from('weight_history').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
-            if (pTimeISO) weightQuery = weightQuery.gte('created_at', pTimeISO);
-            const { count: weightCount } = await weightQuery;
+            // Вага (Тільки нові записи)
+            const { count: rawWeightCount } = await supabaseClient.from('weight_history').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
+            let actualWeightCount = (rawWeightCount || 0) - pWeight;
+            if (actualWeightCount >= 3) unlock('ach-weight', 'weight', 300, 'Вагомий крок');
+            if (actualWeightCount >= 10) unlock('ach-weight10', 'weight10', 800, 'Трансформація');
 
-            if (weightCount >= 3) unlock('ach-weight', 'weight', 300, 'Вагомий крок');
-            if (weightCount >= 10) unlock('ach-weight10', 'weight10', 800, 'Трансформація');
-
-            let effectiveRefs = (userData.referrals_count || 0) - baseRefs;
-            if (effectiveRefs >= 1) unlock('ach-invite', 'invite', 500, 'Амбасадор');
-            if (effectiveRefs >= 5) unlock('ach-influencer', 'influencer', 1500, 'Лідер думок');
+            // Друзі (Тільки нові друзі)
+            let actualRefs = (userData.referrals_count || 0) - pRefs;
+            if (actualRefs >= 1) unlock('ach-invite', 'invite', 500, 'Амбасадор');
+            if (actualRefs >= 5) unlock('ach-influencer', 'influencer', 1500, 'Лідер думок');
 
             if (claimed.includes('ai_pro')) {
                 const el = document.getElementById('ach-ai');
