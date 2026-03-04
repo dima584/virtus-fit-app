@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Virtus Fit AI Ultimate</title>
+    <title>Virtus Fit AI Ultimate Elite</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -55,7 +55,6 @@
     </div>
 
     <div id="page-main" class="page-content">
-        
         <div id="admin-panel" class="hidden card p-4 mb-4 border-2 border-yellow-500/30 shadow-xl">
             <h3 class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest mb-3 text-center">🛡️ АДМІН-ЦЕНТР</h3>
             <div class="grid grid-cols-2 gap-4 text-center">
@@ -214,7 +213,7 @@
         <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white" id="lang-coach-title">AI ТРЕНЕР PRO</h2>
         <div class="card p-6 shadow-2xl border-blue-500/10">
             <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center text-white" id="lang-coach-prompt">ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ</p>
-            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв, фокус на ноги та прес..."></textarea>
+            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв..."></textarea>
             <div class="flex justify-between items-center mb-6 text-white text-[10px] font-bold px-1">
                 <span class="opacity-50 tracking-widest" id="lang-coach-balance">БАЛАНС ГЕНЕРАЦІЙ:</span>
                 <span id="ai-balance-display" class="text-blue-400 text-sm">--</span>
@@ -243,9 +242,8 @@
         let currentUserId = null, userData = null, weightChart = null, calorieChart = null;
         let selectedDate = new Date(), weightFilterDays = 7;
         let userGoals = { cal: 2000, p: 150, f: 70, c: 250, water: 2000 };
-        let currentLang = 'ua'; // За замовчуванням
+        let currentLang = 'ua'; 
 
-        // === СЛОВНИК ПЕРЕКЛАДІВ ===
         const i18n = {
             ua: {
                 tabHome: "ГОЛОВНА", tabAch: "УСПІХИ", tabCoach: "ТРЕНЕР",
@@ -258,23 +256,17 @@
                 weightTrend: "АНАЛІТИКА ТРЕНДУ ВАГИ", archive: "АРХІВ ДНЯ",
                 pathPremium: "Шлях до Преміуму 👑", scrollHint: "* Гортай, щоб побачити всі нагороди",
                 yourAch: "Твої досягнення", statInvite: "СТАТИСТИКА ЗАПРОШЕНЬ",
-                refTitle: "РЕФЕРАЛЬНА ПРОГРАМА", refDesc: "За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+5 AI генерацій</b>! А за проходження 10 рівня тебе чекає <b>Преміум на 1 МІСЯЦЬ</b>!",
+                refTitle: "РЕФЕРАЛЬНА ПРОГРАМА", refDesc: "За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+5 AI генерацій</b>!",
                 inviteBtn: "ЗАПРОСИТИ ДРУГА", coachTitle: "AI ТРЕНЕР PRO", coachPrompt: "ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ",
                 coachPlaceholder: "Наприклад: Тренування вдома на 15 хв, фокус на ноги та прес...",
                 coachBalance: "БАЛАНС ГЕНЕРАЦІЙ:", coachGenBtn: "СФОРМУВАТИ PDF ПЛАН", coachChart: "ККАЛ ЗА ОСТАННІЙ ТИЖДЕНЬ",
                 adminUsers: "Юзерів", adminLogs: "Логів їжі", history: "Перегляд історії", unlimited: "Безліміт 👑",
-                achT1: "Новачок", achD1: "Просто зареєструйся",
-                achT2: "Стрік 3 дні", achD2: "Записуй дані 3 дні поспіль",
-                achT3: "Залізна воля", achD3: "Записуй дані 7 днів поспіль",
-                achT4: "Здорове меню", achD4: "Запиши 10 страв",
-                achT5: "Шеф-кухар", achD5: "Запиши 50 страв",
-                achT6: "Експерт", achD6: "Запиши 100 страв",
-                achT7: "Водний магнат", achD7: "Виконай норму води",
-                achT8: "Вагомий крок", achD8: "Запиши вагу 3 рази",
-                achT9: "Трансформація", achD9: "Запиши вагу 10 разів",
-                achT10: "ШІ-Атлет", achD10: "Згенеруй 1 план",
-                achT11: "Амбасадор", achD11: "Запроси 1 друга",
-                achT12: "Лідер думок", achD12: "Запроси 5 друзів"
+                achT1: "Новачок", achD1: "Просто зареєструйся", achT2: "Стрік 3 дні", achD2: "Записуй дані 3 дні поспіль",
+                achT3: "Залізна воля", achD3: "Записуй дані 7 днів поспіль", achT4: "Здорове меню", achD4: "Запиши 10 страв",
+                achT5: "Шеф-кухар", achD5: "Запиши 50 страв", achT6: "Експерт", achD6: "Запиши 100 страв",
+                achT7: "Водний магнат", achD7: "Виконай норму води", achT8: "Вагомий крок", achD8: "Запиши вагу 3 рази",
+                achT9: "Трансформація", achD9: "Запиши вагу 10 разів", achT10: "ШІ-Атлет", achD10: "Згенеруй 1 план",
+                achT11: "Амбасадор", achD11: "Запроси 1 друга", achT12: "Лідер думок", achD12: "Запроси 5 друзів"
             },
             en: {
                 tabHome: "HOME", tabAch: "AWARDS", tabCoach: "COACH",
@@ -287,23 +279,17 @@
                 weightTrend: "WEIGHT TREND ANALYTICS", archive: "DAILY ARCHIVE",
                 pathPremium: "Path to Premium 👑", scrollHint: "* Swipe to see all rewards",
                 yourAch: "Your Achievements", statInvite: "INVITE STATISTICS",
-                refTitle: "REFERRAL PROGRAM", refDesc: "Get <b>+200 XP</b> for each friend! <br>Each new level grants <b>+5 AI generations</b>! Reach level 10 to get <b>1 MONTH Premium</b>!",
+                refTitle: "REFERRAL PROGRAM", refDesc: "Get <b>+200 XP</b> for each friend! <br>Each new level grants <b>+5 AI generations</b>!",
                 inviteBtn: "INVITE A FRIEND", coachTitle: "AI COACH PRO", coachPrompt: "PERSONALIZED REQUEST",
                 coachPlaceholder: "Example: Home workout for 15 min, focus on legs and abs...",
                 coachBalance: "GENERATIONS BALANCE:", coachGenBtn: "GENERATE PDF PLAN", coachChart: "KCAL LAST WEEK",
                 adminUsers: "Users", adminLogs: "Food Logs", history: "History View", unlimited: "Unlimited 👑",
-                achT1: "Newbie", achD1: "Just register",
-                achT2: "3-Day Streak", achD2: "Log data 3 days in a row",
-                achT3: "Iron Will", achD3: "Log data 7 days in a row",
-                achT4: "Healthy Menu", achD4: "Log 10 meals",
-                achT5: "Chef", achD5: "Log 50 meals",
-                achT6: "Expert", achD6: "Log 100 meals",
-                achT7: "Water Tycoon", achD7: "Reach water goal",
-                achT8: "Weight Step", achD8: "Log weight 3 times",
-                achT9: "Transformation", achD9: "Log weight 10 times",
-                achT10: "AI Athlete", achD10: "Generate 1 plan",
-                achT11: "Ambassador", achD11: "Invite 1 friend",
-                achT12: "Influencer", achD12: "Invite 5 friends"
+                achT1: "Newbie", achD1: "Just register", achT2: "3-Day Streak", achD2: "Log data 3 days in a row",
+                achT3: "Iron Will", achD3: "Log data 7 days in a row", achT4: "Healthy Menu", achD4: "Log 10 meals",
+                achT5: "Chef", achD5: "Log 50 meals", achT6: "Expert", achD6: "Log 100 meals",
+                achT7: "Water Tycoon", achD7: "Reach water goal", achT8: "Weight Step", achD8: "Log weight 3 times",
+                achT9: "Transformation", achD9: "Log weight 10 times", achT10: "AI Athlete", achD10: "Generate 1 plan",
+                achT11: "Ambassador", achD11: "Invite 1 friend", achT12: "Influencer", achD12: "Invite 5 friends"
             },
             ru: {
                 tabHome: "ГЛАВНАЯ", tabAch: "УСПЕХИ", tabCoach: "ТРЕНЕР",
@@ -316,34 +302,27 @@
                 weightTrend: "АНАЛИТИКА ТРЕНДА ВЕСА", archive: "АРХИВ ДНЯ",
                 pathPremium: "Путь к Премиуму 👑", scrollHint: "* Листайте, чтобы увидеть все награды",
                 yourAch: "Твои достижения", statInvite: "СТАТИСТИКА ПРИГЛАШЕНИЙ",
-                refTitle: "РЕФЕРАЛЬНАЯ ПРОГРАММА", refDesc: "За каждого друга получай <b>+200 XP</b>! <br>Каждый новый уровень дает <b>+5 AI генераций</b>! А за прохождение 10 уровня тебя ждет <b>Премиум на 1 МЕСЯЦ</b>!",
+                refTitle: "РЕФЕРАЛЬНАЯ ПРОГРАММА", refDesc: "За каждого друга получай <b>+200 XP</b>! <br>Каждый новый уровень дает <b>+5 AI генераций</b>!",
                 inviteBtn: "ПРИГЛАСИТЬ ДРУГА", coachTitle: "AI ТРЕНЕР PRO", coachPrompt: "ПЕРСОНАЛИЗИРОВАННЫЙ ЗАПРОС",
                 coachPlaceholder: "Например: Тренировка дома на 15 мин, фокус на ноги и пресс...",
                 coachBalance: "БАЛАНС ГЕНЕРАЦИЙ:", coachGenBtn: "СФОРМИРОВАТЬ PDF ПЛАН", coachChart: "ККАЛ ЗА ПОСЛЕДНЮЮ НЕДЕЛЮ",
                 adminUsers: "Юзеров", adminLogs: "Логов еды", history: "Просмотр истории", unlimited: "Безлимит 👑",
-                achT1: "Новичок", achD1: "Просто зарегистрируйся",
-                achT2: "Стрик 3 дня", achD2: "Записывай данные 3 дня подряд",
-                achT3: "Железная воля", achD3: "Записывай данные 7 дней подряд",
-                achT4: "Здоровое меню", achD4: "Запиши 10 блюд",
-                achT5: "Шеф-повар", achD5: "Запиши 50 блюд",
-                achT6: "Эксперт", achD6: "Запиши 100 блюд",
-                achT7: "Водный магнат", achD7: "Выполни норму воды",
-                achT8: "Весомый шаг", achD8: "Запиши вес 3 раза",
-                achT9: "Трансформация", achD9: "Запиши вес 10 раз",
-                achT10: "ИИ-Атлет", achD10: "Сгенерируй 1 план",
-                achT11: "Амбассадор", achD11: "Пригласи 1 друга",
-                achT12: "Лидер мнений", achD12: "Пригласи 5 друзей"
+                achT1: "Новичок", achD1: "Просто зарегистрируйся", achT2: "Стрик 3 дня", achD2: "Записывай данные 3 дня подряд",
+                achT3: "Железная воля", achD3: "Записывай данные 7 дней подряд", achT4: "Здоровое меню", achD4: "Запиши 10 блюд",
+                achT5: "Шеф-повар", achD5: "Запиши 50 блюд", achT6: "Эксперт", achD6: "Запиши 100 блюд",
+                achT7: "Водный магнат", achD7: "Выполни норму воды", achT8: "Весомый шаг", achD8: "Запиши вес 3 раза",
+                achT9: "Трансформация", achD9: "Запиши вес 10 раз", achT10: "ИИ-Атлет", achD10: "Сгенерируй 1 план",
+                achT11: "Амбассадор", achD11: "Пригласи 1 друга", achT12: "Лидер мнений", achD12: "Пригласи 5 друзей"
             }
         };
 
         function setText(id, text) {
             const el = document.getElementById(id);
-            if (el) el.innerHTML = text; // innerHTML для підтримки тегів <b>
+            if (el) el.innerHTML = text; 
         }
 
-        // === ФУНКЦІЯ ЗАСТОСУВАННЯ МОВИ ===
         function applyLanguage(langCode) {
-            const t = i18n[langCode] || i18n['ua']; // Якщо мови немає, ставимо укр
+            const t = i18n[langCode] || i18n['ua']; 
             currentLang = langCode;
 
             setText('lang-tab-home', t.tabHome); setText('lang-tab-ach', t.tabAch); setText('lang-tab-coach', t.tabCoach);
@@ -371,48 +350,24 @@
             const urlParams = new URLSearchParams(window.location.search);
             currentUserId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
             if (!currentUserId) return;
-            
             try {
-                await loadUserData();
-                await refreshScreen();
-                await checkAdmin();
-                await checkAchievements();
-                showPage('main');
-            } catch (err) {
-                console.error("Помилка ініціалізації:", err);
-            }
+                await loadUserData(); await refreshScreen(); await checkAdmin(); await checkAchievements(); showPage('main');
+            } catch (err) { console.error(err); }
         }
 
         function renderRoadmap(currentLevel) {
             const roadmapEl = document.getElementById('level-roadmap');
             if (!roadmapEl) return;
-
             let html = '';
             for (let i = 2; i <= 10; i++) {
-                let statusClass = 'opacity-40 border-white/5'; 
-                let icon = '⚡';
-                let rewardText = '+5';
-
+                let statusClass = 'opacity-40 border-white/5'; let icon = '⚡'; let rewardText = '+5';
                 if (i === 5) { icon = '🎁'; rewardText = '+25'; }
                 if (i === 10) { icon = '👑'; rewardText = 'PRO'; }
-
-                if (i < currentLevel) {
-                    statusClass = 'opacity-100 border-green-500/50 bg-green-500/10 text-green-400';
-                    icon = '✅';
-                } else if (i === currentLevel) {
-                    statusClass = 'opacity-100 border-blue-500 bg-blue-500/20 shadow-lg shadow-blue-500/20 scale-105';
-                }
-
-                html += `
-                    <div class="flex-shrink-0 w-24 card p-3 text-center snap-center border transition-all duration-300 ${statusClass}">
-                        <div class="text-xs font-bold mb-1 ${i===currentLevel ? 'text-white' : ''}">LVL ${i}</div>
-                        <div class="text-2xl mb-1">${icon}</div>
-                        <div class="text-[8px] font-bold ${i===10 && i>=currentLevel ? 'text-yellow-400' : 'text-blue-400'} uppercase leading-tight">${rewardText}</div>
-                    </div>
-                `;
+                if (i < currentLevel) { statusClass = 'opacity-100 border-green-500/50 bg-green-500/10 text-green-400'; icon = '✅'; } 
+                else if (i === currentLevel) { statusClass = 'opacity-100 border-blue-500 bg-blue-500/20 shadow-lg shadow-blue-500/20 scale-105'; }
+                html += `<div class="flex-shrink-0 w-24 card p-3 text-center snap-center border transition-all duration-300 ${statusClass}"><div class="text-xs font-bold mb-1 ${i===currentLevel ? 'text-white' : ''}">LVL ${i}</div><div class="text-2xl mb-1">${icon}</div><div class="text-[8px] font-bold ${i===10 && i>=currentLevel ? 'text-yellow-400' : 'text-blue-400'} uppercase leading-tight">${rewardText}</div></div>`;
             }
             roadmapEl.innerHTML = html;
-
             setTimeout(() => {
                 const activeEl = roadmapEl.querySelector('.border-blue-500');
                 if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
@@ -422,29 +377,22 @@
         async function loadUserData() {
             const { data, error } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
-                // === ЗАСТОСОВУЄМО МОВУ З БАЗИ ===
                 let dbLang = data.language || tg.initDataUnsafe?.user?.language_code || 'ua';
                 applyLanguage(dbLang);
 
-                let currentXp = data.xp || 0;
-                let currentLevel = data.level || 1;
+                let currentXp = data.xp || 0; let currentLevel = data.level || 1;
                 let targetLevel = Math.floor(currentXp / 1000) + 1;
                 let newGenerations = data.ai_generations || 0;
-                let claimedAchievements = data.achievements || "";
-                let needsUpdate = false;
+                let claimedAchievements = data.achievements || ""; let needsUpdate = false;
 
                 let premiumMatch = claimedAchievements.match(/premium_expires:(\d+)/);
                 let isPremium = false;
-                
                 if (premiumMatch) {
                     let expireTime = parseInt(premiumMatch[1]);
-                    if (Date.now() < expireTime) {
-                        isPremium = true;
-                        newGenerations = 9999;
-                    } else {
+                    if (Date.now() < expireTime) { isPremium = true; newGenerations = 9999; } 
+                    else {
                         claimedAchievements = claimedAchievements.replace(/premium_expires:\d+,?/g, '');
-                        newGenerations = (newGenerations > 9000) ? 5 : newGenerations;
-                        needsUpdate = true;
+                        newGenerations = (newGenerations > 9000) ? 5 : newGenerations; needsUpdate = true;
                         tg.showAlert(currentLang === 'en' ? "Premium expired!" : "Термін дії Преміуму закінчився!");
                     }
                 }
@@ -452,65 +400,41 @@
                 if (targetLevel >= 10 && !isPremium && !claimedAchievements.includes('premium_expires')) {
                     let expireTime = Date.now() + (30 * 24 * 60 * 60 * 1000); 
                     claimedAchievements += `premium_expires:${expireTime},`;
-                    newGenerations = 9999;
-                    isPremium = true;
-                    needsUpdate = true;
+                    newGenerations = 9999; isPremium = true; needsUpdate = true;
                     tg.showAlert(currentLang === 'en' ? "Level 10! You got 1 Month Premium!" : `🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА на 1 МІСЯЦЬ! 👑`);
                 }
 
                 if (currentXp >= 10000) {
-                    currentXp = currentXp % 10000; 
-                    targetLevel = Math.floor(currentXp / 1000) + 1;
-                    
+                    currentXp = currentXp % 10000; targetLevel = Math.floor(currentXp / 1000) + 1;
                     const { count: fCount } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
                     const { count: wCount } = await supabaseClient.from('weight_history').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
-                    let bRefs = data.referrals_count || 0;
-                    let pTime = Date.now();
-                    
+                    let bRefs = data.referrals_count || 0; let pTime = Date.now();
                     let expireMatch = claimedAchievements.match(/premium_expires:\d+,?/);
                     let expireStr = expireMatch ? expireMatch[0] : `premium_expires:${Date.now() + (30 * 24 * 60 * 60 * 1000)},`;
-                    
                     claimedAchievements = `${expireStr}p_food:${fCount||0},p_weight:${wCount||0},p_refs:${bRefs},p_time:${pTime},`; 
-                    newGenerations = 9999;
-                    needsUpdate = true;
+                    newGenerations = 9999; needsUpdate = true;
                     tg.showAlert(currentLang === 'en' ? "Legend status! Level reset, Premium kept!" : `🌟 ЛЕГЕНДА! Ти повністю пройшов гру!\nТвій рівень скинуто до 1, щоб заробляти нагороди знову. Преміум залишається! 👑`);
                 } 
                 else if (targetLevel > currentLevel && targetLevel < 10) {
-                    const levelDiff = targetLevel - currentLevel;
-                    let bonusGens = levelDiff * 5; 
+                    const levelDiff = targetLevel - currentLevel; let bonusGens = levelDiff * 5; 
                     if (targetLevel === 5) {
                         bonusGens += 20; 
                         tg.showAlert(currentLang === 'en' ? `Level 5! Bonus +${bonusGens} Gen!` : `🎁 ЕКВАТОР ПРОЙДЕНО! 5 РІВЕНЬ! 🎁\nЗамість 5 генерацій ти отримуєш мега-бонус: +${bonusGens} ⚡ генерацій!`);
-                    } else {
-                        tg.showAlert(`🚀 Level UP: ${targetLevel}! (+${bonusGens} ⚡)`);
-                    }
+                    } else { tg.showAlert(`🚀 Level UP: ${targetLevel}! (+${bonusGens} ⚡)`); }
                     if (!isPremium) newGenerations += bonusGens;
                     needsUpdate = true;
                 }
 
-                if (currentLevel >= 10 && newGenerations <= 0) {
-                    newGenerations = 9999; 
-                    needsUpdate = true;
-                }
+                if (currentLevel >= 10 && newGenerations <= 0) { newGenerations = 9999; needsUpdate = true; }
 
                 if (needsUpdate || targetLevel !== currentLevel) {
-                    await supabaseClient.from('users').update({ 
-                        level: targetLevel, 
-                        ai_generations: newGenerations,
-                        xp: currentXp,
-                        achievements: claimedAchievements
-                    }).eq('user_id', currentUserId);
+                    await supabaseClient.from('users').update({ level: targetLevel, ai_generations: newGenerations, xp: currentXp, achievements: claimedAchievements }).eq('user_id', currentUserId);
                     return loadUserData(); 
                 }
 
-                userData = data;
-                renderRoadmap(data.level || 1); 
-                
-                userGoals.cal = data.daily_cal_goal || 2000;
-                userGoals.water = data.water_goal || 2000;
-                userGoals.p = data.daily_p_goal || 150;
-                userGoals.f = data.daily_f_goal || 70;
-                userGoals.c = data.daily_c_goal || 250;
+                userData = data; renderRoadmap(data.level || 1); 
+                userGoals.cal = data.daily_cal_goal || 2000; userGoals.water = data.water_goal || 2000;
+                userGoals.p = data.daily_p_goal || 150; userGoals.f = data.daily_f_goal || 70; userGoals.c = data.daily_c_goal || 250;
                 
                 if(document.getElementById('goal-cal')) document.getElementById('goal-cal').value = userGoals.cal;
                 if(document.getElementById('goal-water')) document.getElementById('goal-water').value = userGoals.water;
@@ -518,32 +442,24 @@
                 if(document.getElementById('goal-f')) document.getElementById('goal-f').value = userGoals.f;
                 if(document.getElementById('goal-c')) document.getElementById('goal-c').value = userGoals.c;
 
-                setText('user-name', data.name || "User");
-                setText('user-name-top', data.name || "User");
-                setText('weight-display', (data.weight || 0) + " кг");
-                setText('goal-display', data.target_weight ? data.target_weight + " кг" : "...");
+                setText('user-name', data.name || "User"); setText('user-name-top', data.name || "User");
+                setText('weight-display', (data.weight || 0) + " кг"); setText('goal-display', data.target_weight ? data.target_weight + " кг" : "...");
                 
                 const t = i18n[currentLang] || i18n['ua'];
                 const displayBalance = (data.ai_generations && data.ai_generations > 9000) ? t.unlimited : (data.ai_generations || 0);
-                setText('user-balance', displayBalance);
-                setText('ai-balance-display', displayBalance);
-                
+                setText('user-balance', displayBalance); setText('ai-balance-display', displayBalance);
                 setText('ref-count-display', data.referrals_count || 0);
                 
                 if (data.target_weight && data.weight) {
                     const diff = Math.abs(data.weight - data.target_weight).toFixed(1);
                     document.getElementById('status-msg').innerText = data.weight > data.target_weight ? `-${diff} кг` : `+${diff} кг`;
-                } else {
-                    document.getElementById('status-msg').innerText = "🚀";
-                }
+                } else { document.getElementById('status-msg').innerText = "🚀"; }
                 
                 updateXPUI(data.xp || 0, data.level || 1);
                 
                 const todayStr = new Date().toLocaleDateString('sv');
                 const lastUpdate = data.updated_at ? new Date(data.updated_at).toLocaleDateString('sv') : "";
-                if (lastUpdate && lastUpdate !== todayStr) {
-                    await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId);
-                }
+                if (lastUpdate && lastUpdate !== todayStr) { await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId); }
             }
         }
 
@@ -553,15 +469,9 @@
             const p = parseInt(document.getElementById('goal-p').value) || 150;
             const f = parseInt(document.getElementById('goal-f').value) || 70;
             const c = parseInt(document.getElementById('goal-c').value) || 250;
-
             userGoals.cal = cal; userGoals.water = water; userGoals.p = p; userGoals.f = f; userGoals.c = c;
-
-            const { error } = await supabaseClient.from('users').update({
-                daily_cal_goal: cal, water_goal: water, daily_p_goal: p, daily_f_goal: f, daily_c_goal: c
-            }).eq('user_id', currentUserId);
-
-            tg.HapticFeedback.notificationOccurred('success');
-            tg.showAlert(currentLang === 'en' ? "Saved!" : "Збережено!");
+            await supabaseClient.from('users').update({ daily_cal_goal: cal, water_goal: water, daily_p_goal: p, daily_f_goal: f, daily_c_goal: c }).eq('user_id', currentUserId);
+            tg.HapticFeedback.notificationOccurred('success'); tg.showAlert(currentLang === 'en' ? "Saved!" : "Збережено!");
             await refreshScreen();
         }
 
@@ -569,26 +479,16 @@
             const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
             const val = parseFloat(document.getElementById(inputId).value);
             if (!val || isNaN(val)) return;
-            
             await supabaseClient.from('users').update({ [field]: val }).eq('user_id', currentUserId);
-            
-            if(field === 'weight') {
-                await supabaseClient.from('weight_history').insert({ user_id: currentUserId, weight: val });
-                await addXP(50);
-            }
-            
+            if(field === 'weight') { await supabaseClient.from('weight_history').insert({ user_id: currentUserId, weight: val }); await addXP(50); }
             document.getElementById(inputId).value = ''; 
             tg.HapticFeedback.notificationOccurred('success');
-            await loadUserData();
-            await loadCharts();
-            await checkAchievements();
+            await loadUserData(); await loadCharts(); await checkAchievements();
         }
 
         async function checkAchievements() {
             if (!userData) return;
-            let claimed = userData.achievements || "";
-            let newXp = 0; let alerts = [];
-
+            let claimed = userData.achievements || ""; let newXp = 0; let alerts = [];
             let pFood = claimed.match(/p_food:(\d+)/) ? parseInt(claimed.match(/p_food:(\d+)/)[1]) : 0;
             let pWeight = claimed.match(/p_weight:(\d+)/) ? parseInt(claimed.match(/p_weight:(\d+)/)[1]) : 0;
             let pRefs = claimed.match(/p_refs:(\d+)/) ? parseInt(claimed.match(/p_refs:(\d+)/)[1]) : 0;
@@ -651,23 +551,16 @@
         }
 
         function generateAIInsight(logs, water) {
-            const el = document.getElementById('ai-insight');
-            const textEl = document.getElementById('insight-text');
-            if (!el || !textEl) return;
-            el.classList.remove('hidden');
-            if (logs.length === 0) {
-                textEl.innerText = currentLang === 'en' ? "Start by logging a meal! 🍎 Send a photo to the bot." : "Почніть день із запису їжі! 🍎 Надішліть фото боту.";
-            } else if (water < userGoals.water) {
-                textEl.innerText = currentLang === 'en' ? "Don't forget to drink water! 💧" : "Не забувайте пити воду! 💧";
-            } else {
-                textEl.innerText = currentLang === 'en' ? "Great progress today! 🚀" : "Чудовий прогрес! Ви виконали всі норми. 🚀";
-            }
+            const el = document.getElementById('ai-insight'); const textEl = document.getElementById('insight-text');
+            if (!el || !textEl) return; el.classList.remove('hidden');
+            if (logs.length === 0) textEl.innerText = currentLang === 'en' ? "Start by logging a meal! 🍎 Send a photo to the bot." : "Почніть день із запису їжі! 🍎 Надішліть фото боту.";
+            else if (water < userGoals.water) textEl.innerText = currentLang === 'en' ? "Don't forget to drink water! 💧" : "Не забувайте пити воду! 💧";
+            else textEl.innerText = currentLang === 'en' ? "Great progress today! 🚀" : "Чудовий прогрес! Ви виконали всі норми. 🚀";
         }
 
         async function checkAdmin() {
             if (currentUserId == 983710534) {
-                const adminEl = document.getElementById('admin-panel');
-                if(adminEl) adminEl.classList.remove('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
                 const { count: u } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
                 const { count: f } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true });
                 setText('total-users', u || 0); setText('total-food-logs', f || 0);
@@ -684,16 +577,13 @@
         }
 
         function updateXPUI(xp, level) {
-            const curXP = xp % 1000;
-            setText('user-level', level); setText('current-xp', curXP);
-            const bar = document.getElementById('xp-bar');
-            if(bar) bar.style.width = (curXP / 10) + '%';
+            const curXP = xp % 1000; setText('user-level', level); setText('current-xp', curXP);
+            const bar = document.getElementById('xp-bar'); if(bar) bar.style.width = (curXP / 10) + '%';
         }
 
         async function addXP(amount) {
             const newXP = (userData.xp || 0) + amount;
-            await supabaseClient.from('users').update({ xp: newXP }).eq('user_id', currentUserId);
-            await loadUserData();
+            await supabaseClient.from('users').update({ xp: newXP }).eq('user_id', currentUserId); await loadUserData();
         }
 
         async function addWater(ml) {
@@ -704,19 +594,16 @@
         
         async function resetWater() { 
             if(confirm(currentLang === 'en' ? 'Reset water?' : 'Скинути воду?')) { 
-                await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId);
-                await loadUserData(); refreshScreen();
+                await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId); await loadUserData(); refreshScreen();
             } 
         }
 
         function changeDate(days) { selectedDate.setDate(selectedDate.getDate() + days); refreshScreen(); }
 
         async function refreshScreen() {
-            const dateStr = selectedDate.toLocaleDateString('sv');
-            const isToday = dateStr === new Date().toLocaleDateString('sv');
+            const dateStr = selectedDate.toLocaleDateString('sv'); const isToday = dateStr === new Date().toLocaleDateString('sv');
             setText('display-date', isToday ? (currentLang === 'en' ? "Today" : "Сьогодні") : selectedDate.toLocaleDateString(currentLang==='en'?'en-US':'uk', {day:'numeric', month:'long'}));
-            const waterControls = document.getElementById('water-controls');
-            if(waterControls) waterControls.style.display = isToday ? 'flex' : 'none';
+            const waterControls = document.getElementById('water-controls'); if(waterControls) waterControls.style.display = isToday ? 'flex' : 'none';
             const { data: logs } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', dateStr + 'T00:00:00').lte('created_at', dateStr + 'T23:59:59').order('created_at', {ascending: false});
             let waterVal = isToday ? (userData?.water_today || 0) : 0;
             updateUI(logs || [], waterVal); await loadCharts(); generateAIInsight(logs || [], waterVal);
@@ -726,8 +613,7 @@
             const totals = logs.reduce((acc, curr) => ({ cal: acc.cal + curr.calories, p: acc.p + curr.proteins, f: acc.f + curr.fats, c: acc.c + curr.carbs }), { cal: 0, p: 0, f: 0, c: 0 });
             setText('total-cal', totals.cal);
             const calPercent = Math.min((totals.cal / userGoals.cal) * 100, 100);
-            const circle = document.getElementById('cal-circle');
-            if(circle) circle.style.strokeDashoffset = 220 - (220 * calPercent / 100);
+            const circle = document.getElementById('cal-circle'); if(circle) circle.style.strokeDashoffset = 220 - (220 * calPercent / 100);
             setText('cal-percent', Math.round(calPercent) + '%');
             
             document.getElementById('p-bar').style.width = Math.min((totals.p / userGoals.p) * 100, 100) + '%';
@@ -760,10 +646,8 @@
         }
 
         function setWeightFilter(days) { 
-            weightFilterDays = days; 
-            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active')); 
-            const fBtn = document.getElementById('wf-' + days); if(fBtn) fBtn.classList.add('active'); 
-            loadCharts(); 
+            weightFilterDays = days; document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active')); 
+            const fBtn = document.getElementById('wf-' + days); if(fBtn) fBtn.classList.add('active'); loadCharts(); 
         }
 
         async function loadCharts() {
@@ -779,8 +663,7 @@
             if (weights && weights.length > 0 && wCanvas) {
                 const groupedWeights = {};
                 weights.forEach(w => {
-                    const d = new Date(w.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'});
-                    groupedWeights[d] = w.weight;
+                    const d = new Date(w.created_at).toLocaleDateString('uk', {day:'numeric', month:'short'}); groupedWeights[d] = w.weight;
                 });
                 const allLabels = Object.keys(groupedWeights); const allData = Object.values(groupedWeights);
                 let finalLabels = weightFilterDays !== 365 ? allLabels.slice(-weightFilterDays) : allLabels;
@@ -809,48 +692,59 @@
             }
         }
 
+        // === ОНОВЛЕНО: ГАРНИЙ ШРИФТ ЗАГОЛОВКІВ (###) ТА КРАПКИ ДЛЯ СПИСКІВ (*) ===
         function formatMarkdown(text) {
-            return text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*(.*?)\*/g, '<i>$1</i>').replace(/\n/g, '<br>');
+            let html = text + '\n';
+            html = html.replace(/### (.*?)\n/g, '<div style="margin:15px 0 5px 0; color:#3390ec; font-size:16px; font-weight:bold;">$1</div>');
+            html = html.replace(/## (.*?)\n/g, '<div style="margin:18px 0 8px 0; color:#1a1a1a; font-size:18px; font-weight:bold;">$1</div>');
+            html = html.replace(/# (.*?)\n/g, '<div style="margin:20px 0 10px 0; color:#1a1a1a; font-size:20px; font-weight:bold;">$1</div>');
+            html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            html = html.replace(/^\* (.*?)$/gm, '&bull; $1');
+            html = html.replace(/^- (.*?)$/gm, '&bull; $1');
+            return html.replace(/\n/g, '<br>');
         }
 
-        // --- ВІДПРАВКА ЗАПИТУ ДО PYTHON-БОТА ЧЕРЕЗ БАЗУ ---
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
             if (!prompt) return alert(currentLang === 'en' ? "Please enter a request!" : "Будь ласка, введіть запит!");
-            
-            if (userData.ai_generations <= 0 && userData.ai_generations <= 9000) return alert(currentLang === 'en' ? "No generations left!" : "Немає генерацій! Поповніть баланс або запросіть друзів.");
+            if (userData.ai_generations <= 0 && userData.ai_generations <= 9000) return alert(currentLang === 'en' ? "No generations left!" : "Немає генерацій!");
 
             tg.showConfirm(currentLang === 'en' ? "Spend 1 ⚡ to generate plan?" : "Витратити 1 ⚡ на генерацію плану?", async (ok) => {
                 if (ok) {
                     tg.MainButton.text = currentLang === 'en' ? "GENERATING... ⏳" : "ГЕНЕРУЮ ПЛАН... ⏳";
-                    tg.MainButton.show();
-                    tg.MainButton.showProgress();
+                    tg.MainButton.show(); tg.MainButton.showProgress();
 
                     try {
-                        // Відправляємо запит до Python через Supabase
+                        // === ОНОВЛЕНО: НАКАЗУЄМО ШІ ВІДПОВІДАТИ ПРАВИЛЬНОЮ МОВОЮ ===
+                        let aiLangCommand = "";
+                        if (currentLang === 'en') {
+                            aiLangCommand = "CRITICAL INSTRUCTION: You MUST write your ENTIRE response STRICTLY in English! Do not use Ukrainian or Russian. ";
+                        } else if (currentLang === 'ru') {
+                            aiLangCommand = "ВАЖНОЕ УКАЗАНИЕ: Ты ДОЛЖЕН написать ВЕСЬ ответ СТРОГО на русском языке! Не используй украинский. ";
+                        } else {
+                            aiLangCommand = "ВАЖЛИВА ВКАЗІВКА: Ти ПОВИНЕН написати ВСЮ відповідь СТРОГО українською мовою! ";
+                        }
+                        
+                        const finalPromptForAI = aiLangCommand + "Запит клієнта: " + prompt;
+
                         const { data: newReq, error: insertErr } = await supabaseClient.from('ai_requests').insert({
-                            user_id: currentUserId, prompt: prompt, status: 'pending'
+                            user_id: currentUserId, prompt: finalPromptForAI, status: 'pending'
                         }).select().single();
 
                         if (insertErr) throw new Error("Database error: " + insertErr.message);
 
-                        // Чекаємо відповіді 60 секунд
-                        let aiResponseText = "";
-                        let attempts = 0;
+                        let aiResponseText = ""; let attempts = 0;
                         while(attempts < 20) {
                             await new Promise(r => setTimeout(r, 3000));
                             const { data: checkData } = await supabaseClient.from('ai_requests').select('*').eq('id', newReq.id).single();
-                            
                             if (checkData && checkData.status === 'completed') { aiResponseText = checkData.response; break; }
                             if (checkData && checkData.status === 'error') throw new Error("AI error.");
                             attempts++;
                         }
                         if(!aiResponseText) throw new Error("Timeout. Python bot is offline?");
 
-                        // Видаляємо запит
                         await supabaseClient.from('ai_requests').delete().eq('id', newReq.id);
 
-                        // Списання балансу
                         let claimed = userData.achievements || ""; let xpBonus = 0;
                         if (!claimed.includes('ai_pro')) {
                             claimed += "ai_pro,"; xpBonus = 200;
@@ -860,7 +754,6 @@
                         const newBal = userData.ai_generations > 9000 ? userData.ai_generations : userData.ai_generations - 1;
                         await supabaseClient.from('users').update({ ai_generations: newBal, xp: finalXp, achievements: claimed }).eq('user_id', currentUserId);
                         
-                        // Малюємо PDF
                         const formattedAI = formatMarkdown(aiResponseText);
                         const printDiv = document.createElement('div');
                         printDiv.style.width = '800px'; printDiv.style.padding = '40px'; printDiv.style.background = 'white';
@@ -868,11 +761,11 @@
                         printDiv.style.position = 'absolute'; printDiv.style.left = '-9999px'; printDiv.style.top = '-9999px';
                         
                         printDiv.innerHTML = `
-                            <h1 style="font-size: 32px; color: #1a1a1a; margin-bottom: 10px;">${currentLang === 'en' ? 'AI Coach Plan' : 'План від ШІ-Тренера'}: Virtus Fit</h1>
+                            <h1 style="font-size: 32px; color: #1a1a1a; margin-bottom: 10px;">${currentLang === 'en' ? 'AI Coach Plan' : (currentLang === 'ru' ? 'План от ИИ-Тренера' : 'План від ШІ-Тренера')}: Virtus Fit</h1>
                             <p style="font-size: 18px; color: #666; margin-bottom: 20px;">${currentLang === 'en' ? 'Athlete' : 'Атлет'}: <b>${userData.name || 'User'}</b></p>
                             <div style="width: 100%; height: 3px; background-color: #3390ec; margin-bottom: 30px;"></div>
                             <div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #3390ec; margin-bottom: 25px;">
-                                <p style="font-size: 14px; color: #555; margin: 0;"><b>${currentLang === 'en' ? 'Your Request' : 'Ваш запит'}:</b> ${prompt}</p>
+                                <p style="font-size: 14px; color: #555; margin: 0;"><b>${currentLang === 'en' ? 'Your Request' : (currentLang === 'ru' ? 'Ваш запрос' : 'Ваш запит')}:</b> ${prompt}</p>
                             </div>
                             <div style="font-size: 16px; line-height: 1.6; color: #222;">${formattedAI}</div>
                             <br><br><br>
