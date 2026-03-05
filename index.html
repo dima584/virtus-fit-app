@@ -726,16 +726,7 @@
                     tg.MainButton.show(); tg.MainButton.showProgress();
 
                     try {
-                        let aiLangCommand = "";
-                        if (currentLang === 'en') {
-                            aiLangCommand = "CRITICAL INSTRUCTION: You MUST write your ENTIRE response STRICTLY in English! Do not use Ukrainian or Russian. ";
-                        } else if (currentLang === 'ru') {
-                            aiLangCommand = "ВАЖНОЕ УКАЗАНИЕ: Ты ДОЛЖЕН написать ВЕСЬ ответ СТРОГО на русском языке! Не используй украинский. ";
-                        } else {
-                            aiLangCommand = "ВАЖЛИВА ВКАЗІВКА: Ти ПОВИНЕН написати ВСЮ відповідь СТРОГО українською мовою! ";
-                        }
-                        
-                        const finalPromptForAI = aiLangCommand + "Запит клієнта: " + prompt;
+                        const finalPromptForAI = prompt;
 
                         const { data: newReq, error: insertErr } = await supabaseClient.from('ai_requests').insert({
                             user_id: currentUserId, prompt: finalPromptForAI, status: 'pending'
@@ -816,3 +807,4 @@
     </script>
 </body>
 </html>
+
