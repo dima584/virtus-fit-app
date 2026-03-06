@@ -94,11 +94,17 @@
         </div>
 
         <div class="card p-5 mb-4 border border-white/5 shadow-lg">
-            <div class="flex justify-between items-center mb-4 text-[10px] opacity-40 font-bold uppercase text-white"><span id="lang-daily-norm">ДЕННА НОРМА</span><span id="cal-percent" class="accent-text">0%</span></div>
+            <div class="flex justify-between items-center mb-2 text-[10px] opacity-40 font-bold uppercase text-white"><span id="lang-daily-norm">ДЕННА НОРМА</span><span id="cal-percent" class="accent-text">0%</span></div>
+            <div class="text-center mb-4 text-[10px] bg-white/5 rounded-lg py-2 border border-white/5">
+                <span class="text-green-400 font-bold"><span id="lang-eaten">🍏 З'їдено:</span> <span id="eaten-cal">0</span></span>
+                <span class="text-white/30 mx-2">|</span>
+                <span class="text-orange-400 font-bold"><span id="lang-burned">🔥 Спалено:</span> <span id="burned-cal">0</span></span>
+            </div>
+            
             <div class="flex justify-around items-center">
                 <div class="relative flex items-center justify-center">
                     <svg class="w-20 h-20 transform -rotate-90"><circle cx="40" cy="40" r="35" stroke="rgba(255,255,255,0.05)" stroke-width="8" fill="none"/><circle id="cal-circle" cx="40" cy="40" r="35" stroke="#3390ec" stroke-width="8" fill="none" stroke-dasharray="220" stroke-dashoffset="220" stroke-linecap="round" class="progress-ring"/></svg>
-                    <div class="absolute text-center"><span id="total-cal" class="text-sm font-black text-white">0</span><p class="text-[8px] opacity-40 uppercase text-white">ккал</p></div>
+                    <div class="absolute text-center"><span id="total-cal" class="text-sm font-black text-white">0</span><p class="text-[8px] opacity-40 uppercase text-white" id="lang-net">чистих ккал</p></div>
                 </div>
                 <div class="flex-1 ml-6 space-y-2">
                     <div><div class="flex justify-between text-[9px] mb-1"><span class="text-orange-400 font-bold uppercase" id="lang-p">Білки</span><span id="p-val" class="font-bold text-white">0г</span></div><div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden"><div id="p-bar" class="bg-orange-400 h-full transition-all duration-500" style="width: 0%"></div></div></div>
@@ -161,42 +167,18 @@
         <h2 class="text-xl font-black italic mb-4 uppercase text-white px-2" id="lang-your-achievements">Твої досягнення</h2>
         
         <div class="grid grid-cols-2 gap-4" id="achievements-grid">
-            <div id="ach-newbie" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🐣</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-1">Новачок</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-1">Просто зареєструйся</div><div class="text-[8px] text-blue-400 font-bold">+100 XP</div>
-            </div>
-            <div id="ach-streak" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🔥</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-2">Стрік 3 дні</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-2">Записуй дані 3 дні поспіль</div><div class="text-[8px] text-blue-400 font-bold">+300 XP</div>
-            </div>
-            <div id="ach-streak7" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🛡️</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-3">Залізна воля</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-3">Записуй дані 7 днів поспіль</div><div class="text-[8px] text-blue-400 font-bold">+1000 XP</div>
-            </div>
-            <div id="ach-foodie" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🥦</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-4">Здорове меню</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-4">Запиши 10 страв</div><div class="text-[8px] text-blue-400 font-bold">+500 XP</div>
-            </div>
-            <div id="ach-foodie50" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">👨‍🍳</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-5">Шеф-кухар</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-5">Запиши 50 страв</div><div class="text-[8px] text-blue-400 font-bold">+1000 XP</div>
-            </div>
-            <div id="ach-foodie100" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🥗</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-6">Експерт</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-6">Запиши 100 страв</div><div class="text-[8px] text-blue-400 font-bold">+2000 XP</div>
-            </div>
-            <div id="ach-water" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🐳</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-7">Водний магнат</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-7">Виконай норму води</div><div class="text-[8px] text-blue-400 font-bold">+400 XP</div>
-            </div>
-            <div id="ach-weight" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">⚖️</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-8">Вагомий крок</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-8">Запиши вагу 3 рази</div><div class="text-[8px] text-blue-400 font-bold">+300 XP</div>
-            </div>
-            <div id="ach-weight10" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🦋</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-9">Трансформація</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-9">Запиши вагу 10 разів</div><div class="text-[8px] text-blue-400 font-bold">+800 XP</div>
-            </div>
-            <div id="ach-ai" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🏋️‍♂️</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-10">ШІ-Атлет</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-10">Згенеруй 1 план</div><div class="text-[8px] text-blue-400 font-bold">+200 XP</div>
-            </div>
-            <div id="ach-invite" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🤝</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-11">Амбасадор</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-11">Запроси 1 друга</div><div class="text-[8px] text-blue-400 font-bold">+500 XP</div>
-            </div>
-            <div id="ach-influencer" class="card p-4 text-center achievement-card achievement-locked">
-                <div class="text-2xl mb-1">🗣️</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-12">Лідер думок</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-12">Запроси 5 друзів</div><div class="text-[8px] text-blue-400 font-bold">+1500 XP</div>
-            </div>
+            <div id="ach-newbie" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🐣</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-1">Новачок</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-1">Просто зареєструйся</div><div class="text-[8px] text-blue-400 font-bold">+100 XP</div></div>
+            <div id="ach-streak" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🔥</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-2">Стрік 3 дні</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-2">Записуй дані 3 дні поспіль</div><div class="text-[8px] text-blue-400 font-bold">+300 XP</div></div>
+            <div id="ach-streak7" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🛡️</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-3">Залізна воля</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-3">Записуй дані 7 днів поспіль</div><div class="text-[8px] text-blue-400 font-bold">+1000 XP</div></div>
+            <div id="ach-foodie" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🥦</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-4">Здорове меню</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-4">Запиши 10 страв</div><div class="text-[8px] text-blue-400 font-bold">+500 XP</div></div>
+            <div id="ach-foodie50" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">👨‍🍳</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-5">Шеф-кухар</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-5">Запиши 50 страв</div><div class="text-[8px] text-blue-400 font-bold">+1000 XP</div></div>
+            <div id="ach-foodie100" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🥗</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-6">Експерт</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-6">Запиши 100 страв</div><div class="text-[8px] text-blue-400 font-bold">+2000 XP</div></div>
+            <div id="ach-water" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🐳</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-7">Водний магнат</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-7">Виконай норму води</div><div class="text-[8px] text-blue-400 font-bold">+400 XP</div></div>
+            <div id="ach-weight" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">⚖️</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-8">Вагомий крок</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-8">Запиши вагу 3 рази</div><div class="text-[8px] text-blue-400 font-bold">+300 XP</div></div>
+            <div id="ach-weight10" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🦋</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-9">Трансформація</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-9">Запиши вагу 10 разів</div><div class="text-[8px] text-blue-400 font-bold">+800 XP</div></div>
+            <div id="ach-ai" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🏋️‍♂️</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-10">ШІ-Атлет</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-10">Згенеруй 1 план</div><div class="text-[8px] text-blue-400 font-bold">+200 XP</div></div>
+            <div id="ach-invite" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🤝</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-11">Амбасадор</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-11">Запроси 1 друга</div><div class="text-[8px] text-blue-400 font-bold">+500 XP</div></div>
+            <div id="ach-influencer" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🗣️</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-12">Лідер думок</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-12">Запроси 5 друзів</div><div class="text-[8px] text-blue-400 font-bold">+1500 XP</div></div>
             <div class="card p-4 text-center achievement-card unlocked col-span-2">
                 <div class="text-2xl mb-1">🥇</div><div class="text-[10px] font-bold uppercase text-white" id="lang-stat-invite">СТАТИСТИКА ЗАПРОШЕНЬ</div><div id="ref-count-display" class="text-blue-400 font-black text-xl mt-1">0</div>
             </div>
@@ -231,7 +213,14 @@
         <h2 class="text-xl font-black italic mb-4 uppercase text-white px-2" id="lang-activity-title">Щоденник тренувань</h2>
         
         <div class="card p-5 mb-4 border border-white/5 shadow-xl">
-            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-center text-white" id="lang-muscle-map">Теплова карта м'язів (Тиждень)</h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-[10px] font-bold opacity-40 uppercase text-white" id="lang-muscle-map">Теплова карта м'язів</h3>
+                <div class="flex gap-1" id="muscle-filters">
+                    <button onclick="setMuscleFilter(1)" id="mf-1" class="btn-filter">1д</button>
+                    <button onclick="setMuscleFilter(7)" id="mf-7" class="btn-filter active">7д</button>
+                    <button onclick="setMuscleFilter(30)" id="mf-30" class="btn-filter">30д</button>
+                </div>
+            </div>
             <div style="height: 200px; position: relative;"><canvas id="muscleChart"></canvas></div>
         </div>
 
@@ -273,7 +262,7 @@
 
     <div class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-2xl border-t border-white/5 p-4 flex justify-around items-center z-50">
         <button onclick="showPage('main')" id="btn-main" class="tab-btn active text-white"><div class="text-xl mb-1">🏠</div><div id="lang-tab-home">ГОЛОВНА</div></button>
-        <button onclick="showPage('achievements')" id="btn-achievements" class="tab-btn text-white"><div class="text-xl mb-1">🏆</div><div id="lang-tab-ach">УСПІХ</div></button>
+        <button onclick="showPage('achievements')" id="btn-achievements" class="tab-btn text-white"><div class="text-xl mb-1">🏆</div><div id="lang-tab-ach">УСПІХИ</div></button>
         <button onclick="showPage('coach')" id="btn-coach" class="tab-btn text-white"><div class="text-xl mb-1">📋</div><div id="lang-tab-coach">ТРЕНЕР</div></button>
         <button onclick="showPage('activity')" id="btn-activity" class="tab-btn text-white"><div class="text-xl mb-1">🏃</div><div id="lang-tab-activity">РУХ</div></button>
     </div>
@@ -285,7 +274,7 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let currentUserId = null, userData = null, weightChart = null, calorieChart = null, muscleChartInstance = null;
-        let selectedDate = new Date(), weightFilterDays = 7;
+        let selectedDate = new Date(), weightFilterDays = 7, muscleFilterDays = 7;
         let userGoals = { cal: 2000, p: 150, f: 70, c: 250, water: 2000 };
         let currentLang = 'ua'; 
 
@@ -294,7 +283,7 @@
                 tabHome: "ГОЛОВНА", tabAch: "УСПІХИ", tabCoach: "ТРЕНЕР", tabActivity: "РУХ",
                 hello: "Привіт", aiInsight: "АНАЛІЗ AI", aiBalance: "БАЛАНС ІІ",
                 hint: "Щоб розрахувати калорії, просто надішліть боту <b>фото страви</b> або її <b>текст</b> у чат.",
-                dailyNorm: "ДЕННА НОРМА", p: "Білки", f: "Жири", c: "Вугл.",
+                dailyNorm: "ДЕННА НОРМА", p: "Білки", f: "Жири", c: "Вугл.", eaten: "🍏 З'їдено:", burned: "🔥 Спалено:", net: "чистих ккал",
                 settingsTitle: "⚙️ Налаштувати норми", setCal: "Ккал ціль", setWater: "Вода (мл)",
                 setP: "Білки (г)", setF: "Жири (г)", setC: "Вуглеводи (г)", saveBtn: "Зберегти норми",
                 waterTracker: "💧 ТРЕКЕР ВОДИ", weightNow: "ВАГА ЗАРАЗ", weightTarget: "ЦІЛЬОВА ВАГА",
@@ -306,7 +295,7 @@
                 coachPlaceholder: "Наприклад: Тренування вдома на 15 хв...",
                 coachBalance: "БАЛАНС ГЕНЕРАЦІЙ:", coachGenBtn: "СФОРМУВАТИ PDF ПЛАН", coachChart: "ККАЛ ЗА ОСТАННІЙ ТИЖДЕНЬ",
                 adminUsers: "Юзерів", adminLogs: "Логів їжі", history: "Перегляд історії", unlimited: "Безліміт 👑",
-                activityTitle: "Щоденник тренувань", muscleMap: "Теплова карта м'язів (Тиждень)", cardioTitle: "🏃 Кардіо / Активність", cardioBtn: "Записати Кардіо", strengthTitle: "🏋️ Силове тренування", strengthBtn: "Записати Вправу", activityArchive: "Історія за сьогодні",
+                activityTitle: "Щоденник тренувань", muscleMap: "Теплова карта м'язів", cardioTitle: "🏃 Кардіо / Активність", cardioBtn: "Записати Кардіо", strengthTitle: "🏋️ Силове тренування", strengthBtn: "Записати Вправу", activityArchive: "Історія за сьогодні",
                 achT1: "Новачок", achD1: "Просто зареєструйся", achT2: "Стрік 3 дні", achD2: "Записуй дані 3 дні поспіль",
                 achT3: "Залізна воля", achD3: "Записуй дані 7 днів поспіль", achT4: "Здорове меню", achD4: "Запиши 10 страв",
                 achT5: "Шеф-кухар", achD5: "Запиши 50 страв", achT6: "Експерт", achD6: "Запиши 100 страв",
@@ -318,7 +307,7 @@
                 tabHome: "HOME", tabAch: "AWARDS", tabCoach: "COACH", tabActivity: "MOVE",
                 hello: "Hello", aiInsight: "AI INSIGHT", aiBalance: "AI BALANCE",
                 hint: "To calculate calories, simply send a <b>photo of the meal</b> or its <b>text</b> to the chat.",
-                dailyNorm: "DAILY GOAL", p: "Protein", f: "Fats", c: "Carbs",
+                dailyNorm: "DAILY GOAL", p: "Protein", f: "Fats", c: "Carbs", eaten: "🍏 Eaten:", burned: "🔥 Burned:", net: "net kcal",
                 settingsTitle: "⚙️ Setup Goals", setCal: "Kcal Target", setWater: "Water (ml)",
                 setP: "Proteins (g)", setF: "Fats (g)", setC: "Carbs (g)", saveBtn: "Save Goals",
                 waterTracker: "💧 WATER TRACKER", weightNow: "CURRENT WEIGHT", weightTarget: "TARGET WEIGHT",
@@ -330,7 +319,7 @@
                 coachPlaceholder: "Example: Home workout for 15 min...",
                 coachBalance: "GENERATIONS BALANCE:", coachGenBtn: "GENERATE PDF PLAN", coachChart: "KCAL LAST WEEK",
                 adminUsers: "Users", adminLogs: "Food Logs", history: "History View", unlimited: "Unlimited 👑",
-                activityTitle: "Workout Log", muscleMap: "Muscle Heatmap (Weekly)", cardioTitle: "🏃 Cardio / Activity", cardioBtn: "Log Cardio", strengthTitle: "🏋️ Strength Training", strengthBtn: "Log Exercise", activityArchive: "Today's History",
+                activityTitle: "Workout Log", muscleMap: "Muscle Heatmap", cardioTitle: "🏃 Cardio / Activity", cardioBtn: "Log Cardio", strengthTitle: "🏋️ Strength Training", strengthBtn: "Log Exercise", activityArchive: "Today's History",
                 achT1: "Newbie", achD1: "Just register", achT2: "3-Day Streak", achD2: "Log data 3 days in a row",
                 achT3: "Iron Will", achD3: "Log data 7 days in a row", achT4: "Healthy Menu", achD4: "Log 10 meals",
                 achT5: "Chef", achD5: "Log 50 meals", achT6: "Expert", achD6: "Log 100 meals",
@@ -342,7 +331,7 @@
                 tabHome: "ГЛАВНАЯ", tabAch: "УСПЕХИ", tabCoach: "ТРЕНЕР", tabActivity: "ДВИЖЕНИЕ",
                 hello: "Привет", aiInsight: "АНАЛИЗ AI", aiBalance: "БАЛАНС ИИ",
                 hint: "Чтобы рассчитать калории, просто отправьте боту <b>фото еды</b> или её <b>текст</b> в чат.",
-                dailyNorm: "ДНЕВНАЯ НОРМА", p: "Белки", f: "Жиры", c: "Угл.",
+                dailyNorm: "ДНЕВНАЯ НОРМА", p: "Белки", f: "Жиры", c: "Угл.", eaten: "🍏 Съедено:", burned: "🔥 Сожжено:", net: "чистых ккал",
                 settingsTitle: "⚙️ Настроить нормы", setCal: "Ккал цель", setWater: "Вода (мл)",
                 setP: "Белки (г)", setF: "Жиры (г)", setC: "Углеводы (г)", saveBtn: "Сохранить нормы",
                 waterTracker: "💧 ТРЕКЕР ВОДЫ", weightNow: "ВЕС СЕЙЧАС", weightTarget: "ЦЕЛЕВОЙ ВЕС",
@@ -354,7 +343,7 @@
                 coachPlaceholder: "Например: Тренировка дома на 15 мин...",
                 coachBalance: "БАЛАНС ГЕНЕРАЦИЙ:", coachGenBtn: "СФОРМИРОВАТЬ PDF ПЛАН", coachChart: "ККАЛ ЗА ПОСЛЕДНЮЮ НЕДЕЛЮ",
                 adminUsers: "Юзеров", adminLogs: "Логов еды", history: "Просмотр истории", unlimited: "Безлимит 👑",
-                activityTitle: "Дневник тренировок", muscleMap: "Тепловая карта мышц (Неделя)", cardioTitle: "🏃 Кардио / Активность", cardioBtn: "Записать Кардио", strengthTitle: "🏋️ Силовая тренировка", strengthBtn: "Записать Упражнение", activityArchive: "История за сегодня",
+                activityTitle: "Дневник тренировок", muscleMap: "Тепловая карта мышц", cardioTitle: "🏃 Кардио / Активность", cardioBtn: "Записать Кардио", strengthTitle: "🏋️ Силовая тренировка", strengthBtn: "Записать Упражнение", activityArchive: "История за сегодня",
                 achT1: "Новичок", achD1: "Просто зарегистрируйся", achT2: "Стрик 3 дня", achD2: "Записывай данные 3 дня подряд",
                 achT3: "Железная воля", achD3: "Записывай данные 7 дней подряд", achT4: "Здоровое меню", achD4: "Запиши 10 блюд",
                 achT5: "Шеф-повар", achD5: "Запиши 50 блюд", achT6: "Эксперт", achD6: "Запиши 100 блюд",
@@ -375,7 +364,7 @@
 
             setText('lang-tab-home', t.tabHome); setText('lang-tab-ach', t.tabAch); setText('lang-tab-coach', t.tabCoach); setText('lang-tab-activity', t.tabActivity);
             setText('lang-hello', t.hello); setText('lang-ai-insight', t.aiInsight); setText('lang-ai-balance', t.aiBalance);
-            setText('lang-hint', t.hint); setText('lang-daily-norm', t.dailyNorm);
+            setText('lang-hint', t.hint); setText('lang-daily-norm', t.dailyNorm); setText('lang-eaten', t.eaten); setText('lang-burned', t.burned); setText('lang-net', t.net);
             setText('lang-p', t.p); setText('lang-f', t.f); setText('lang-c', t.c);
             setText('lang-settings-title', t.settingsTitle); setText('lang-set-cal', t.setCal); setText('lang-set-water', t.setWater);
             setText('lang-set-p', t.setP); setText('lang-set-f', t.setF); setText('lang-set-c', t.setC); setText('lang-save-btn', t.saveBtn);
@@ -653,30 +642,42 @@
         function changeDate(days) { selectedDate.setDate(selectedDate.getDate() + days); refreshScreen(); }
 
         async function refreshScreen() {
-            const dateStr = selectedDate.toLocaleDateString('sv'); const isToday = dateStr === new Date().toLocaleDateString('sv');
-            setText('display-date', isToday ? (currentLang === 'en' ? "Today" : "Сьогодні") : selectedDate.toLocaleDateString(currentLang==='en'?'en-US':'uk', {day:'numeric', month:'long'}));
-            const waterControls = document.getElementById('water-controls'); if(waterControls) waterControls.style.display = isToday ? 'flex' : 'none';
-            
-            let startOfDay = new Date(selectedDate);
-            startOfDay.setHours(0, 0, 0, 0);
-            let endOfDay = new Date(selectedDate);
-            endOfDay.setHours(23, 59, 59, 999);
+            try {
+                const dateStr = selectedDate.toLocaleDateString('sv'); const isToday = dateStr === new Date().toLocaleDateString('sv');
+                setText('display-date', isToday ? (currentLang === 'en' ? "Today" : "Сьогодні") : selectedDate.toLocaleDateString(currentLang==='en'?'en-US':'uk', {day:'numeric', month:'long'}));
+                const waterControls = document.getElementById('water-controls'); if(waterControls) waterControls.style.display = isToday ? 'flex' : 'none';
+                
+                let startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0);
+                let endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
 
-            const { data: logs } = await supabaseClient.from('nutrition_logs')
-                .select('*')
-                .eq('user_id', currentUserId)
-                .gte('created_at', startOfDay.toISOString())
-                .lte('created_at', endOfDay.toISOString())
-                .order('created_at', {ascending: false});
-            
-            let waterVal = isToday ? (userData?.water_today || 0) : 0;
-            updateUI(logs || [], waterVal); await loadCharts(); generateAIInsight(logs || [], waterVal); await loadActivity();
+                const { data: logs } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString()).order('created_at', {ascending: false});
+                
+                // Отримуємо спалені калорії для відображення в головному меню
+                const { data: cardio } = await supabaseClient.from('workouts_cardio').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
+                let burnedCals = 0;
+                if(cardio) cardio.forEach(c => burnedCals += c.calories_burned);
+
+                let waterVal = isToday ? (userData?.water_today || 0) : 0;
+                
+                updateUI(logs || [], waterVal, burnedCals); 
+                await loadCharts(); 
+                generateAIInsight(logs || [], waterVal); 
+                await loadActivity();
+            } catch(e) { console.error("Помилка refreshScreen:", e); }
         }
 
-        function updateUI(logs, water) {
+        function updateUI(logs, water, burnedCals) {
             const totals = logs.reduce((acc, curr) => ({ cal: acc.cal + curr.calories, p: acc.p + curr.proteins, f: acc.f + curr.fats, c: acc.c + curr.carbs }), { cal: 0, p: 0, f: 0, c: 0 });
-            setText('total-cal', totals.cal);
-            const calPercent = Math.min((totals.cal / userGoals.cal) * 100, 100);
+            
+            // Розрахунок ЧИСТИХ калорій
+            let netCals = totals.cal - burnedCals;
+            
+            setText('eaten-cal', totals.cal);
+            setText('burned-cal', burnedCals);
+            setText('total-cal', netCals);
+
+            // Кільце рахує відсоток по ЧИСТИХ калоріях (але не менше 0%)
+            const calPercent = Math.min(Math.max((netCals / userGoals.cal) * 100, 0), 100);
             const circle = document.getElementById('cal-circle'); if(circle) circle.style.strokeDashoffset = 220 - (220 * calPercent / 100);
             setText('cal-percent', Math.round(calPercent) + '%');
             
@@ -710,8 +711,13 @@
         }
 
         function setWeightFilter(days) { 
-            weightFilterDays = days; document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active')); 
+            weightFilterDays = days; document.querySelectorAll('#weight-filters .btn-filter').forEach(b => b.classList.remove('active')); 
             const fBtn = document.getElementById('wf-' + days); if(fBtn) fBtn.classList.add('active'); loadCharts(); 
+        }
+
+        function setMuscleFilter(days) {
+            muscleFilterDays = days; document.querySelectorAll('#muscle-filters .btn-filter').forEach(b => b.classList.remove('active')); 
+            const fBtn = document.getElementById('mf-' + days); if(fBtn) fBtn.classList.add('active'); renderMuscleChart(); 
         }
 
         async function loadCharts() {
@@ -778,7 +784,6 @@
                     tg.MainButton.show(); tg.MainButton.showProgress();
 
                     try {
-                        // Оновлений промпт без прив'язки до мови інтерфейсу
                         const finalPromptForAI = prompt;
 
                         const { data: newReq, error: insertErr } = await supabaseClient.from('ai_requests').insert({
@@ -788,7 +793,8 @@
                         if (insertErr) throw new Error("Database error: " + insertErr.message);
 
                         let aiResponseText = ""; let attempts = 0;
-                        while(attempts < 20) {
+                        // Збільшив час очікування до 120 секунд (40 спроб по 3 секунди)
+                        while(attempts < 40) {
                             await new Promise(r => setTimeout(r, 3000));
                             const { data: checkData } = await supabaseClient.from('ai_requests').select('*').eq('id', newReq.id).single();
                             if (checkData && checkData.status === 'completed') { aiResponseText = checkData.response; break; }
@@ -808,7 +814,11 @@
                         const newBal = userData.ai_generations > 9000 ? userData.ai_generations : userData.ai_generations - 1;
                         await supabaseClient.from('users').update({ ai_generations: newBal, xp: finalXp, achievements: claimed }).eq('user_id', currentUserId);
                         
-                        // Відновлена логіка PDF!
+                        // АВТОМАТИЧНИЙ ЗАПИС У ЩОДЕННИК (Кардіо) - АВАНС 200 ккал
+                        await supabaseClient.from('workouts_cardio').insert({
+                            user_id: currentUserId, activity_type: "🤖 ШІ-Тренування (План)", duration_min: 30, distance_km: 0, calories_burned: 200
+                        });
+                        
                         const formattedAI = formatMarkdown(aiResponseText);
                         const printDiv = document.createElement('div');
                         printDiv.style.width = '800px'; printDiv.style.padding = '40px'; printDiv.style.background = 'white';
@@ -840,7 +850,7 @@
                             document.body.removeChild(printDiv);
                             tg.HapticFeedback.notificationOccurred('success');
                             document.getElementById('ai-request-box').value = ''; 
-                            loadUserData(); checkAchievements();
+                            loadUserData(); checkAchievements(); refreshScreen();
                         });
 
                     } catch (error) {
@@ -871,7 +881,7 @@
             document.getElementById('cardio-distance').value = ''; document.getElementById('cardio-cals').value = '';
             
             tg.HapticFeedback.notificationOccurred('success');
-            await loadActivity();
+            await refreshScreen();
         }
 
         async function addStrength() {
@@ -891,7 +901,7 @@
             document.getElementById('strength-reps').value = ''; document.getElementById('strength-weight').value = '';
 
             tg.HapticFeedback.notificationOccurred('success');
-            await loadActivity();
+            await refreshScreen();
         }
 
         async function loadActivity() {
@@ -922,17 +932,17 @@
 
         async function deleteActivity(table, id) {
             if(confirm(currentLang==='en'?'Delete?':'Видалити запис?')) {
-                await supabaseClient.from(table).delete().eq('id', id); await loadActivity();
+                await supabaseClient.from(table).delete().eq('id', id); await refreshScreen();
             }
         }
 
         async function renderMuscleChart() {
-            const { data: strengthWeek } = await supabaseClient.from('workouts_strength')
+            const { data: strengthData } = await supabaseClient.from('workouts_strength')
                 .select('muscle_group, sets, reps').eq('user_id', currentUserId)
-                .gte('created_at', new Date(Date.now() - 7*86400000).toISOString());
+                .gte('created_at', new Date(Date.now() - muscleFilterDays*86400000).toISOString());
 
             let muscles = { chest: 0, back: 0, legs: 0, arms: 0, shoulders: 0, core: 0 };
-            if(strengthWeek) strengthWeek.forEach(s => { if(muscles[s.muscle_group] !== undefined) muscles[s.muscle_group] += (s.sets * s.reps); });
+            if(strengthData) strengthData.forEach(s => { if(muscles[s.muscle_group] !== undefined) muscles[s.muscle_group] += (s.sets * s.reps); });
 
             const mCanvas = document.getElementById('muscleChart');
             if(mCanvas) {
