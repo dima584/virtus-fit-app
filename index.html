@@ -31,7 +31,6 @@
         .achievement-card { transition: 0.5s; border: 1px solid rgba(255,255,255,0.03); }
         .achievement-locked { filter: grayscale(1); opacity: 0.3; }
         .achievement-card.unlocked { filter: none !important; opacity: 1 !important; border-color: #3390ec !important; box-shadow: 0 0 15px rgba(51, 144, 236, 0.2); background: rgba(51, 144, 236, 0.05); }
-        
         .custom-scroll { overflow-x: scroll !important; scrollbar-width: thin; scrollbar-color: #3390ec rgba(255,255,255,0.05); }
         .custom-scroll::-webkit-scrollbar { height: 8px; display: block !important; }
         .custom-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
@@ -784,7 +783,8 @@
                     tg.MainButton.show(); tg.MainButton.showProgress();
 
                     try {
-                        const finalPromptForAI = prompt;
+                        // РОЗУМНИЙ ПРОМПТ ДЛЯ КАЛОРІЙ ТА ЧАСУ
+                        const finalPromptForAI = prompt + "\n\nВАЖЛИВО: В самому кінці свого повідомлення обов'язково додай точний розрахунок спалених калорій та часу на основі твого плану. Використай СУВОРО такий формат англійськими літерами (без пробілів): [CAL:XXX|MIN:YYY] (де XXX - сумарні калорії, YYY - тривалість у хвилинах). Наприклад: [CAL:320|MIN:40]";
 
                         const { data: newReq, error: insertErr } = await supabaseClient.from('ai_requests').insert({
                             user_id: currentUserId, prompt: finalPromptForAI, status: 'pending'
@@ -793,9 +793,9 @@
                         if (insertErr) throw new Error("Database error: " + insertErr.message);
 
                         let aiResponseText = ""; let attempts = 0;
-                        // Збільшив час очікування до 120 секунд (40 спроб по 3 секунди)
-                        while(attempts < 40) {
-                            await new Promise(r => setTimeout(r, 3000));
+                        // ПРИШВИДШЕННЯ ПЕРЕВІРКИ: Кожні 1.5 секунди замість 3 секунд
+                        while(attempts < 80) {
+                            await new Promise(r => setTimeout(r, 1500));
                             const { data: checkData } = await supabaseClient.from('ai_requests').select('*').eq('id', newReq.id).single();
                             if (checkData && checkData.status === 'completed') { aiResponseText = checkData.response; break; }
                             if (checkData && checkData.status === 'error') throw new Error("AI error.");
@@ -814,9 +814,19 @@
                         const newBal = userData.ai_generations > 9000 ? userData.ai_generations : userData.ai_generations - 1;
                         await supabaseClient.from('users').update({ ai_generations: newBal, xp: finalXp, achievements: claimed }).eq('user_id', currentUserId);
                         
-                        // АВТОМАТИЧНИЙ ЗАПИС У ЩОДЕННИК (Кардіо) - АВАНС 200 ккал
+                        // МАГІЯ ВИЛУЧЕННЯ КАЛОРІЙ І ЧАСУ З ТЕКСТУ
+                        let calcCals = 200; // значення за замовчуванням
+                        let calcMins = 30; // значення за замовчуванням
+                        const match = aiResponseText.match(/\[CAL:(\d+)\|MIN:(\d+)\]/i);
+                        if (match) {
+                            calcCals = parseInt(match[1]);
+                            calcMins = parseInt(match[2]);
+                            aiResponseText = aiResponseText.replace(match[0], '').trim(); // Видаляємо тег з тексту, щоб не псувати PDF
+                        }
+
+                        // РОЗУМНИЙ ЗАПИС У ЩОДЕННИК (на основі розрахунків ШІ)
                         await supabaseClient.from('workouts_cardio').insert({
-                            user_id: currentUserId, activity_type: "🤖 ШІ-Тренування (План)", duration_min: 30, distance_km: 0, calories_burned: 200
+                            user_id: currentUserId, activity_type: "🤖 ШІ-Тренування (План)", duration_min: calcMins, distance_km: 0, calories_burned: calcCals
                         });
                         
                         const formattedAI = formatMarkdown(aiResponseText);
