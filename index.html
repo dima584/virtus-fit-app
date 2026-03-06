@@ -209,28 +209,54 @@
         </div>
     </div>
 
-    <div id="page-coach" class="page-content hidden">
-        <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white" id="lang-coach-title">AI ТРЕНЕР PRO</h2>
-        <div class="card p-6 shadow-2xl border-blue-500/10">
-            <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center text-white" id="lang-coach-prompt">ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ</p>
-            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв..."></textarea>
-            <div class="flex justify-between items-center mb-6 text-white text-[10px] font-bold px-1">
-                <span class="opacity-50 tracking-widest" id="lang-coach-balance">БАЛАНС ГЕНЕРАЦІЙ:</span>
-                <span id="ai-balance-display" class="text-blue-400 text-sm">--</span>
-            </div>
-            <button onclick="generateAIWorkout()" class="btn-main w-full py-5 font-black uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-blue-500/20" id="lang-coach-gen-btn">СФОРМУВАТИ PDF ПЛАН</button>
+    <div id="page-activity" class="page-content hidden pb-6">
+        <h2 class="text-xl font-black italic mb-4 uppercase text-white px-2">Щоденник тренувань</h2>
+        
+        <div class="card p-5 mb-4 border border-white/5 shadow-xl">
+            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-center text-white">Теплова карта м'язів (Тиждень)</h3>
+            <div style="height: 200px; position: relative;"><canvas id="muscleChart"></canvas></div>
         </div>
 
-        <div class="mt-8 card p-5 border-white/5 shadow-xl">
-            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-center text-white" id="lang-coach-chart">ККАЛ ЗА ОСТАННІЙ ТИЖДЕНЬ</h3>
-            <div style="height: 140px; position: relative;"><canvas id="calorieChart"></canvas></div>
+        <div class="card p-5 mb-4 border border-white/5 shadow-lg">
+            <h3 class="text-[10px] font-bold text-green-400 uppercase mb-3">🏃 Кардіо / Активність</h3>
+            <div class="grid grid-cols-2 gap-2 mb-3">
+                <input type="text" id="cardio-type" placeholder="Біг, ходьба, велик..." class="col-span-2">
+                <input type="number" id="cardio-duration" placeholder="Час (хв)">
+                <input type="number" id="cardio-distance" step="0.1" placeholder="Км (необов'язково)">
+                <input type="number" id="cardio-cals" placeholder="Ккал (якщо знаєш)" class="col-span-2">
+            </div>
+            <button onclick="addCardio()" class="btn-main w-full py-3 text-xs font-bold uppercase shadow-lg bg-green-500/20 text-green-400 border border-green-500/30">Записати Кардіо</button>
+        </div>
+
+        <div class="card p-5 mb-4 border border-white/5 shadow-lg">
+            <h3 class="text-[10px] font-bold text-orange-400 uppercase mb-3">🏋️ Силове тренування</h3>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <input type="text" id="strength-name" placeholder="Назва вправи" class="col-span-3">
+                <input type="number" id="strength-sets" placeholder="Підходи">
+                <input type="number" id="strength-reps" placeholder="Повтори">
+                <input type="number" id="strength-weight" step="0.5" placeholder="Вага (кг)">
+                <select id="strength-muscle" class="col-span-3 bg-white/5 border border-white/10 text-white rounded-xl p-2 text-sm outline-none focus:border-blue-500">
+                    <option value="chest" class="bg-gray-800">Груди</option>
+                    <option value="back" class="bg-gray-800">Спина</option>
+                    <option value="legs" class="bg-gray-800">Ноги</option>
+                    <option value="arms" class="bg-gray-800">Руки</option>
+                    <option value="shoulders" class="bg-gray-800">Плечі</option>
+                    <option value="core" class="bg-gray-800">Прес/Кор</option>
+                </select>
+            </div>
+            <button onclick="addStrength()" class="btn-main w-full py-3 text-xs font-bold uppercase shadow-lg bg-orange-500/20 text-orange-400 border border-orange-500/30">Записати Вправу</button>
+        </div>
+
+        <div class="card p-5 mb-6 border border-white/5 shadow-lg">
+            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-3 text-white">Історія за сьогодні</h3>
+            <div id="activity-list" class="space-y-3"></div>
         </div>
     </div>
 
     <div class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-2xl border-t border-white/5 p-4 flex justify-around items-center z-50">
         <button onclick="showPage('main')" id="btn-main" class="tab-btn active text-white"><div class="text-xl mb-1">🏠</div><div id="lang-tab-home">ГОЛОВНА</div></button>
         <button onclick="showPage('achievements')" id="btn-achievements" class="tab-btn text-white"><div class="text-xl mb-1">🏆</div><div id="lang-tab-ach">УСПІХИ</div></button>
-        <button onclick="showPage('coach')" id="btn-coach" class="tab-btn text-white"><div class="text-xl mb-1">📋</div><div id="lang-tab-coach">ТРЕНЕР</div></button>
+        <button onclick="showPage('activity')" id="btn-activity" class="tab-btn text-white"><div class="text-xl mb-1">🏃</div><div id="lang-tab-activity">РУХ</div></button>
     </div>
 
     <script>
@@ -618,7 +644,7 @@
                 .order('created_at', {ascending: false});
             
             let waterVal = isToday ? (userData?.water_today || 0) : 0;
-            updateUI(logs || [], waterVal); await loadCharts(); generateAIInsight(logs || [], waterVal);
+            updateUI(logs || [], waterVal); await loadCharts(); generateAIInsight(logs || [], waterVal); await loadActivity();
         }
 
         function updateUI(logs, water) {
@@ -802,9 +828,104 @@
             const link = `https://t.me/medbotlab_bot?start=${currentUserId}`;
             tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Прокачуй своє тіло разом зі мною у Virtus Fit AI!")}`); 
         }
+        // --- НОВИЙ МОДУЛЬ: АКТИВНІСТЬ ТА ТРЕНУВАННЯ ---
+        let muscleChartInstance = null;
 
+        async function addCardio() {
+            const type = document.getElementById('cardio-type').value;
+            const duration = parseInt(document.getElementById('cardio-duration').value) || 0;
+            const distance = parseFloat(document.getElementById('cardio-distance').value) || 0;
+            let cals = parseInt(document.getElementById('cardio-cals').value) || 0;
+
+            if(!type || duration <= 0) return alert(currentLang === 'en' ? 'Enter type and time!' : 'Введіть тип та час!');
+            
+            if (cals === 0) { cals = duration * 8; } // Авто-розрахунок, якщо пусте
+
+            await supabaseClient.from('workouts_cardio').insert({
+                user_id: currentUserId, activity_type: type, duration_min: duration, distance_km: distance, calories_burned: cals
+            });
+            
+            document.getElementById('cardio-type').value = ''; document.getElementById('cardio-duration').value = '';
+            document.getElementById('cardio-distance').value = ''; document.getElementById('cardio-cals').value = '';
+            
+            tg.HapticFeedback.notificationOccurred('success');
+            await loadActivity();
+        }
+
+        async function addStrength() {
+            const name = document.getElementById('strength-name').value;
+            const sets = parseInt(document.getElementById('strength-sets').value) || 0;
+            const reps = parseInt(document.getElementById('strength-reps').value) || 0;
+            const weight = parseFloat(document.getElementById('strength-weight').value) || 0;
+            const muscle = document.getElementById('strength-muscle').value;
+
+            if(!name || sets <= 0 || reps <= 0) return alert(currentLang === 'en' ? 'Enter all data!' : 'Введіть назву, підходи та повторення!');
+
+            await supabaseClient.from('workouts_strength').insert({
+                user_id: currentUserId, exercise_name: name, sets: sets, reps: reps, weight_kg: weight, muscle_group: muscle
+            });
+
+            document.getElementById('strength-name').value = ''; document.getElementById('strength-sets').value = '';
+            document.getElementById('strength-reps').value = ''; document.getElementById('strength-weight').value = '';
+
+            tg.HapticFeedback.notificationOccurred('success');
+            await loadActivity();
+        }
+
+        async function loadActivity() {
+            let startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0);
+            let endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
+
+            const { data: cardio } = await supabaseClient.from('workouts_cardio').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
+            const { data: strength } = await supabaseClient.from('workouts_strength').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
+
+            const listEl = document.getElementById('activity-list'); let html = '';
+            
+            if(cardio) cardio.forEach(c => {
+                html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-green-400">🏃 ${c.activity_type}</div><div class="text-[9px] opacity-50 text-white">${c.duration_min} хв | ${c.distance_km} км</div></div><div class="flex items-center gap-3"><span class="text-xs font-bold text-green-400">-${c.calories_burned} ккал</span><button onclick="deleteActivity('workouts_cardio', ${c.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`;
+            });
+
+            if(strength) strength.forEach(s => {
+                const vol = s.sets * s.reps * s.weight_kg;
+                html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-orange-400">🏋️ ${s.exercise_name}</div><div class="text-[9px] opacity-50 text-white">${s.sets}x${s.reps} | ${s.weight_kg} кг | Об'єм: ${vol} кг</div></div><div><button onclick="deleteActivity('workouts_strength', ${s.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`;
+            });
+
+            if(html === '') html = `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${currentLang==='en'?'No workouts':'Тренувань немає'}</p>`;
+            if(listEl) listEl.innerHTML = html;
+
+            await renderMuscleChart();
+        }
+
+        async function deleteActivity(table, id) {
+            if(confirm(currentLang==='en'?'Delete?':'Видалити запис?')) {
+                await supabaseClient.from(table).delete().eq('id', id); await loadActivity();
+            }
+        }
+
+        async function renderMuscleChart() {
+            const { data: strengthWeek } = await supabaseClient.from('workouts_strength')
+                .select('muscle_group, sets, reps').eq('user_id', currentUserId)
+                .gte('created_at', new Date(Date.now() - 7*86400000).toISOString());
+
+            let muscles = { chest: 0, back: 0, legs: 0, arms: 0, shoulders: 0, core: 0 };
+            if(strengthWeek) strengthWeek.forEach(s => { if(muscles[s.muscle_group] !== undefined) muscles[s.muscle_group] += (s.sets * s.reps); });
+
+            const mCanvas = document.getElementById('muscleChart');
+            if(mCanvas) {
+                if(muscleChartInstance) muscleChartInstance.destroy();
+                muscleChartInstance = new Chart(mCanvas, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Груди', 'Спина', 'Ноги', 'Руки', 'Плечі', 'Прес'],
+                        datasets: [{ data: [muscles.chest, muscles.back, muscles.legs, muscles.arms, muscles.shoulders, muscles.core], backgroundColor: 'rgba(51, 144, 236, 0.2)', borderColor: '#3390ec', pointBackgroundColor: '#3390ec', pointBorderColor: '#fff' }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, pointLabels: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 10 } }, ticks: { display: false } } }, plugins: { legend: { display: false } } }
+                });
+            }
+        }
         initApp();
     </script>
 </body>
 </html>
+
 
