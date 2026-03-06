@@ -19,8 +19,8 @@
         .accent-text { color: var(--tg-theme-button-color, #3390ec); }
         .btn-main { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); border-radius: 12px; transition: transform 0.2s; }
         .btn-main:active { transform: scale(0.95); }
-        input, textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 12px; padding: 10px; font-size: 14px; outline: none; transition: 0.3s; }
-        input:focus, textarea:focus { border-color: #3390ec; background: rgba(51, 144, 236, 0.05); }
+        input, textarea, select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 12px; padding: 10px; font-size: 14px; outline: none; transition: 0.3s; }
+        input:focus, textarea:focus, select:focus { border-color: #3390ec; background: rgba(51, 144, 236, 0.05); }
         .progress-ring { transition: stroke-dashoffset 0.5s ease; }
         .btn-filter { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; background: rgba(255,255,255,0.05); opacity: 0.5; transition: 0.3s; color: white; border: none; }
         .btn-filter.active { background: #3390ec; opacity: 1; }
@@ -209,27 +209,45 @@
         </div>
     </div>
 
+    <div id="page-coach" class="page-content hidden">
+        <h2 class="text-xl font-black italic mb-6 uppercase text-center text-white" id="lang-coach-title">AI ТРЕНЕР PRO</h2>
+        <div class="card p-6 shadow-2xl border-blue-500/10">
+            <p class="text-[10px] opacity-50 uppercase font-bold mb-3 text-center text-white" id="lang-coach-prompt">ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ</p>
+            <textarea id="ai-request-box" rows="4" class="w-full mb-4 text-left border-white/10" placeholder="Наприклад: Тренування вдома на 15 хв..."></textarea>
+            <div class="flex justify-between items-center mb-6 text-white text-[10px] font-bold px-1">
+                <span class="opacity-50 tracking-widest" id="lang-coach-balance">БАЛАНС ГЕНЕРАЦІЙ:</span>
+                <span id="ai-balance-display" class="text-blue-400 text-sm">--</span>
+            </div>
+            <button onclick="generateAIWorkout()" class="btn-main w-full py-5 font-black uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-blue-500/20" id="lang-coach-gen-btn">СФОРМУВАТИ PDF ПЛАН</button>
+        </div>
+
+        <div class="mt-8 card p-5 border-white/5 shadow-xl">
+            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-center text-white" id="lang-coach-chart">ККАЛ ЗА ОСТАННІЙ ТИЖДЕНЬ</h3>
+            <div style="height: 140px; position: relative;"><canvas id="calorieChart"></canvas></div>
+        </div>
+    </div>
+
     <div id="page-activity" class="page-content hidden pb-6">
-        <h2 class="text-xl font-black italic mb-4 uppercase text-white px-2">Щоденник тренувань</h2>
+        <h2 class="text-xl font-black italic mb-4 uppercase text-white px-2" id="lang-activity-title">Щоденник тренувань</h2>
         
         <div class="card p-5 mb-4 border border-white/5 shadow-xl">
-            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-center text-white">Теплова карта м'язів (Тиждень)</h3>
+            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-4 text-center text-white" id="lang-muscle-map">Теплова карта м'язів (Тиждень)</h3>
             <div style="height: 200px; position: relative;"><canvas id="muscleChart"></canvas></div>
         </div>
 
         <div class="card p-5 mb-4 border border-white/5 shadow-lg">
-            <h3 class="text-[10px] font-bold text-green-400 uppercase mb-3">🏃 Кардіо / Активність</h3>
+            <h3 class="text-[10px] font-bold text-green-400 uppercase mb-3" id="lang-cardio-title">🏃 Кардіо / Активність</h3>
             <div class="grid grid-cols-2 gap-2 mb-3">
                 <input type="text" id="cardio-type" placeholder="Біг, ходьба, велик..." class="col-span-2">
                 <input type="number" id="cardio-duration" placeholder="Час (хв)">
                 <input type="number" id="cardio-distance" step="0.1" placeholder="Км (необов'язково)">
                 <input type="number" id="cardio-cals" placeholder="Ккал (якщо знаєш)" class="col-span-2">
             </div>
-            <button onclick="addCardio()" class="btn-main w-full py-3 text-xs font-bold uppercase shadow-lg bg-green-500/20 text-green-400 border border-green-500/30">Записати Кардіо</button>
+            <button onclick="addCardio()" class="btn-main w-full py-3 text-xs font-bold uppercase shadow-lg bg-green-500/20 text-green-400 border border-green-500/30" id="lang-cardio-btn">Записати Кардіо</button>
         </div>
 
         <div class="card p-5 mb-4 border border-white/5 shadow-lg">
-            <h3 class="text-[10px] font-bold text-orange-400 uppercase mb-3">🏋️ Силове тренування</h3>
+            <h3 class="text-[10px] font-bold text-orange-400 uppercase mb-3" id="lang-strength-title">🏋️ Силове тренування</h3>
             <div class="grid grid-cols-3 gap-2 mb-3">
                 <input type="text" id="strength-name" placeholder="Назва вправи" class="col-span-3">
                 <input type="number" id="strength-sets" placeholder="Підходи">
@@ -244,18 +262,19 @@
                     <option value="core" class="bg-gray-800">Прес/Кор</option>
                 </select>
             </div>
-            <button onclick="addStrength()" class="btn-main w-full py-3 text-xs font-bold uppercase shadow-lg bg-orange-500/20 text-orange-400 border border-orange-500/30">Записати Вправу</button>
+            <button onclick="addStrength()" class="btn-main w-full py-3 text-xs font-bold uppercase shadow-lg bg-orange-500/20 text-orange-400 border border-orange-500/30" id="lang-strength-btn">Записати Вправу</button>
         </div>
 
         <div class="card p-5 mb-6 border border-white/5 shadow-lg">
-            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-3 text-white">Історія за сьогодні</h3>
+            <h3 class="text-[10px] font-bold opacity-40 uppercase mb-3 text-white" id="lang-activity-archive">Історія за сьогодні</h3>
             <div id="activity-list" class="space-y-3"></div>
         </div>
     </div>
 
     <div class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-2xl border-t border-white/5 p-4 flex justify-around items-center z-50">
         <button onclick="showPage('main')" id="btn-main" class="tab-btn active text-white"><div class="text-xl mb-1">🏠</div><div id="lang-tab-home">ГОЛОВНА</div></button>
-        <button onclick="showPage('achievements')" id="btn-achievements" class="tab-btn text-white"><div class="text-xl mb-1">🏆</div><div id="lang-tab-ach">УСПІХИ</div></button>
+        <button onclick="showPage('achievements')" id="btn-achievements" class="tab-btn text-white"><div class="text-xl mb-1">🏆</div><div id="lang-tab-ach">УСПІХ</div></button>
+        <button onclick="showPage('coach')" id="btn-coach" class="tab-btn text-white"><div class="text-xl mb-1">📋</div><div id="lang-tab-coach">ТРЕНЕР</div></button>
         <button onclick="showPage('activity')" id="btn-activity" class="tab-btn text-white"><div class="text-xl mb-1">🏃</div><div id="lang-tab-activity">РУХ</div></button>
     </div>
 
@@ -265,14 +284,14 @@
         const SUPABASE_KEY = "sb_publishable_Ir8nKEcq4o3ap05_4MIaPg_ZtJGPG1Z";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        let currentUserId = null, userData = null, weightChart = null, calorieChart = null;
+        let currentUserId = null, userData = null, weightChart = null, calorieChart = null, muscleChartInstance = null;
         let selectedDate = new Date(), weightFilterDays = 7;
         let userGoals = { cal: 2000, p: 150, f: 70, c: 250, water: 2000 };
         let currentLang = 'ua'; 
 
         const i18n = {
             ua: {
-                tabHome: "ГОЛОВНА", tabAch: "УСПІХИ", tabCoach: "ТРЕНЕР",
+                tabHome: "ГОЛОВНА", tabAch: "УСПІХИ", tabCoach: "ТРЕНЕР", tabActivity: "РУХ",
                 hello: "Привіт", aiInsight: "АНАЛІЗ AI", aiBalance: "БАЛАНС ІІ",
                 hint: "Щоб розрахувати калорії, просто надішліть боту <b>фото страви</b> або її <b>текст</b> у чат.",
                 dailyNorm: "ДЕННА НОРМА", p: "Білки", f: "Жири", c: "Вугл.",
@@ -284,9 +303,10 @@
                 yourAch: "Твої досягнення", statInvite: "СТАТИСТИКА ЗАПРОШЕНЬ",
                 refTitle: "РЕФЕРАЛЬНА ПРОГРАМА", refDesc: "За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+5 AI генерацій</b>!",
                 inviteBtn: "ЗАПРОСИТИ ДРУГА", coachTitle: "AI ТРЕНЕР PRO", coachPrompt: "ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ",
-                coachPlaceholder: "Наприклад: Тренування вдома на 15 хв, фокус на ноги та прес...",
+                coachPlaceholder: "Наприклад: Тренування вдома на 15 хв...",
                 coachBalance: "БАЛАНС ГЕНЕРАЦІЙ:", coachGenBtn: "СФОРМУВАТИ PDF ПЛАН", coachChart: "ККАЛ ЗА ОСТАННІЙ ТИЖДЕНЬ",
                 adminUsers: "Юзерів", adminLogs: "Логів їжі", history: "Перегляд історії", unlimited: "Безліміт 👑",
+                activityTitle: "Щоденник тренувань", muscleMap: "Теплова карта м'язів (Тиждень)", cardioTitle: "🏃 Кардіо / Активність", cardioBtn: "Записати Кардіо", strengthTitle: "🏋️ Силове тренування", strengthBtn: "Записати Вправу", activityArchive: "Історія за сьогодні",
                 achT1: "Новачок", achD1: "Просто зареєструйся", achT2: "Стрік 3 дні", achD2: "Записуй дані 3 дні поспіль",
                 achT3: "Залізна воля", achD3: "Записуй дані 7 днів поспіль", achT4: "Здорове меню", achD4: "Запиши 10 страв",
                 achT5: "Шеф-кухар", achD5: "Запиши 50 страв", achT6: "Експерт", achD6: "Запиши 100 страв",
@@ -295,7 +315,7 @@
                 achT11: "Амбасадор", achD11: "Запроси 1 друга", achT12: "Лідер думок", achD12: "Запроси 5 друзів"
             },
             en: {
-                tabHome: "HOME", tabAch: "AWARDS", tabCoach: "COACH",
+                tabHome: "HOME", tabAch: "AWARDS", tabCoach: "COACH", tabActivity: "MOVE",
                 hello: "Hello", aiInsight: "AI INSIGHT", aiBalance: "AI BALANCE",
                 hint: "To calculate calories, simply send a <b>photo of the meal</b> or its <b>text</b> to the chat.",
                 dailyNorm: "DAILY GOAL", p: "Protein", f: "Fats", c: "Carbs",
@@ -307,9 +327,10 @@
                 yourAch: "Your Achievements", statInvite: "INVITE STATISTICS",
                 refTitle: "REFERRAL PROGRAM", refDesc: "Get <b>+200 XP</b> for each friend! <br>Each new level grants <b>+5 AI generations</b>!",
                 inviteBtn: "INVITE A FRIEND", coachTitle: "AI COACH PRO", coachPrompt: "PERSONALIZED REQUEST",
-                coachPlaceholder: "Example: Home workout for 15 min, focus on legs and abs...",
+                coachPlaceholder: "Example: Home workout for 15 min...",
                 coachBalance: "GENERATIONS BALANCE:", coachGenBtn: "GENERATE PDF PLAN", coachChart: "KCAL LAST WEEK",
                 adminUsers: "Users", adminLogs: "Food Logs", history: "History View", unlimited: "Unlimited 👑",
+                activityTitle: "Workout Log", muscleMap: "Muscle Heatmap (Weekly)", cardioTitle: "🏃 Cardio / Activity", cardioBtn: "Log Cardio", strengthTitle: "🏋️ Strength Training", strengthBtn: "Log Exercise", activityArchive: "Today's History",
                 achT1: "Newbie", achD1: "Just register", achT2: "3-Day Streak", achD2: "Log data 3 days in a row",
                 achT3: "Iron Will", achD3: "Log data 7 days in a row", achT4: "Healthy Menu", achD4: "Log 10 meals",
                 achT5: "Chef", achD5: "Log 50 meals", achT6: "Expert", achD6: "Log 100 meals",
@@ -318,7 +339,7 @@
                 achT11: "Ambassador", achD11: "Invite 1 friend", achT12: "Influencer", achD12: "Invite 5 friends"
             },
             ru: {
-                tabHome: "ГЛАВНАЯ", tabAch: "УСПЕХИ", tabCoach: "ТРЕНЕР",
+                tabHome: "ГЛАВНАЯ", tabAch: "УСПЕХИ", tabCoach: "ТРЕНЕР", tabActivity: "ДВИЖЕНИЕ",
                 hello: "Привет", aiInsight: "АНАЛИЗ AI", aiBalance: "БАЛАНС ИИ",
                 hint: "Чтобы рассчитать калории, просто отправьте боту <b>фото еды</b> или её <b>текст</b> в чат.",
                 dailyNorm: "ДНЕВНАЯ НОРМА", p: "Белки", f: "Жиры", c: "Угл.",
@@ -330,9 +351,10 @@
                 yourAch: "Твои достижения", statInvite: "СТАТИСТИКА ПРИГЛАШЕНИЙ",
                 refTitle: "РЕФЕРАЛЬНАЯ ПРОГРАММА", refDesc: "За каждого друга получай <b>+200 XP</b>! <br>Каждый новый уровень дает <b>+5 AI генераций</b>!",
                 inviteBtn: "ПРИГЛАСИТЬ ДРУГА", coachTitle: "AI ТРЕНЕР PRO", coachPrompt: "ПЕРСОНАЛИЗИРОВАННЫЙ ЗАПРОС",
-                coachPlaceholder: "Например: Тренировка дома на 15 мин, фокус на ноги и пресс...",
+                coachPlaceholder: "Например: Тренировка дома на 15 мин...",
                 coachBalance: "БАЛАНС ГЕНЕРАЦИЙ:", coachGenBtn: "СФОРМИРОВАТЬ PDF ПЛАН", coachChart: "ККАЛ ЗА ПОСЛЕДНЮЮ НЕДЕЛЮ",
                 adminUsers: "Юзеров", adminLogs: "Логов еды", history: "Просмотр истории", unlimited: "Безлимит 👑",
+                activityTitle: "Дневник тренировок", muscleMap: "Тепловая карта мышц (Неделя)", cardioTitle: "🏃 Кардио / Активность", cardioBtn: "Записать Кардио", strengthTitle: "🏋️ Силовая тренировка", strengthBtn: "Записать Упражнение", activityArchive: "История за сегодня",
                 achT1: "Новичок", achD1: "Просто зарегистрируйся", achT2: "Стрик 3 дня", achD2: "Записывай данные 3 дня подряд",
                 achT3: "Железная воля", achD3: "Записывай данные 7 дней подряд", achT4: "Здоровое меню", achD4: "Запиши 10 блюд",
                 achT5: "Шеф-повар", achD5: "Запиши 50 блюд", achT6: "Эксперт", achD6: "Запиши 100 блюд",
@@ -351,7 +373,7 @@
             const t = i18n[langCode] || i18n['ua']; 
             currentLang = langCode;
 
-            setText('lang-tab-home', t.tabHome); setText('lang-tab-ach', t.tabAch); setText('lang-tab-coach', t.tabCoach);
+            setText('lang-tab-home', t.tabHome); setText('lang-tab-ach', t.tabAch); setText('lang-tab-coach', t.tabCoach); setText('lang-tab-activity', t.tabActivity);
             setText('lang-hello', t.hello); setText('lang-ai-insight', t.aiInsight); setText('lang-ai-balance', t.aiBalance);
             setText('lang-hint', t.hint); setText('lang-daily-norm', t.dailyNorm);
             setText('lang-p', t.p); setText('lang-f', t.f); setText('lang-c', t.c);
@@ -365,6 +387,9 @@
             document.getElementById('ai-request-box').placeholder = t.coachPlaceholder;
             setText('lang-coach-balance', t.coachBalance); setText('lang-coach-gen-btn', t.coachGenBtn); setText('lang-coach-chart', t.coachChart);
             setText('lang-admin-users', t.adminUsers); setText('lang-admin-logs', t.adminLogs); setText('lang-history', t.history);
+            setText('lang-activity-title', t.activityTitle); setText('lang-muscle-map', t.muscleMap); setText('lang-cardio-title', t.cardioTitle);
+            setText('lang-cardio-btn', t.cardioBtn); setText('lang-strength-title', t.strengthTitle); setText('lang-strength-btn', t.strengthBtn);
+            setText('lang-activity-archive', t.activityArchive);
 
             for(let i=1; i<=12; i++) {
                 setText('ach-t-'+i, t['achT'+i]); setText('ach-d-'+i, t['achD'+i]);
@@ -599,6 +624,7 @@
             document.getElementById('page-' + p).classList.remove('hidden');
             document.getElementById('btn-' + p).classList.add('active');
             if (p === 'coach' || p === 'main') loadCharts();
+            if (p === 'activity') renderMuscleChart(); 
             tg.HapticFeedback.selectionChanged();
         }
 
@@ -752,6 +778,7 @@
                     tg.MainButton.show(); tg.MainButton.showProgress();
 
                     try {
+                        // Оновлений промпт без прив'язки до мови інтерфейсу
                         const finalPromptForAI = prompt;
 
                         const { data: newReq, error: insertErr } = await supabaseClient.from('ai_requests').insert({
@@ -781,6 +808,7 @@
                         const newBal = userData.ai_generations > 9000 ? userData.ai_generations : userData.ai_generations - 1;
                         await supabaseClient.from('users').update({ ai_generations: newBal, xp: finalXp, achievements: claimed }).eq('user_id', currentUserId);
                         
+                        // Відновлена логіка PDF!
                         const formattedAI = formatMarkdown(aiResponseText);
                         const printDiv = document.createElement('div');
                         printDiv.style.width = '800px'; printDiv.style.padding = '40px'; printDiv.style.background = 'white';
@@ -824,13 +852,7 @@
             });
         }
 
-        function shareReferral() { 
-            const link = `https://t.me/medbotlab_bot?start=${currentUserId}`;
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Прокачуй своє тіло разом зі мною у Virtus Fit AI!")}`); 
-        }
         // --- НОВИЙ МОДУЛЬ: АКТИВНІСТЬ ТА ТРЕНУВАННЯ ---
-        let muscleChartInstance = null;
-
         async function addCardio() {
             const type = document.getElementById('cardio-type').value;
             const duration = parseInt(document.getElementById('cardio-duration').value) || 0;
@@ -839,7 +861,7 @@
 
             if(!type || duration <= 0) return alert(currentLang === 'en' ? 'Enter type and time!' : 'Введіть тип та час!');
             
-            if (cals === 0) { cals = duration * 8; } // Авто-розрахунок, якщо пусте
+            if (cals === 0) { cals = duration * 8; } 
 
             await supabaseClient.from('workouts_cardio').insert({
                 user_id: currentUserId, activity_type: type, duration_min: duration, distance_km: distance, calories_burned: cals
@@ -873,27 +895,29 @@
         }
 
         async function loadActivity() {
-            let startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0);
-            let endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
+            try {
+                let startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0);
+                let endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
 
-            const { data: cardio } = await supabaseClient.from('workouts_cardio').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
-            const { data: strength } = await supabaseClient.from('workouts_strength').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
+                const { data: cardio } = await supabaseClient.from('workouts_cardio').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
+                const { data: strength } = await supabaseClient.from('workouts_strength').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
 
-            const listEl = document.getElementById('activity-list'); let html = '';
-            
-            if(cardio) cardio.forEach(c => {
-                html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-green-400">🏃 ${c.activity_type}</div><div class="text-[9px] opacity-50 text-white">${c.duration_min} хв | ${c.distance_km} км</div></div><div class="flex items-center gap-3"><span class="text-xs font-bold text-green-400">-${c.calories_burned} ккал</span><button onclick="deleteActivity('workouts_cardio', ${c.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`;
-            });
+                const listEl = document.getElementById('activity-list'); let html = '';
+                
+                if(cardio) cardio.forEach(c => {
+                    html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-green-400">🏃 ${c.activity_type}</div><div class="text-[9px] opacity-50 text-white">${c.duration_min} хв | ${c.distance_km} км</div></div><div class="flex items-center gap-3"><span class="text-xs font-bold text-green-400">-${c.calories_burned} ккал</span><button onclick="deleteActivity('workouts_cardio', ${c.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`;
+                });
 
-            if(strength) strength.forEach(s => {
-                const vol = s.sets * s.reps * s.weight_kg;
-                html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-orange-400">🏋️ ${s.exercise_name}</div><div class="text-[9px] opacity-50 text-white">${s.sets}x${s.reps} | ${s.weight_kg} кг | Об'єм: ${vol} кг</div></div><div><button onclick="deleteActivity('workouts_strength', ${s.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`;
-            });
+                if(strength) strength.forEach(s => {
+                    const vol = s.sets * s.reps * s.weight_kg;
+                    html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-orange-400">🏋️ ${s.exercise_name}</div><div class="text-[9px] opacity-50 text-white">${s.sets}x${s.reps} | ${s.weight_kg} кг | Об'єм: ${vol} кг</div></div><div><button onclick="deleteActivity('workouts_strength', ${s.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`;
+                });
 
-            if(html === '') html = `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${currentLang==='en'?'No workouts':'Тренувань немає'}</p>`;
-            if(listEl) listEl.innerHTML = html;
+                if(html === '') html = `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${currentLang==='en'?'No workouts':'Тренувань немає'}</p>`;
+                if(listEl) listEl.innerHTML = html;
 
-            await renderMuscleChart();
+                await renderMuscleChart();
+            } catch(e) { console.log(e); }
         }
 
         async function deleteActivity(table, id) {
@@ -923,9 +947,13 @@
                 });
             }
         }
+
+        function shareReferral() { 
+            const link = `https://t.me/medbotlab_bot?start=${currentUserId}`;
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Прокачуй своє тіло разом зі мною у Virtus Fit AI!")}`); 
+        }
+
         initApp();
     </script>
 </body>
 </html>
-
-
