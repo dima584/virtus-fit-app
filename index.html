@@ -659,10 +659,10 @@
                     tg.MainButton.text = btnText; tg.MainButton.show(); tg.MainButton.showProgress();
 
                     try {
-                        let langInstruct = "Відповідай суворо українською мовою. ВАЖЛИВО: В самому кінці свого повідомлення обов'язково додай точний розрахунок спалених калорій та часу. Використай СУВОРО такий формат (без пробілів): [CAL:XXX|MIN:YYY]";
-                        if (currentLang === 'en') langInstruct = "Respond strictly in English. IMPORTANT: At the very end of your response, add the exact calculation of burned calories and time using exactly this format (no spaces): [CAL:XXX|MIN:YYY]";
-                        if (currentLang === 'kk') langInstruct = "Қатаң түрде қазақ тілінде жауап беріңіз. МАҢЫЗДЫ: Хабарламаның соңында калория мен уақытты дәл осы форматта жазыңыз: [CAL:XXX|MIN:YYY]";
-                        if (currentLang === 'ru') langInstruct = "Отвечай строго на русском языке. ВАЖНО: В самом конце добавь расчет калорий и времени строго в таком формате: [CAL:XXX|MIN:YYY]";
+                        let langInstruct = "Відповідай суворо українською мовою. ВАЖЛИВО: В самому кінці повідомлення обов'язково додай точний розрахунок калорій, часу та сумарної кількості повторень на кожну групу м'язів. Використай СУВОРО такий формат без пробілів: [CAL:XXX|MIN:YYY|CHEST:X|BACK:X|LEGS:X|ARMS:X|SHOULDERS:X|CORE:X] (де X - кількість повторень за тренування, якщо м'яз не працює - пиши 0). Наприклад: [CAL:300|MIN:45|CHEST:0|BACK:50|LEGS:120|ARMS:0|SHOULDERS:0|CORE:60]";
+                        if (currentLang === 'en') langInstruct = "Respond strictly in English. IMPORTANT: At the very end, add the exact calculation of burned calories, time, and total reps per muscle group. Use EXACTLY this format with no spaces: [CAL:XXX|MIN:YYY|CHEST:X|BACK:X|LEGS:X|ARMS:X|SHOULDERS:X|CORE:X] (where X is the number of reps, write 0 if none).";
+                        if (currentLang === 'kk') langInstruct = "Қатаң түрде қазақ тілінде жауап беріңіз. МАҢЫЗДЫ: Хабарламаның соңында калория, уақыт және әр бұлшықет тобына арналған қайталаулар санын дәл осы форматта жазыңыз: [CAL:XXX|MIN:YYY|CHEST:X|BACK:X|LEGS:X|ARMS:X|SHOULDERS:X|CORE:X] (мұндағы X - қайталау саны, егер жоқ болса 0 жазыңыз).";
+                        if (currentLang === 'ru') langInstruct = "Отвечай строго на русском языке. ВАЖНО: В самом конце добавь расчет калорий, времени и суммарного количества повторений на каждую группу мышц строго в таком формате: [CAL:XXX|MIN:YYY|CHEST:X|BACK:X|LEGS:X|ARMS:X|SHOULDERS:X|CORE:X] (где X - количество повторений, если нет - пиши 0).";
 
                         const finalPromptForAI = prompt + "\n\n" + langInstruct;
 
@@ -683,21 +683,26 @@
                         await supabaseClient.from('users').update({ ai_generations: newBal }).eq('user_id', currentUserId);
                         
                         let calcCals = 200; let calcMins = 30; 
-                        const match = aiResponseText.match(/\[CAL:(\d+)\|MIN:(\d+)\]/i);
-                        if (match) { calcCals = parseInt(match[1]); calcMins = parseInt(match[2]); aiResponseText = aiResponseText.replace(match[0], '').trim(); }
+                        let cleanTextForPDF = aiResponseText;
+                        
+                        const regex = /\[CAL:.*?\]/i;
+                        const match = aiResponseText.match(regex);
+                        if (match) { 
+                            let calMatch = match[0].match(/CAL:\s*(\d+)/i);
+                            let minMatch = match[0].match(/MIN:\s*(\d+)/i);
+                            if(calMatch) calcCals = parseInt(calMatch[1]);
+                            if(minMatch) calcMins = parseInt(minMatch[1]);
+                            cleanTextForPDF = aiResponseText.replace(match[0], '').trim(); 
+                        }
 
                         let safeTitle = prompt.substring(0, 30) + "...";
                         try {
-                            const { error: saveErr } = await supabaseClient.from('saved_programs').insert({
+                            await supabaseClient.from('saved_programs').insert({
                                 user_id: currentUserId, title: safeTitle, duration_min: calcMins, calories_burned: calcCals, content: aiResponseText
                             });
-                            if (saveErr) {
-                                console.error("Save Error:", saveErr);
-                                alert("Помилка! Ви забули додати колонку 'content' в таблицю 'saved_programs' у Supabase!");
-                            }
                         } catch(e) { console.log(e); }
                         
-                        const formattedAI = formatMarkdown(aiResponseText);
+                        const formattedAI = formatMarkdown(cleanTextForPDF);
                         const printDiv = document.createElement('div'); printDiv.style.width = '800px'; printDiv.style.padding = '40px'; printDiv.style.background = 'white'; printDiv.style.color = 'black'; printDiv.style.fontFamily = 'sans-serif'; printDiv.style.position = 'absolute'; printDiv.style.left = '-9999px'; printDiv.style.top = '-9999px';
                         let planTitle = currentLang === 'en' ? 'AI Coach Plan' : (currentLang === 'kk' ? 'ЖИ-Жаттықтырушы Жоспары' : (currentLang === 'ru' ? 'План от ИИ-Тренера' : 'План від ШІ-Тренера'));
                         let athlTitle = currentLang === 'en' ? 'Athlete' : (currentLang === 'kk' ? 'Атлет' : 'Атлет');
@@ -736,6 +741,132 @@
             tg.HapticFeedback.notificationOccurred('success'); await refreshScreen();
         }
 
+        // ВІДКРИТТЯ І ЗАКРИТТЯ МОДАЛКИ 
+        function viewProgram(id) {
+            const p = savedProgramsData[id];
+            if(!p) return;
+            document.getElementById('modal-title').innerText = p.title;
+            let emptyText = currentLang === 'en' ? 'Program text missing. Make sure you added "content" column to Supabase!' : (currentLang === 'kk' ? 'Бағдарлама мәтіні жоқ.' : 'Текст програми відсутній (старий запис).');
+            let textToShow = p.content ? p.content.replace(/\[CAL:.*?\]/i, '').trim() : '';
+            document.getElementById('modal-body').innerHTML = textToShow ? formatMarkdown(textToShow) : `<p class='opacity-50 italic text-center text-red-400'>${emptyText}</p>`;
+            document.getElementById('program-modal').classList.add('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function closeModal() {
+            document.getElementById('program-modal').classList.remove('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        async function deleteProgram(id) {
+            let delMsg = currentLang === 'en' ? 'Delete program?' : (currentLang === 'kk' ? 'Бағдарламаны жою керек пе?' : 'Видалити програму?');
+            if(confirm(delMsg)) {
+                await supabaseClient.from('saved_programs').delete().eq('id', id); 
+                await refreshScreen();
+            }
+        }
+
+        // НОВА ЛОГІКА ДЛЯ ЗАПИСУ ВСІХ М'ЯЗІВ ПРИ НАТИСКАННІ "✅ ВИКОНАВ"
+        async function logSavedProgram(id) {
+            const p = savedProgramsData[id];
+            if(!p) return;
+            
+            await supabaseClient.from('workouts_cardio').insert({ user_id: currentUserId, activity_type: "🤖 " + p.title, duration_min: p.duration_min, distance_km: 0, calories_burned: p.calories_burned });
+            
+            if(p.content) {
+                const chestM = p.content.match(/CHEST:\s*(\d+)/i);
+                const backM = p.content.match(/BACK:\s*(\d+)/i);
+                const legsM = p.content.match(/LEGS:\s*(\d+)/i);
+                const armsM = p.content.match(/ARMS:\s*(\d+)/i);
+                const shouldersM = p.content.match(/SHOULDERS:\s*(\d+)/i);
+                const coreM = p.content.match(/CORE:\s*(\d+)/i);
+                
+                let promises = [];
+                const addMuscle = (matchData, mName) => {
+                    if(matchData && parseInt(matchData[1]) > 0) {
+                        promises.push(supabaseClient.from('workouts_strength').insert({
+                            user_id: currentUserId, exercise_name: "🤖 " + p.title.substring(0,20), sets: 1, reps: parseInt(matchData[1]), weight_kg: 0, muscle_group: mName
+                        }));
+                    }
+                };
+                
+                addMuscle(chestM, 'chest');
+                addMuscle(backM, 'back');
+                addMuscle(legsM, 'legs');
+                addMuscle(armsM, 'arms');
+                addMuscle(shouldersM, 'shoulders');
+                addMuscle(coreM, 'core');
+                
+                if(promises.length > 0) await Promise.all(promises);
+            }
+            
+            tg.HapticFeedback.notificationOccurred('success'); 
+            await refreshScreen();
+        }
+
+        // ВІДКРИТТЯ І ЗАКРИТТЯ МОДАЛКИ 
+        function viewProgram(id) {
+            const p = savedProgramsData[id];
+            if(!p) return;
+            document.getElementById('modal-title').innerText = p.title;
+            let emptyText = currentLang === 'en' ? 'Program text missing. Make sure you added "content" column to Supabase!' : (currentLang === 'kk' ? 'Бағдарлама мәтіні жоқ.' : 'Текст програми відсутній (старий запис).');
+            let textToShow = p.content ? p.content.replace(/\[CAL:.*?\]/i, '').trim() : '';
+            document.getElementById('modal-body').innerHTML = textToShow ? formatMarkdown(textToShow) : `<p class='opacity-50 italic text-center text-red-400'>${emptyText}</p>`;
+            document.getElementById('program-modal').classList.add('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function closeModal() {
+            document.getElementById('program-modal').classList.remove('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        async function deleteProgram(id) {
+            let delMsg = currentLang === 'en' ? 'Delete program?' : (currentLang === 'kk' ? 'Бағдарламаны жою керек пе?' : 'Видалити програму?');
+            if(confirm(delMsg)) {
+                await supabaseClient.from('saved_programs').delete().eq('id', id); 
+                await refreshScreen();
+            }
+        }
+
+        // НОВА ЛОГІКА ДЛЯ ЗАПИСУ ВСІХ М'ЯЗІВ ПРИ НАТИСКАННІ "✅ ВИКОНАВ"
+        async function logSavedProgram(id) {
+            const p = savedProgramsData[id];
+            if(!p) return;
+            
+            await supabaseClient.from('workouts_cardio').insert({ user_id: currentUserId, activity_type: "🤖 " + p.title, duration_min: p.duration_min, distance_km: 0, calories_burned: p.calories_burned });
+            
+            if(p.content) {
+                const chestM = p.content.match(/CHEST:\s*(\d+)/i);
+                const backM = p.content.match(/BACK:\s*(\d+)/i);
+                const legsM = p.content.match(/LEGS:\s*(\d+)/i);
+                const armsM = p.content.match(/ARMS:\s*(\d+)/i);
+                const shouldersM = p.content.match(/SHOULDERS:\s*(\d+)/i);
+                const coreM = p.content.match(/CORE:\s*(\d+)/i);
+                
+                let promises = [];
+                const addMuscle = (matchData, mName) => {
+                    if(matchData && parseInt(matchData[1]) > 0) {
+                        promises.push(supabaseClient.from('workouts_strength').insert({
+                            user_id: currentUserId, exercise_name: "🤖 " + p.title.substring(0,20), sets: 1, reps: parseInt(matchData[1]), weight_kg: 0, muscle_group: mName
+                        }));
+                    }
+                };
+                
+                addMuscle(chestM, 'chest');
+                addMuscle(backM, 'back');
+                addMuscle(legsM, 'legs');
+                addMuscle(armsM, 'arms');
+                addMuscle(shouldersM, 'shoulders');
+                addMuscle(coreM, 'core');
+                
+                if(promises.length > 0) await Promise.all(promises);
+            }
+            
+            tg.HapticFeedback.notificationOccurred('success'); 
+            await refreshScreen();
+        }
+
         async function loadActivity() {
             try {
                 let startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0); let endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
@@ -768,7 +899,7 @@
                                 </div>
                                 <div class="flex gap-2 w-full mt-1">
                                     <button onclick="viewProgram(${p.id})" class="flex-1 bg-white/10 text-white text-[10px] font-bold px-3 py-2 rounded-lg active:scale-95 border border-white/5">👁️ ${viewBtnTxt}</button>
-                                    <button onclick="logSavedProgram('${p.title.replace(/'/g, "\\'")}', ${p.duration_min}, ${p.calories_burned})" class="flex-1 bg-blue-500 text-white text-[10px] font-bold px-3 py-2 rounded-lg active:scale-95 shadow-lg shadow-blue-500/30">✅ ${doneBtnTxt}</button>
+                                    <button onclick="logSavedProgram(${p.id})" class="flex-1 bg-blue-500 text-white text-[10px] font-bold px-3 py-2 rounded-lg active:scale-95 shadow-lg shadow-blue-500/30">✅ ${doneBtnTxt}</button>
                                 </div>
                             </div>`;
                         });
@@ -786,7 +917,6 @@
                 await renderMuscleChart();
             } catch(e) { console.log(e); }
         }
-
         async function deleteActivity(table, id) { let delMsg = currentLang === 'en' ? 'Delete?' : (currentLang === 'kk' ? 'Жою керек пе?' : 'Видалити запис?'); if(confirm(delMsg)) { await supabaseClient.from(table).delete().eq('id', id); await refreshScreen(); } }
 
         async function renderMuscleChart() { 
@@ -806,3 +936,4 @@
     </script>
 </body>
 </html>
+
