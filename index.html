@@ -35,6 +35,7 @@
         .custom-scroll::-webkit-scrollbar { height: 8px; display: block !important; }
         .custom-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(51, 144, 236, 0.8); border-radius: 10px; }
+        
         /* СТИЛІ ДЛЯ СПЛИВАЮЧОГО ВІКНА ПРОГРАМИ */
         #program-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 999; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(2px); }
         #program-modal.active { opacity: 1; pointer-events: auto; }
@@ -161,7 +162,6 @@
     </div>
 
     <div id="page-achievements" class="page-content hidden space-y-6">
-        
         <div class="card p-4 shadow-xl border-blue-500/10 mb-6 relative overflow-hidden">
             <h3 class="text-[10px] font-bold opacity-50 uppercase mb-3 text-white tracking-widest text-center" id="lang-path-premium">Шлях до Преміуму 👑</h3>
             <div class="flex gap-3 pb-4 snap-x custom-scroll" id="level-roadmap"></div>
@@ -169,7 +169,6 @@
         </div>
 
         <h2 class="text-xl font-black italic mb-4 uppercase text-white px-2" id="lang-your-achievements">Твої досягнення</h2>
-        
         <div class="grid grid-cols-2 gap-4" id="achievements-grid">
             <div id="ach-newbie" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🐣</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-1">Новачок</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-1">Просто зареєструйся</div><div class="text-[8px] text-blue-400 font-bold">+100 XP</div></div>
             <div id="ach-streak" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🔥</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-2">Стрік 3 дні</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-2">Записуй дані 3 дні поспіль</div><div class="text-[8px] text-blue-400 font-bold">+300 XP</div></div>
@@ -286,7 +285,7 @@
                 </div>
         </div>
     </div>
-    
+
     <div class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-2xl border-t border-white/5 p-4 flex justify-around items-center z-50">
         <button onclick="showPage('main')" id="btn-main" class="tab-btn active text-white"><div class="text-xl mb-1">🏠</div><div id="lang-tab-home">ГОЛОВНА</div></button>
         <button onclick="showPage('achievements')" id="btn-achievements" class="tab-btn text-white"><div class="text-xl mb-1">🏆</div><div id="lang-tab-ach">УСПІХИ</div></button>
@@ -304,6 +303,7 @@
         let selectedDate = new Date(), weightFilterDays = 7, muscleFilterDays = 7;
         let userGoals = { cal: 2000, p: 150, f: 70, c: 250, water: 2000 };
         let currentLang = 'ua'; 
+        let savedProgramsData = {};
 
         const i18n = {
             ua: { tabHome: "ГОЛОВНА", tabAch: "УСПІХИ", tabCoach: "ТРЕНЕР", tabActivity: "РУХ", hello: "Привіт", aiInsight: "АНАЛІЗ AI", aiBalance: "БАЛАНС ІІ", hint: "Щоб розрахувати калорії, просто надішліть боту <b>фото страви</b> або її <b>текст</b> у чат.", dailyNorm: "ДЕННА НОРМА", p: "Білки", f: "Жири", c: "Вугл.", eaten: "🍏 З'їдено:", burned: "🔥 Спалено:", net: "чистих ккал", settingsTitle: "⚙️ Налаштувати норми", setCal: "Ккал ціль", setWater: "Вода (мл)", setP: "Білки (г)", setF: "Жири (г)", setC: "Вуглеводи (г)", saveBtn: "Зберегти норми", waterTracker: "💧 ТРЕКЕР ВОДИ", weightNow: "ВАГА ЗАРАЗ", weightTarget: "ЦІЛЬОВА ВАГА", weightTrend: "АНАЛІТИКА ТРЕНДУ ВАГИ", archive: "АРХІВ ДНЯ", pathPremium: "Шлях до Преміуму 👑", scrollHint: "* Гортай, щоб побачити всі нагороди", yourAch: "Твої досягнення", statInvite: "СТАТИСТИКА ЗАПРОШЕНЬ", refTitle: "РЕФЕРАЛЬНА ПРОГРАМА", refDesc: "За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+5 AI генерацій</b>!", inviteBtn: "ЗАПРОСИТИ ДРУГА", coachTitle: "AI ТРЕНЕР PRO", coachPrompt: "ПЕРСОНАЛІЗОВАНИЙ ЗАПРОС", coachPlaceholder: "Наприклад: Тренування вдома на 15 хв...", coachBalance: "БАЛАНС ГЕНЕРАЦІЙ:", coachGenBtn: "СФОРМУВАТИ PDF ПЛАН", coachChart: "ККАЛ ЗА ОСТАННІЙ ТИЖДЕНЬ", adminUsers: "Юзерів", adminLogs: "Логів їжі", history: "Перегляд історії", unlimited: "Безліміт 👑", activityTitle: "Щоденник тренувань", muscleMap: "Теплова карта м'язів", cardioTitle: "🏃 Кардіо / Активність", cardioBtn: "Записати Кардіо", strengthTitle: "🏋️ Силове тренування", strengthBtn: "Записати Вправу", activityArchive: "Історія за сьогодні", achT1: "Новачок", achD1: "Просто зареєструйся", achT2: "Стрік 3 дні", achD2: "Записуй дані 3 дні поспіль", achT3: "Залізна воля", achD3: "Записуй дані 7 днів поспіль", achT4: "Здорове меню", achD4: "Запиши 10 страв", achT5: "Шеф-кухар", achD5: "Запиши 50 страв", achT6: "Експерт", achD6: "Запиши 100 страв", achT7: "Водний магнат", achD7: "Виконай норму води", achT8: "Вагомий крок", achD8: "Запиши вагу 3 рази", achT9: "Трансформация", achD9: "Запиши вагу 10 разів", achT10: "ШІ-Атлет", achD10: "Згенеруй 1 план", achT11: "Амбасадор", achD11: "Запроси 1 друга", achT12: "Лідер думок", achD12: "Запроси 5 друзів" },
@@ -312,15 +312,10 @@
             kk: { tabHome: "БАСТЫ БЕТ", tabAch: "ЖЕТІСТІКТЕР", tabCoach: "ЖАТТЫҚТЫРУШЫ", tabActivity: "ҚОЗҒАЛЫС", hello: "Сәлем", aiInsight: "ЖИ АНАЛИЗІ", aiBalance: "ЖИ БАЛАНСЫ", hint: "Калорияларды есептеу үшін чатқа <b>тамақтың суретін</b> немесе <b>мәтінін</b> жіберіңіз.", dailyNorm: "КҮНДЕЛІКТІ НОРМА", p: "Ақуыздар", f: "Майлар", c: "Көмірсу.", eaten: "🍏 Желінді:", burned: "🔥 Жанды:", net: "таза ккал", settingsTitle: "⚙️ Нормаларды баптау", setCal: "Ккал мақсаты", setWater: "Су (мл)", setP: "Ақуыздар (г)", setF: "Майлар (г)", setC: "Көмірсулар (г)", saveBtn: "Нормаларды сақтау", waterTracker: "💧 СУ ТРЕКЕРІ", weightNow: "ҚАЗІРГІ САЛМАҚ", weightTarget: "МАҚСАТТЫ САЛМАҚ", weightTrend: "САЛМАҚ ТРЕНДІНІҢ АНАЛИТИКАСЫ", archive: "КҮН МҰРАҒАТЫ", pathPremium: "Премиумға жол 👑", scrollHint: "* Барлық марапаттарды көру үшін айналдырыңыз", yourAch: "Сіздің жетістіктеріңіз", statInvite: "ШАҚЫРУЛАР СТАТИСТИКАСЫ", refTitle: "РЕФЕРАЛДЫҚ БАҒДАРЛАМА", refDesc: "Әрбір дос үшін <b>+200 XP</b> алыңыз! <br>Әр жаңа деңгей <b>+5 ЖИ генерациясын</b> береді!", inviteBtn: "ДОСТЫ ШАҚЫРУ", coachTitle: "AI ЖАТТЫҚТЫРУШЫ PRO", coachPrompt: "ЖЕКЕ СҰРАНЫС", coachPlaceholder: "Мысалы: Үйдегі 15 минуттық жаттығу...", coachBalance: "ГЕНЕРАЦИЯЛАР БАЛАНСЫ:", coachGenBtn: "PDF ЖОСПАРЫН ЖАСАУ", coachChart: "СОҢҒЫ АПТАДАҒЫ ККАЛ", adminUsers: "Қолданушылар", adminLogs: "Тамақ логтары", history: "Тарихты көру", unlimited: "Шексіз 👑", activityTitle: "Жаттығулар күнделігі", muscleMap: "Бұлшықеттердің жылу картасы", cardioTitle: "🏃 Кардио / Белсенділік", cardioBtn: "Кардионы жазу", strengthTitle: "🏋️ Күштік жаттығу", strengthBtn: "Жаттығуды жазу", activityArchive: "Бүгінгі тарих", achT1: "Жаңадан бастаушы", achD1: "Тек тіркел", achT2: "Стрик 3 күн", achD2: "Мәліметтерді 3 күн қатарынан жаз", achT3: "Темір ерік", achD3: "Мәліметтерді 7 күн қатарынан жаз", achT4: "Дені сау мәзір", achD4: "10 тағамды жаз", achT5: "Аспаз", achD5: "50 тағамды жаз", achT6: "Сарапшы", achD6: "100 тағамды жаз", achT7: "Су магнаты", achD7: "Су нормасын орында", achT8: "Салмақты қадам", achD8: "Салмақты 3 рет жаз", achT9: "Трансформация", achD9: "Салмақты 10 рет жаз", achT10: "ЖИ-Атлет", achD10: "1 жоспар жаса", achT11: "Елші", achD11: "1 досты шақыр", achT12: "Пікір көшбасшысы", achD12: "5 досты шақыр" }
         };
 
-        function setText(id, text) {
-            const el = document.getElementById(id);
-            if (el) el.innerHTML = text; 
-        }
+        function setText(id, text) { const el = document.getElementById(id); if (el) el.innerHTML = text; }
 
         function applyLanguage(langCode) {
-            const t = i18n[langCode] || i18n['ua']; 
-            currentLang = langCode;
-
+            const t = i18n[langCode] || i18n['ua']; currentLang = langCode;
             setText('lang-tab-home', t.tabHome); setText('lang-tab-ach', t.tabAch); setText('lang-tab-coach', t.tabCoach); setText('lang-tab-activity', t.tabActivity);
             setText('lang-hello', t.hello); setText('lang-ai-insight', t.aiInsight); setText('lang-ai-balance', t.aiBalance);
             setText('lang-hint', t.hint); setText('lang-daily-norm', t.dailyNorm); setText('lang-eaten', t.eaten); setText('lang-burned', t.burned); setText('lang-net', t.net);
@@ -338,10 +333,7 @@
             setText('lang-activity-title', t.activityTitle); setText('lang-muscle-map', t.muscleMap); setText('lang-cardio-title', t.cardioTitle);
             setText('lang-cardio-btn', t.cardioBtn); setText('lang-strength-title', t.strengthTitle); setText('lang-strength-btn', t.strengthBtn);
             setText('lang-activity-archive', t.activityArchive);
-
-            for(let i=1; i<=12; i++) {
-                setText('ach-t-'+i, t['achT'+i]); setText('ach-d-'+i, t['achD'+i]);
-            }
+            for(let i=1; i<=12; i++) { setText('ach-t-'+i, t['achT'+i]); setText('ach-d-'+i, t['achD'+i]); }
         }
 
         async function initApp() {
@@ -349,86 +341,51 @@
             const urlParams = new URLSearchParams(window.location.search);
             currentUserId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
             if (!currentUserId) return;
-            try {
-                await loadUserData(); await refreshScreen(); await checkAdmin(); await checkAchievements(); showPage('main');
-            } catch (err) { console.error(err); }
+            try { await loadUserData(); await refreshScreen(); await checkAdmin(); await checkAchievements(); showPage('main'); } catch (err) { console.error(err); }
         }
 
         function renderRoadmap(currentLevel) {
-            const roadmapEl = document.getElementById('level-roadmap');
-            if (!roadmapEl) return;
-            let html = '';
+            const roadmapEl = document.getElementById('level-roadmap'); if (!roadmapEl) return; let html = '';
             for (let i = 2; i <= 10; i++) {
                 let statusClass = 'opacity-40 border-white/5'; let icon = '⚡'; let rewardText = '+5';
-                if (i === 5) { icon = '🎁'; rewardText = '+25'; }
-                if (i === 10) { icon = '👑'; rewardText = 'PRO'; }
+                if (i === 5) { icon = '🎁'; rewardText = '+25'; } if (i === 10) { icon = '👑'; rewardText = 'PRO'; }
                 if (i < currentLevel) { statusClass = 'opacity-100 border-green-500/50 bg-green-500/10 text-green-400'; icon = '✅'; } 
                 else if (i === currentLevel) { statusClass = 'opacity-100 border-blue-500 bg-blue-500/20 shadow-lg shadow-blue-500/20 scale-105'; }
                 html += `<div class="flex-shrink-0 w-24 card p-3 text-center snap-center border transition-all duration-300 ${statusClass}"><div class="text-xs font-bold mb-1 ${i===currentLevel ? 'text-white' : ''}">LVL ${i}</div><div class="text-2xl mb-1">${icon}</div><div class="text-[8px] font-bold ${i===10 && i>=currentLevel ? 'text-yellow-400' : 'text-blue-400'} uppercase leading-tight">${rewardText}</div></div>`;
             }
             roadmapEl.innerHTML = html;
-            setTimeout(() => {
-                const activeEl = roadmapEl.querySelector('.border-blue-500');
-                if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-            }, 300);
+            setTimeout(() => { const activeEl = roadmapEl.querySelector('.border-blue-500'); if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }, 300);
         }
 
         async function loadUserData() {
             const { data, error } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
             if (data) {
-                let dbLang = data.language || tg.initDataUnsafe?.user?.language_code || 'ua';
-                applyLanguage(dbLang);
+                applyLanguage(data.language || tg.initDataUnsafe?.user?.language_code || 'ua');
+                let currentXp = data.xp || 0; let currentLevel = data.level || 1; let targetLevel = Math.floor(currentXp / 1000) + 1;
+                let newGenerations = data.ai_generations || 0; let claimedAchievements = data.achievements || ""; let needsUpdate = false;
 
-                let currentXp = data.xp || 0; let currentLevel = data.level || 1;
-                let targetLevel = Math.floor(currentXp / 1000) + 1;
-                let newGenerations = data.ai_generations || 0;
-                let claimedAchievements = data.achievements || ""; let needsUpdate = false;
-
-                let premiumMatch = claimedAchievements.match(/premium_expires:(\d+)/);
-                let isPremium = false;
+                let premiumMatch = claimedAchievements.match(/premium_expires:(\d+)/); let isPremium = false;
                 if (premiumMatch) {
                     let expireTime = parseInt(premiumMatch[1]);
                     if (Date.now() < expireTime) { isPremium = true; newGenerations = 9999; } 
-                    else {
-                        claimedAchievements = claimedAchievements.replace(/premium_expires:\d+,?/g, '');
-                        newGenerations = (newGenerations > 9000) ? 5 : newGenerations; needsUpdate = true;
-                        tg.showAlert(currentLang === 'en' ? "Premium expired!" : (currentLang === 'kk' ? "Премиум мерзімі аяқталды!" : "Термін дії Преміуму закінчився!"));
-                    }
+                    else { claimedAchievements = claimedAchievements.replace(/premium_expires:\d+,?/g, ''); newGenerations = (newGenerations > 9000) ? 5 : newGenerations; needsUpdate = true; }
                 }
-
                 if (targetLevel >= 10 && !isPremium && !claimedAchievements.includes('premium_expires')) {
-                    let expireTime = Date.now() + (30 * 24 * 60 * 60 * 1000); 
-                    claimedAchievements += `premium_expires:${expireTime},`;
-                    newGenerations = 9999; isPremium = true; needsUpdate = true;
-                    tg.showAlert(currentLang === 'en' ? "Level 10! You got 1 Month Premium!" : (currentLang === 'kk' ? "10 деңгей! Сіз 1 айлық Премиум алдыңыз!" : `🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА на 1 МІСЯЦЬ! 👑`));
+                    claimedAchievements += `premium_expires:${Date.now() + (30 * 24 * 60 * 60 * 1000)},`; newGenerations = 9999; isPremium = true; needsUpdate = true;
                 }
-
                 if (currentXp >= 10000) {
                     currentXp = currentXp % 10000; targetLevel = Math.floor(currentXp / 1000) + 1;
                     const { count: fCount } = await supabaseClient.from('nutrition_logs').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
                     const { count: wCount } = await supabaseClient.from('weight_history').select('*', { count: 'exact', head: true }).eq('user_id', currentUserId);
-                    let bRefs = data.referrals_count || 0; let pTime = Date.now();
-                    let expireMatch = claimedAchievements.match(/premium_expires:\d+,?/);
-                    let expireStr = expireMatch ? expireMatch[0] : `premium_expires:${Date.now() + (30 * 24 * 60 * 60 * 1000)},`;
-                    claimedAchievements = `${expireStr}p_food:${fCount||0},p_weight:${wCount||0},p_refs:${bRefs},p_time:${pTime},`; 
-                    newGenerations = 9999; needsUpdate = true;
-                    tg.showAlert(currentLang === 'en' ? "Legend status! Level reset, Premium kept!" : (currentLang === 'kk' ? "Аңыз мәртебесі! Деңгей қалпына келтірілді, Премиум сақталды!" : `🌟 ЛЕГЕНДА! Ти повністю пройшов гру!\nТвій рівень скинуто до 1, щоб заробляти нагороди знову. Преміум залишається! 👑`));
-                } 
-                else if (targetLevel > currentLevel && targetLevel < 10) {
-                    const levelDiff = targetLevel - currentLevel; let bonusGens = levelDiff * 5; 
-                    if (targetLevel === 5) {
-                        bonusGens += 20; 
-                        tg.showAlert(currentLang === 'en' ? `Level 5! Bonus +${bonusGens} Gen!` : (currentLang === 'kk' ? `5 деңгей! Бонус +${bonusGens} генерация!` : `🎁 ЕКВАТОР ПРОЙДЕНО! 5 РІВЕНЬ! 🎁\nЗамість 5 генерацій ти отримуєш мега-бонус: +${bonusGens} ⚡ генерацій!`));
-                    } else { tg.showAlert(`🚀 Level UP: ${targetLevel}! (+${bonusGens} ⚡)`); }
-                    if (!isPremium) newGenerations += bonusGens;
-                    needsUpdate = true;
+                    let expireMatch = claimedAchievements.match(/premium_expires:\d+,?/); let expireStr = expireMatch ? expireMatch[0] : `premium_expires:${Date.now() + (30 * 24 * 60 * 60 * 1000)},`;
+                    claimedAchievements = `${expireStr}p_food:${fCount||0},p_weight:${wCount||0},p_refs:${data.referrals_count || 0},p_time:${Date.now()},`; newGenerations = 9999; needsUpdate = true;
+                } else if (targetLevel > currentLevel && targetLevel < 10) {
+                    let bonusGens = (targetLevel - currentLevel) * 5; if (targetLevel === 5) bonusGens += 20; 
+                    if (!isPremium) newGenerations += bonusGens; needsUpdate = true;
                 }
-
                 if (currentLevel >= 10 && newGenerations <= 0) { newGenerations = 9999; needsUpdate = true; }
-
                 if (needsUpdate || targetLevel !== currentLevel) {
-                    await supabaseClient.from('users').update({ level: targetLevel, ai_generations: newGenerations, xp: currentXp, achievements: claimedAchievements }).eq('user_id', currentUserId);
-                    return loadUserData(); 
+                    await supabaseClient.from('users').update({ level: targetLevel, ai_generations: newGenerations, xp: currentXp, achievements: claimedAchievements }).eq('user_id', currentUserId); return loadUserData(); 
                 }
 
                 userData = data; renderRoadmap(data.level || 1); 
@@ -443,47 +400,26 @@
 
                 setText('user-name', data.name || "User"); setText('user-name-top', data.name || "User");
                 setText('weight-display', (data.weight || 0) + " кг"); setText('goal-display', data.target_weight ? data.target_weight + " кг" : "...");
-                
-                const t = i18n[currentLang] || i18n['ua'];
-                const displayBalance = (data.ai_generations && data.ai_generations > 9000) ? t.unlimited : (data.ai_generations || 0);
-                setText('user-balance', displayBalance); setText('ai-balance-display', displayBalance);
-                setText('ref-count-display', data.referrals_count || 0);
-                
-                if (data.target_weight && data.weight) {
-                    const diff = Math.abs(data.weight - data.target_weight).toFixed(1);
-                    document.getElementById('status-msg').innerText = data.weight > data.target_weight ? `-${diff} кг` : `+${diff} кг`;
-                } else { document.getElementById('status-msg').innerText = "🚀"; }
-                
+                const t = i18n[currentLang] || i18n['ua']; const displayBalance = (data.ai_generations && data.ai_generations > 9000) ? t.unlimited : (data.ai_generations || 0);
+                setText('user-balance', displayBalance); setText('ai-balance-display', displayBalance); setText('ref-count-display', data.referrals_count || 0);
+                if (data.target_weight && data.weight) { const diff = Math.abs(data.weight - data.target_weight).toFixed(1); document.getElementById('status-msg').innerText = data.weight > data.target_weight ? `-${diff} кг` : `+${diff} кг`; } else { document.getElementById('status-msg').innerText = "🚀"; }
                 updateXPUI(data.xp || 0, data.level || 1);
-                
-                const todayStr = new Date().toLocaleDateString('sv');
-                const lastUpdate = data.updated_at ? new Date(data.updated_at).toLocaleDateString('sv') : "";
+                const todayStr = new Date().toLocaleDateString('sv'); const lastUpdate = data.updated_at ? new Date(data.updated_at).toLocaleDateString('sv') : "";
                 if (lastUpdate && lastUpdate !== todayStr) { await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId); }
             }
         }
 
-        async function saveGoals() {
-            const cal = parseInt(document.getElementById('goal-cal').value) || 2000;
-            const water = parseInt(document.getElementById('goal-water').value) || 2000;
-            const p = parseInt(document.getElementById('goal-p').value) || 150;
-            const f = parseInt(document.getElementById('goal-f').value) || 70;
-            const c = parseInt(document.getElementById('goal-c').value) || 250;
-            userGoals.cal = cal; userGoals.water = water; userGoals.p = p; userGoals.f = f; userGoals.c = c;
-            await supabaseClient.from('users').update({ daily_cal_goal: cal, water_goal: water, daily_p_goal: p, daily_f_goal: f, daily_c_goal: c }).eq('user_id', currentUserId);
-            tg.HapticFeedback.notificationOccurred('success'); 
-            tg.showAlert(currentLang === 'en' ? "Saved!" : (currentLang === 'kk' ? "Сақталды!" : "Збережено!"));
-            await refreshScreen();
+        async function saveGoals() { 
+            const cal = parseInt(document.getElementById('goal-cal').value) || 2000; const water = parseInt(document.getElementById('goal-water').value) || 2000;
+            const p = parseInt(document.getElementById('goal-p').value) || 150; const f = parseInt(document.getElementById('goal-f').value) || 70; const c = parseInt(document.getElementById('goal-c').value) || 250;
+            userGoals = {cal, water, p, f, c}; await supabaseClient.from('users').update({ daily_cal_goal: cal, water_goal: water, daily_p_goal: p, daily_f_goal: f, daily_c_goal: c }).eq('user_id', currentUserId);
+            tg.HapticFeedback.notificationOccurred('success'); await refreshScreen();
         }
 
-        async function updateField(field) {
-            const inputId = field === 'weight' ? 'weight-input' : 'goal-input';
-            const val = parseFloat(document.getElementById(inputId).value);
-            if (!val || isNaN(val)) return;
-            await supabaseClient.from('users').update({ [field]: val }).eq('user_id', currentUserId);
-            if(field === 'weight') { await supabaseClient.from('weight_history').insert({ user_id: currentUserId, weight: val }); await addXP(50); }
-            document.getElementById(inputId).value = ''; 
-            tg.HapticFeedback.notificationOccurred('success');
-            await loadUserData(); await loadCharts(); await checkAchievements();
+        async function updateField(field) { 
+            const inputId = field === 'weight' ? 'weight-input' : 'goal-input'; const val = parseFloat(document.getElementById(inputId).value); if (!val || isNaN(val)) return;
+            await supabaseClient.from('users').update({ [field]: val }).eq('user_id', currentUserId); if(field === 'weight') { await supabaseClient.from('weight_history').insert({ user_id: currentUserId, weight: val }); await addXP(50); }
+            document.getElementById(inputId).value = ''; tg.HapticFeedback.notificationOccurred('success'); await loadUserData(); await loadCharts(); await checkAchievements();
         }
 
         async function checkAchievements() {
@@ -576,6 +512,35 @@
             }
         }
 
+        // ВІДКРИТТЯ І ЗАКРИТТЯ МОДАЛКИ (ПЕРЕНЕСЕНО ВИЩЕ, ЩОБ ПРАЦЮВАЛО БЕЗ ПОМИЛОК)
+        function viewProgram(id) {
+            const p = savedProgramsData[id];
+            if(!p) return;
+            document.getElementById('modal-title').innerText = p.title;
+            let emptyText = currentLang === 'en' ? 'Program text missing. Make sure you added "content" column to Supabase!' : (currentLang === 'kk' ? 'Бағдарлама мәтіні жоқ.' : 'Текст програми відсутній (старий запис або помилка БД).');
+            document.getElementById('modal-body').innerHTML = p.content ? formatMarkdown(p.content) : `<p class='opacity-50 italic text-center text-red-400'>${emptyText}</p>`;
+            document.getElementById('program-modal').classList.add('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function closeModal() {
+            document.getElementById('program-modal').classList.remove('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        async function deleteProgram(id) {
+            let delMsg = currentLang === 'en' ? 'Delete program?' : (currentLang === 'kk' ? 'Бағдарламаны жою керек пе?' : 'Видалити програму?');
+            if(confirm(delMsg)) {
+                await supabaseClient.from('saved_programs').delete().eq('id', id); 
+                await refreshScreen();
+            }
+        }
+
+        async function logSavedProgram(title, duration, cals) {
+            await supabaseClient.from('workouts_cardio').insert({ user_id: currentUserId, activity_type: "🤖 " + title, duration_min: duration, distance_km: 0, calories_burned: cals });
+            tg.HapticFeedback.notificationOccurred('success'); await refreshScreen();
+        }
+
         function showPage(p) {
             document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -586,118 +551,48 @@
             tg.HapticFeedback.selectionChanged();
         }
 
-        function updateXPUI(xp, level) {
-            const curXP = xp % 1000; setText('user-level', level); setText('current-xp', curXP);
-            const bar = document.getElementById('xp-bar'); if(bar) bar.style.width = (curXP / 10) + '%';
-        }
-
-        async function addXP(amount) {
-            const newXP = (userData.xp || 0) + amount;
-            await supabaseClient.from('users').update({ xp: newXP }).eq('user_id', currentUserId); await loadUserData();
-        }
-
-        async function addWater(ml) {
-            const newVal = (userData.water_today || 0) + ml;
-            await supabaseClient.from('users').update({ water_today: newVal }).eq('user_id', currentUserId);
-            await addXP(15); await loadUserData(); refreshScreen(); checkAchievements();
-        }
-        
-        async function resetWater() { 
-            let msg = currentLang === 'en' ? 'Reset water?' : (currentLang === 'kk' ? 'Суды қалпына келтіру керек пе?' : 'Скинути воду?');
-            if(confirm(msg)) { 
-                await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId); await loadUserData(); refreshScreen();
-            } 
-        }
-
+        function updateXPUI(xp, level) { const curXP = xp % 1000; setText('user-level', level); setText('current-xp', curXP); const bar = document.getElementById('xp-bar'); if(bar) bar.style.width = (curXP / 10) + '%'; }
+        async function addXP(amount) { const newXP = (userData.xp || 0) + amount; await supabaseClient.from('users').update({ xp: newXP }).eq('user_id', currentUserId); await loadUserData(); }
+        async function addWater(ml) { const newVal = (userData.water_today || 0) + ml; await supabaseClient.from('users').update({ water_today: newVal }).eq('user_id', currentUserId); await addXP(15); await loadUserData(); refreshScreen(); checkAchievements(); }
+        async function resetWater() { let msg = currentLang === 'en' ? 'Reset water?' : (currentLang === 'kk' ? 'Суды қалпына келтіру керек пе?' : 'Скинути воду?'); if(confirm(msg)) { await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId); await loadUserData(); refreshScreen(); } }
         function changeDate(days) { selectedDate.setDate(selectedDate.getDate() + days); refreshScreen(); }
 
         async function refreshScreen() {
             try {
                 const dateStr = selectedDate.toLocaleDateString('sv'); const isToday = dateStr === new Date().toLocaleDateString('sv');
-                
-                let todayText = "Сьогодні";
-                if(currentLang === 'en') todayText = "Today";
-                if(currentLang === 'kk') todayText = "Бүгін";
-                
+                let todayText = "Сьогодні"; if(currentLang === 'en') todayText = "Today"; if(currentLang === 'kk') todayText = "Бүгін";
                 setText('display-date', isToday ? todayText : selectedDate.toLocaleDateString(currentLang==='en'?'en-US':(currentLang==='kk'?'kk-KZ':'uk'), {day:'numeric', month:'long'}));
-                
                 const waterControls = document.getElementById('water-controls'); if(waterControls) waterControls.style.display = isToday ? 'flex' : 'none';
-                
-                let startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0);
-                let endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
-
+                let startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0); let endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
                 const { data: logs } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString()).order('created_at', {ascending: false});
-                
                 const { data: cardio } = await supabaseClient.from('workouts_cardio').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
-                let burnedCals = 0;
-                if(cardio) cardio.forEach(c => burnedCals += c.calories_burned);
-
+                let burnedCals = 0; if(cardio) cardio.forEach(c => burnedCals += c.calories_burned);
                 let waterVal = isToday ? (userData?.water_today || 0) : 0;
-                
-                updateUI(logs || [], waterVal, burnedCals); 
-                await loadCharts(); 
-                generateAIInsight(logs || [], waterVal); 
-                await loadActivity();
-            } catch(e) { console.error("Помилка refreshScreen:", e); }
+                updateUI(logs || [], waterVal, burnedCals); await loadCharts(); generateAIInsight(logs || [], waterVal); await loadActivity();
+            } catch(e) { console.error(e); }
         }
 
         function updateUI(logs, water, burnedCals) {
             const totals = logs.reduce((acc, curr) => ({ cal: acc.cal + curr.calories, p: acc.p + curr.proteins, f: acc.f + curr.fats, c: acc.c + curr.carbs }), { cal: 0, p: 0, f: 0, c: 0 });
-            
             let netCals = totals.cal - burnedCals;
-            
-            setText('eaten-cal', totals.cal);
-            setText('burned-cal', burnedCals);
-            setText('total-cal', netCals);
-
+            setText('eaten-cal', totals.cal); setText('burned-cal', burnedCals); setText('total-cal', netCals);
             const calPercent = Math.min(Math.max((netCals / userGoals.cal) * 100, 0), 100);
             const circle = document.getElementById('cal-circle'); if(circle) circle.style.strokeDashoffset = 220 - (220 * calPercent / 100);
             setText('cal-percent', Math.round(calPercent) + '%');
-            
-            document.getElementById('p-bar').style.width = Math.min((totals.p / userGoals.p) * 100, 100) + '%';
-            document.getElementById('f-bar').style.width = Math.min((totals.f / userGoals.f) * 100, 100) + '%';
-            document.getElementById('c-bar').style.width = Math.min((totals.c / userGoals.c) * 100, 100) + '%';
-            setText('p-val', totals.p + 'г'); setText('f-val', totals.f + 'г'); setText('c-val', totals.c + 'г');
-            setText('water-display', `${water} / ${userGoals.water} мл`);
+            document.getElementById('p-bar').style.width = Math.min((totals.p / userGoals.p) * 100, 100) + '%'; document.getElementById('f-bar').style.width = Math.min((totals.f / userGoals.f) * 100, 100) + '%'; document.getElementById('c-bar').style.width = Math.min((totals.c / userGoals.c) * 100, 100) + '%';
+            setText('p-val', totals.p + 'г'); setText('f-val', totals.f + 'г'); setText('c-val', totals.c + 'г'); setText('water-display', `${water} / ${userGoals.water} мл`);
             document.getElementById('water-bar').style.width = Math.min((water / userGoals.water) * 100, 100) + '%';
-            
             const foodListEl = document.getElementById('food-list');
             if(foodListEl) {
-                let noRecordsText = "Записів немає";
-                if(currentLang === 'en') noRecordsText = "No records";
-                if(currentLang === 'kk') noRecordsText = "Жазбалар жоқ";
-                
-                foodListEl.innerHTML = logs.map(i => `
-                    <div class="flex justify-between items-center py-2 border-b border-white/5">
-                        <div>
-                            <div class="text-xs font-bold text-white">${i.food_name}</div>
-                            <div class="text-[9px] opacity-40 uppercase text-white">Б:${i.proteins} Ж:${i.fats} В:${i.carbs}</div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="accent-text font-black text-xs">${i.calories} ккал</div>
-                            <button onclick="deleteFood(${i.id})" class="opacity-30 hover:opacity-100 p-2 text-white transition-opacity">🗑️</button>
-                        </div>
-                    </div>`).join('') || `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${noRecordsText}</p>`;
+                let noRecordsText = "Записів немає"; if(currentLang === 'en') noRecordsText = "No records"; if(currentLang === 'kk') noRecordsText = "Жазбалар жоқ";
+                foodListEl.innerHTML = logs.map(i => `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-white">${i.food_name}</div><div class="text-[9px] opacity-40 uppercase text-white">Б:${i.proteins} Ж:${i.fats} В:${i.carbs}</div></div><div class="flex items-center gap-3"><div class="accent-text font-black text-xs">${i.calories} ккал</div><button onclick="deleteFood(${i.id})" class="opacity-30 hover:opacity-100 p-2 text-white transition-opacity">🗑️</button></div></div>`).join('') || `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${noRecordsText}</p>`;
             }
         }
 
-        async function deleteFood(id) { 
-            let msg = currentLang === 'en' ? 'Delete log?' : (currentLang === 'kk' ? 'Жазбаны өшіру керек пе?' : 'Видалити запис?');
-            if(confirm(msg)) { 
-                await supabaseClient.from('nutrition_logs').delete().eq('id', id); refreshScreen(); checkAchievements(); 
-            } 
-        }
-
-        function setWeightFilter(days) { 
-            weightFilterDays = days; document.querySelectorAll('#weight-filters .btn-filter').forEach(b => b.classList.remove('active')); 
-            const fBtn = document.getElementById('wf-' + days); if(fBtn) fBtn.classList.add('active'); loadCharts(); 
-        }
-
-        function setMuscleFilter(days) {
-            muscleFilterDays = days; document.querySelectorAll('#muscle-filters .btn-filter').forEach(b => b.classList.remove('active')); 
-            const fBtn = document.getElementById('mf-' + days); if(fBtn) fBtn.classList.add('active'); renderMuscleChart(); 
-        }
-
+        async function deleteFood(id) { let msg = currentLang === 'en' ? 'Delete log?' : (currentLang === 'kk' ? 'Жазбаны өшіру керек пе?' : 'Видалити запис?'); if(confirm(msg)) { await supabaseClient.from('nutrition_logs').delete().eq('id', id); refreshScreen(); checkAchievements(); } }
+        function setWeightFilter(days) { weightFilterDays = days; document.querySelectorAll('#weight-filters .btn-filter').forEach(b => b.classList.remove('active')); const fBtn = document.getElementById('wf-' + days); if(fBtn) fBtn.classList.add('active'); loadCharts(); }
+        function setMuscleFilter(days) { muscleFilterDays = days; document.querySelectorAll('#muscle-filters .btn-filter').forEach(b => b.classList.remove('active')); const fBtn = document.getElementById('mf-' + days); if(fBtn) fBtn.classList.add('active'); renderMuscleChart(); }
+        
         async function loadCharts() {
             const { data: weights } = await supabaseClient.from('weight_history').select('weight, created_at').eq('user_id', currentUserId).order('created_at', { ascending: true });
             const wCanvas = document.getElementById('weightChart');
@@ -745,37 +640,34 @@
             html = html.replace(/### (.*?)\n/g, '<div style="margin:15px 0 5px 0; color:#3390ec; font-size:16px; font-weight:bold;">$1</div>');
             html = html.replace(/## (.*?)\n/g, '<div style="margin:18px 0 8px 0; color:#1a1a1a; font-size:18px; font-weight:bold;">$1</div>');
             html = html.replace(/# (.*?)\n/g, '<div style="margin:20px 0 10px 0; color:#1a1a1a; font-size:20px; font-weight:bold;">$1</div>');
-            html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-            html = html.replace(/^\* (.*?)$/gm, '&bull; $1');
-            html = html.replace(/^- (.*?)$/gm, '&bull; $1');
+            html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>'); html = html.replace(/^\* (.*?)$/gm, '&bull; $1'); html = html.replace(/^- (.*?)$/gm, '&bull; $1');
             return html.replace(/\n/g, '<br>');
         }
 
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
-            
             let reqMsg = currentLang === 'en' ? "Please enter a request!" : (currentLang === 'kk' ? "Сұранысты енгізіңіз!" : "Будь ласка, введіть запит!");
             if (!prompt) return alert(reqMsg);
-            
             let genMsg = currentLang === 'en' ? "No generations left!" : (currentLang === 'kk' ? "Генерация қалмады!" : "Немає генерацій!");
             if (userData.ai_generations <= 0 && userData.ai_generations <= 9000) return alert(genMsg);
 
             let confMsg = currentLang === 'en' ? "Spend 1 ⚡ to generate plan?" : (currentLang === 'kk' ? "Жоспарды жасауға 1 ⚡ жұмсау керек пе?" : "Витратити 1 ⚡ на генерацію плану?");
+            
             tg.showConfirm(confMsg, async (ok) => {
                 if (ok) {
                     let btnText = currentLang === 'en' ? "GENERATING... ⏳" : (currentLang === 'kk' ? "ЖАСАЛУДА... ⏳" : "ГЕНЕРУЮ ПЛАН... ⏳");
-                    tg.MainButton.text = btnText;
-                    tg.MainButton.show(); tg.MainButton.showProgress();
+                    tg.MainButton.text = btnText; tg.MainButton.show(); tg.MainButton.showProgress();
 
                     try {
-                        const finalPromptForAI = prompt + "\n\nВАЖЛИВО: В самому кінці свого повідомлення обов'язково додай точний розрахунок спалених калорій та часу на основі твого плану. Використай СУВОРО такий формат англійськими літерами (без пробілів): [CAL:XXX|MIN:YYY] (де XXX - сумарні калорії, YYY - тривалість у хвилинах). Наприклад: [CAL:320|MIN:40]";
+                        let langInstruct = "Відповідай суворо українською мовою. ВАЖЛИВО: В самому кінці свого повідомлення обов'язково додай точний розрахунок спалених калорій та часу. Використай СУВОРО такий формат (без пробілів): [CAL:XXX|MIN:YYY]";
+                        if (currentLang === 'en') langInstruct = "Respond strictly in English. IMPORTANT: At the very end of your response, add the exact calculation of burned calories and time using exactly this format (no spaces): [CAL:XXX|MIN:YYY]";
+                        if (currentLang === 'kk') langInstruct = "Қатаң түрде қазақ тілінде жауап беріңіз. МАҢЫЗДЫ: Хабарламаның соңында калория мен уақытты дәл осы форматта жазыңыз: [CAL:XXX|MIN:YYY]";
+                        if (currentLang === 'ru') langInstruct = "Отвечай строго на русском языке. ВАЖНО: В самом конце добавь расчет калорий и времени строго в таком формате: [CAL:XXX|MIN:YYY]";
 
-                        const { data: newReq, error: insertErr } = await supabaseClient.from('ai_requests').insert({
-                            user_id: currentUserId, prompt: finalPromptForAI, status: 'pending'
-                        }).select().single();
+                        const finalPromptForAI = prompt + "\n\n" + langInstruct;
 
-                        if (insertErr) throw new Error("Database error: " + insertErr.message);
-
+                        const { data: newReq } = await supabaseClient.from('ai_requests').insert({ user_id: currentUserId, prompt: finalPromptForAI, status: 'pending' }).select().single();
+                        
                         let aiResponseText = ""; let attempts = 0;
                         while(attempts < 80) {
                             await new Promise(r => setTimeout(r, 1500));
@@ -785,147 +677,73 @@
                             attempts++;
                         }
                         if(!aiResponseText) throw new Error("Timeout. Python bot is offline?");
-
                         await supabaseClient.from('ai_requests').delete().eq('id', newReq.id);
 
-                        let claimed = userData.achievements || ""; let xpBonus = 0;
-                        if (!claimed.includes('ai_pro')) {
-                            claimed += "ai_pro,"; xpBonus = 200;
-                            let achT10Name = i18n[currentLang] ? i18n[currentLang].achT10 : i18n['ua'].achT10;
-                            tg.showAlert(`🏆 ${achT10Name} unlocked! +200 XP`);
-                        }
-                        const finalXp = (userData.xp || 0) + xpBonus;
                         const newBal = userData.ai_generations > 9000 ? userData.ai_generations : userData.ai_generations - 1;
-                        await supabaseClient.from('users').update({ ai_generations: newBal, xp: finalXp, achievements: claimed }).eq('user_id', currentUserId);
+                        await supabaseClient.from('users').update({ ai_generations: newBal }).eq('user_id', currentUserId);
                         
-                        let calcCals = 200; 
-                        let calcMins = 30; 
+                        let calcCals = 200; let calcMins = 30; 
                         const match = aiResponseText.match(/\[CAL:(\d+)\|MIN:(\d+)\]/i);
-                        if (match) {
-                            calcCals = parseInt(match[1]);
-                            calcMins = parseInt(match[2]);
-                            aiResponseText = aiResponseText.replace(match[0], '').trim(); 
-                        }
+                        if (match) { calcCals = parseInt(match[1]); calcMins = parseInt(match[2]); aiResponseText = aiResponseText.replace(match[0], '').trim(); }
 
                         let safeTitle = prompt.substring(0, 30) + "...";
                         try {
-                            await supabaseClient.from('saved_programs').insert({
-                                user_id: currentUserId, title: safeTitle, duration_min: calcMins, calories_burned: calcCals
+                            const { error: saveErr } = await supabaseClient.from('saved_programs').insert({
+                                user_id: currentUserId, title: safeTitle, duration_min: calcMins, calories_burned: calcCals, content: aiResponseText
                             });
-                        } catch(e) { console.log("Таблиця saved_programs ще не створена"); }
+                            if (saveErr) {
+                                console.error("Save Error:", saveErr);
+                                alert("Помилка! Ви забули додати колонку 'content' в таблицю 'saved_programs' у Supabase!");
+                            }
+                        } catch(e) { console.log(e); }
                         
                         const formattedAI = formatMarkdown(aiResponseText);
-                        const printDiv = document.createElement('div');
-                        printDiv.style.width = '800px'; printDiv.style.padding = '40px'; printDiv.style.background = 'white';
-                        printDiv.style.color = 'black'; printDiv.style.fontFamily = 'sans-serif';
-                        printDiv.style.position = 'absolute'; printDiv.style.left = '-9999px'; printDiv.style.top = '-9999px';
-                        
+                        const printDiv = document.createElement('div'); printDiv.style.width = '800px'; printDiv.style.padding = '40px'; printDiv.style.background = 'white'; printDiv.style.color = 'black'; printDiv.style.fontFamily = 'sans-serif'; printDiv.style.position = 'absolute'; printDiv.style.left = '-9999px'; printDiv.style.top = '-9999px';
                         let planTitle = currentLang === 'en' ? 'AI Coach Plan' : (currentLang === 'kk' ? 'ЖИ-Жаттықтырушы Жоспары' : (currentLang === 'ru' ? 'План от ИИ-Тренера' : 'План від ШІ-Тренера'));
                         let athlTitle = currentLang === 'en' ? 'Athlete' : (currentLang === 'kk' ? 'Атлет' : 'Атлет');
                         let reqTitle = currentLang === 'en' ? 'Your Request' : (currentLang === 'kk' ? 'Сіздің сұранысыңыз' : (currentLang === 'ru' ? 'Ваш запрос' : 'Ваш запит'));
-
-                        printDiv.innerHTML = `
-                            <h1 style="font-size: 32px; color: #1a1a1a; margin-bottom: 10px;">${planTitle}: Virtus Fit</h1>
-                            <p style="font-size: 18px; color: #666; margin-bottom: 20px;">${athlTitle}: <b>${userData.name || 'User'}</b></p>
-                            <div style="width: 100%; height: 3px; background-color: #3390ec; margin-bottom: 30px;"></div>
-                            <div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #3390ec; margin-bottom: 25px;">
-                                <p style="font-size: 14px; color: #555; margin: 0;"><b>${reqTitle}:</b> ${prompt}</p>
-                            </div>
-                            <div style="font-size: 16px; line-height: 1.6; color: #222;">${formattedAI}</div>
-                            <br><br><br>
-                            <div style="border-top: 1px solid #eee; padding-top: 15px; text-align: center;">
-                                <p style="font-size: 12px; color: #aaa;">Generated by Virtus Fit AI</p>
-                            </div>
-                        `;
+                        printDiv.innerHTML = `<h1 style="font-size: 32px; color: #1a1a1a; margin-bottom: 10px;">${planTitle}: Virtus Fit</h1><p style="font-size: 18px; color: #666; margin-bottom: 20px;">${athlTitle}: <b>${userData.name || 'User'}</b></p><div style="width: 100%; height: 3px; background-color: #3390ec; margin-bottom: 30px;"></div><div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #3390ec; margin-bottom: 25px;"><p style="font-size: 14px; color: #555; margin: 0;"><b>${reqTitle}:</b> ${prompt}</p></div><div style="font-size: 16px; line-height: 1.6; color: #222;">${formattedAI}</div><br><br><br><div style="border-top: 1px solid #eee; padding-top: 15px; text-align: center;"><p style="font-size: 12px; color: #aaa;">Generated by Virtus Fit AI</p></div>`;
                         document.body.appendChild(printDiv);
-
                         html2canvas(printDiv, { scale: 2, useCORS: true }).then(canvas => {
-                            const imgData = canvas.toDataURL('image/jpeg', 1.0);
-                            const imgWidth = 210; const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                            const { jsPDF } = window.jspdf;
-                            const doc = new jsPDF('p', 'mm', [imgWidth, imgHeight]); 
-                            doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
-                            doc.save(`VirtusFit_Plan_${userData.name || 'AI'}.pdf`);
-                            document.body.removeChild(printDiv);
-                            tg.HapticFeedback.notificationOccurred('success');
-                            document.getElementById('ai-request-box').value = ''; 
-                            loadUserData(); checkAchievements(); refreshScreen();
+                            const imgData = canvas.toDataURL('image/jpeg', 1.0); const imgWidth = 210; const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', [imgWidth, imgHeight]); 
+                            doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight); doc.save(`VirtusFit_Plan_${userData.name || 'AI'}.pdf`);
+                            document.body.removeChild(printDiv); tg.HapticFeedback.notificationOccurred('success');
+                            document.getElementById('ai-request-box').value = ''; loadUserData(); refreshScreen();
                         });
-
-                    } catch (error) {
-                        alert(error.message);
-                    } finally {
-                        tg.MainButton.hide();
-                    }
+                    } catch (error) { alert(error.message); } finally { tg.MainButton.hide(); }
                 }
             });
         }
 
-        async function logSavedProgram(title, duration, cals) {
-            await supabaseClient.from('workouts_cardio').insert({
-                user_id: currentUserId, activity_type: "🤖 " + title, duration_min: duration, distance_km: 0, calories_burned: cals
-            });
-            tg.HapticFeedback.notificationOccurred('success');
-            await refreshScreen();
-        }
-
-        async function addCardio() {
-            const type = document.getElementById('cardio-type').value;
-            const duration = parseInt(document.getElementById('cardio-duration').value) || 0;
-            const distance = parseFloat(document.getElementById('cardio-distance').value) || 0;
-            let cals = parseInt(document.getElementById('cardio-cals').value) || 0;
-
+        async function addCardio() { 
+            const type = document.getElementById('cardio-type').value; const duration = parseInt(document.getElementById('cardio-duration').value) || 0;
+            const distance = parseFloat(document.getElementById('cardio-distance').value) || 0; let cals = parseInt(document.getElementById('cardio-cals').value) || 0;
             let errTypeMsg = currentLang === 'en' ? 'Enter type and time!' : (currentLang === 'kk' ? 'Түрі мен уақытты енгізіңіз!' : 'Введіть тип та час!');
-            if(!type || duration <= 0) return alert(errTypeMsg);
-            
-            if (cals === 0) { cals = duration * 8; } 
-
-            await supabaseClient.from('workouts_cardio').insert({
-                user_id: currentUserId, activity_type: type, duration_min: duration, distance_km: distance, calories_burned: cals
-            });
-            
-            document.getElementById('cardio-type').value = ''; document.getElementById('cardio-duration').value = '';
-            document.getElementById('cardio-distance').value = ''; document.getElementById('cardio-cals').value = '';
-            
-            tg.HapticFeedback.notificationOccurred('success');
-            await refreshScreen();
+            if(!type || duration <= 0) return alert(errTypeMsg); if (cals === 0) { cals = duration * 8; } 
+            await supabaseClient.from('workouts_cardio').insert({ user_id: currentUserId, activity_type: type, duration_min: duration, distance_km: distance, calories_burned: cals });
+            document.getElementById('cardio-type').value = ''; document.getElementById('cardio-duration').value = ''; document.getElementById('cardio-distance').value = ''; document.getElementById('cardio-cals').value = '';
+            tg.HapticFeedback.notificationOccurred('success'); await refreshScreen();
         }
 
-        async function addStrength() {
-            const name = document.getElementById('strength-name').value;
-            const sets = parseInt(document.getElementById('strength-sets').value) || 0;
-            const reps = parseInt(document.getElementById('strength-reps').value) || 0;
-            const weight = parseFloat(document.getElementById('strength-weight').value) || 0;
-            const muscle = document.getElementById('strength-muscle').value;
-
+        async function addStrength() { 
+            const name = document.getElementById('strength-name').value; const sets = parseInt(document.getElementById('strength-sets').value) || 0;
+            const reps = parseInt(document.getElementById('strength-reps').value) || 0; const weight = parseFloat(document.getElementById('strength-weight').value) || 0; const muscle = document.getElementById('strength-muscle').value;
             let errStrMsg = currentLang === 'en' ? 'Enter all data!' : (currentLang === 'kk' ? 'Барлық мәліметтерді енгізіңіз!' : 'Введіть назву, підходи та повторення!');
             if(!name || sets <= 0 || reps <= 0) return alert(errStrMsg);
-
-            await supabaseClient.from('workouts_strength').insert({
-                user_id: currentUserId, exercise_name: name, sets: sets, reps: reps, weight_kg: weight, muscle_group: muscle
-            });
-
-            document.getElementById('strength-name').value = ''; document.getElementById('strength-sets').value = '';
-            document.getElementById('strength-reps').value = ''; document.getElementById('strength-weight').value = '';
-
-            tg.HapticFeedback.notificationOccurred('success');
-            await refreshScreen();
+            await supabaseClient.from('workouts_strength').insert({ user_id: currentUserId, exercise_name: name, sets: sets, reps: reps, weight_kg: weight, muscle_group: muscle });
+            document.getElementById('strength-name').value = ''; document.getElementById('strength-sets').value = ''; document.getElementById('strength-reps').value = ''; document.getElementById('strength-weight').value = '';
+            tg.HapticFeedback.notificationOccurred('success'); await refreshScreen();
         }
 
         async function loadActivity() {
             try {
-                let startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0);
-                let endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
-
+                let startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0); let endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
                 const { data: cardio } = await supabaseClient.from('workouts_cardio').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
                 const { data: strength } = await supabaseClient.from('workouts_strength').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
 
                 const promptEl = document.getElementById('training-daily-prompt');
-                if(promptEl) {
-                    if((!cardio || cardio.length === 0) && (!strength || strength.length === 0) && selectedDate.toDateString() === new Date().toDateString()) {
-                        promptEl.classList.remove('hidden');
-                    } else { promptEl.classList.add('hidden'); }
-                }
+                if(promptEl) { if((!cardio || cardio.length === 0) && (!strength || strength.length === 0) && selectedDate.toDateString() === new Date().toDateString()) { promptEl.classList.remove('hidden'); } else { promptEl.classList.add('hidden'); } }
 
                 try {
                     const { data: programs } = await supabaseClient.from('saved_programs').select('*').eq('user_id', currentUserId).order('created_at', {ascending: false});
@@ -935,10 +753,10 @@
                     let viewBtnTxt = currentLang === 'en' ? 'View' : (currentLang === 'kk' ? 'Көру' : 'Відкрити');
                     let noProgTxt = currentLang === 'en' ? 'Generate a program with AI Coach' : (currentLang === 'kk' ? 'ЖИ Жаттықтырушыда бағдарлама жасаңыз' : 'Згенеруй програму у ШІ Тренера');
 
-                    savedProgramsData = {}; // Очищуємо глобальне сховище
+                    savedProgramsData = {};
                     if(programs && programs.length > 0) {
                         programs.forEach(p => {
-                            savedProgramsData[p.id] = p; // Зберігаємо програму для перегляду
+                            savedProgramsData[p.id] = p;
                             p_html += `
                             <div class="flex flex-col py-3 border-b border-white/5">
                                 <div class="flex justify-between items-start mb-2">
@@ -959,16 +777,8 @@
                 } catch(e) { console.log("Таблиця saved_programs відсутня"); }
 
                 const listEl = document.getElementById('activity-list'); let html = '';
-                
-                if(cardio) cardio.forEach(c => {
-                    html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-green-400">🏃 ${c.activity_type}</div><div class="text-[9px] opacity-50 text-white">${c.duration_min} хв | ${c.distance_km} км</div></div><div class="flex items-center gap-3"><span class="text-xs font-bold text-green-400">-${c.calories_burned} ккал</span><button onclick="deleteActivity('workouts_cardio', ${c.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`;
-                });
-
-                if(strength) strength.forEach(s => {
-                    const vol = s.sets * s.reps * s.weight_kg;
-                    html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-orange-400">🏋️ ${s.exercise_name}</div><div class="text-[9px] opacity-50 text-white">${s.sets}x${s.reps} | ${s.weight_kg} кг | Об'єм: ${vol} кг</div></div><div><button onclick="deleteActivity('workouts_strength', ${s.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`;
-                });
-
+                if(cardio) cardio.forEach(c => { html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-green-400">🏃 ${c.activity_type}</div><div class="text-[9px] opacity-50 text-white">${c.duration_min} хв | ${c.distance_km} км</div></div><div class="flex items-center gap-3"><span class="text-xs font-bold text-green-400">-${c.calories_burned} ккал</span><button onclick="deleteActivity('workouts_cardio', ${c.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`; });
+                if(strength) strength.forEach(s => { const vol = s.sets * s.reps * s.weight_kg; html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-orange-400">🏋️ ${s.exercise_name}</div><div class="text-[9px] opacity-50 text-white">${s.sets}x${s.reps} | ${s.weight_kg} кг | Об'єм: ${vol} кг</div></div><div><button onclick="deleteActivity('workouts_strength', ${s.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`; });
                 let noWorkoutsTxt = currentLang === 'en' ? 'No workouts' : (currentLang === 'kk' ? 'Жаттығулар жоқ' : 'Тренувань немає');
                 if(html === '') html = `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${noWorkoutsTxt}</p>`;
                 if(listEl) listEl.innerHTML = html;
@@ -977,73 +787,22 @@
             } catch(e) { console.log(e); }
         }
 
-        async function deleteActivity(table, id) {
-            let delMsg = currentLang === 'en' ? 'Delete?' : (currentLang === 'kk' ? 'Жою керек пе?' : 'Видалити запис?');
-            if(confirm(delMsg)) {
-                await supabaseClient.from(table).delete().eq('id', id); await refreshScreen();
-            }
-        }
+        async function deleteActivity(table, id) { let delMsg = currentLang === 'en' ? 'Delete?' : (currentLang === 'kk' ? 'Жою керек пе?' : 'Видалити запис?'); if(confirm(delMsg)) { await supabaseClient.from(table).delete().eq('id', id); await refreshScreen(); } }
 
-        async function renderMuscleChart() {
-            const { data: strengthData } = await supabaseClient.from('workouts_strength')
-                .select('muscle_group, sets, reps').eq('user_id', currentUserId)
-                .gte('created_at', new Date(Date.now() - muscleFilterDays*86400000).toISOString());
-
+        async function renderMuscleChart() { 
+            const { data: strengthData } = await supabaseClient.from('workouts_strength').select('muscle_group, sets, reps').eq('user_id', currentUserId).gte('created_at', new Date(Date.now() - muscleFilterDays*86400000).toISOString());
             let muscles = { chest: 0, back: 0, legs: 0, arms: 0, shoulders: 0, core: 0 };
             if(strengthData) strengthData.forEach(s => { if(muscles[s.muscle_group] !== undefined) muscles[s.muscle_group] += (s.sets * s.reps); });
-
             const mCanvas = document.getElementById('muscleChart');
             if(mCanvas) {
                 if(muscleChartInstance) muscleChartInstance.destroy();
-                
-                let labels = ['Груди', 'Спина', 'Ноги', 'Руки', 'Плечі', 'Прес'];
-                if(currentLang === 'en') labels = ['Chest', 'Back', 'Legs', 'Arms', 'Shoulders', 'Core'];
-                if(currentLang === 'kk') labels = ['Кеуде', 'Арқа', 'Аяқтар', 'Қолдар', 'Иықтар', 'Прес'];
-
-                muscleChartInstance = new Chart(mCanvas, {
-                    type: 'radar',
-                    data: {
-                        labels: labels,
-                        datasets: [{ data: [muscles.chest, muscles.back, muscles.legs, muscles.arms, muscles.shoulders, muscles.core], backgroundColor: 'rgba(51, 144, 236, 0.2)', borderColor: '#3390ec', pointBackgroundColor: '#3390ec', pointBorderColor: '#fff' }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, pointLabels: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 10 } }, ticks: { display: false } } }, plugins: { legend: { display: false } } }
-                });
+                let labels = ['Груди', 'Спина', 'Ноги', 'Руки', 'Плечі', 'Прес']; if(currentLang === 'en') labels = ['Chest', 'Back', 'Legs', 'Arms', 'Shoulders', 'Core']; if(currentLang === 'kk') labels = ['Кеуде', 'Арқа', 'Аяқтар', 'Қолдар', 'Иықтар', 'Прес'];
+                muscleChartInstance = new Chart(mCanvas, { type: 'radar', data: { labels: labels, datasets: [{ data: [muscles.chest, muscles.back, muscles.legs, muscles.arms, muscles.shoulders, muscles.core], backgroundColor: 'rgba(51, 144, 236, 0.2)', borderColor: '#3390ec', pointBackgroundColor: '#3390ec', pointBorderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, pointLabels: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 10 } }, ticks: { display: false } } }, plugins: { legend: { display: false } } } });
             }
         }
+        function shareReferral() { const link = `https://t.me/medbotlab_bot?start=${currentUserId}`; let refText = currentLang === 'en' ? "Upgrade your body with me in Virtus Fit AI!" : (currentLang === 'kk' ? "Virtus Fit AI арқылы менімен бірге денеңізді жаттықтырыңыз!" : "Прокачуй своє тіло разом зі мною у Virtus Fit AI!"); tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(refText)}`); }
 
-        function shareReferral() { 
-            const link = `https://t.me/medbotlab_bot?start=${currentUserId}`;
-            let refText = currentLang === 'en' ? "Upgrade your body with me in Virtus Fit AI!" : (currentLang === 'kk' ? "Virtus Fit AI арқылы менімен бірге денеңізді жаттықтырыңыз!" : "Прокачуй своє тіло разом зі мною у Virtus Fit AI!");
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(refText)}`); 
-        }
-
-        // ВІДКРИТТЯ І ЗАКРИТТЯ МОДАЛКИ
-        function viewProgram(id) {
-            const p = savedProgramsData[id];
-            if(!p) return;
-            document.getElementById('modal-title').innerText = p.title;
-            // Якщо контенту ще немає (старі програми), виводимо заглушку
-            let emptyText = currentLang === 'en' ? 'Program text missing.' : (currentLang === 'kk' ? 'Бағдарлама мәтіні жоқ.' : 'Текст програми відсутній (старий запис).');
-            document.getElementById('modal-body').innerHTML = p.content ? formatMarkdown(p.content) : `<p class='opacity-50 italic text-center'>${emptyText}</p>`;
-            document.getElementById('program-modal').classList.add('active');
-            tg.HapticFeedback.selectionChanged();
-        }
-
-        function closeModal() {
-            document.getElementById('program-modal').classList.remove('active');
-            tg.HapticFeedback.selectionChanged();
-        }
-
-        async function deleteProgram(id) {
-            let delMsg = currentLang === 'en' ? 'Delete program?' : (currentLang === 'kk' ? 'Бағдарламаны жою керек пе?' : 'Видалити програму?');
-            if(confirm(delMsg)) {
-                await supabaseClient.from('saved_programs').delete().eq('id', id); 
-                await refreshScreen();
-            }
-        }
-        
         initApp();
     </script>
 </body>
 </html>
-
