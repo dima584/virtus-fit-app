@@ -156,6 +156,7 @@
     </div>
 
     <div id="page-achievements" class="page-content hidden space-y-6">
+        
         <div class="card p-4 shadow-xl border-blue-500/10 mb-6 relative overflow-hidden">
             <h3 class="text-[10px] font-bold opacity-50 uppercase mb-3 text-white tracking-widest text-center" id="lang-path-premium">Шлях до Преміуму 👑</h3>
             <div class="flex gap-3 pb-4 snap-x custom-scroll" id="level-roadmap"></div>
@@ -163,6 +164,7 @@
         </div>
 
         <h2 class="text-xl font-black italic mb-4 uppercase text-white px-2" id="lang-your-achievements">Твої досягнення</h2>
+        
         <div class="grid grid-cols-2 gap-4" id="achievements-grid">
             <div id="ach-newbie" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🐣</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-1">Новачок</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-1">Просто зареєструйся</div><div class="text-[8px] text-blue-400 font-bold">+100 XP</div></div>
             <div id="ach-streak" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🔥</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-2">Стрік 3 дні</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-2">Записуй дані 3 дні поспіль</div><div class="text-[8px] text-blue-400 font-bold">+300 XP</div></div>
@@ -288,78 +290,10 @@
         let currentLang = 'ua'; 
 
         const i18n = {
-            ua: {
-                tabHome: "ГОЛОВНА", tabAch: "УСПІХИ", tabCoach: "ТРЕНЕР", tabActivity: "РУХ",
-                hello: "Привіт", aiInsight: "АНАЛІЗ AI", aiBalance: "БАЛАНС ІІ",
-                hint: "Щоб розрахувати калорії, просто надішліть боту <b>фото страви</b> або її <b>текст</b> у чат.",
-                dailyNorm: "ДЕННА НОРМА", p: "Білки", f: "Жири", c: "Вугл.", eaten: "🍏 З'їдено:", burned: "🔥 Спалено:", net: "чистих ккал",
-                settingsTitle: "⚙️ Налаштувати норми", setCal: "Ккал ціль", setWater: "Вода (мл)",
-                setP: "Білки (г)", setF: "Жири (г)", setC: "Вуглеводи (г)", saveBtn: "Зберегти норми",
-                waterTracker: "💧 ТРЕКЕР ВОДИ", weightNow: "ВАГА ЗАРАЗ", weightTarget: "ЦІЛЬОВА ВАГА",
-                weightTrend: "АНАЛІТИКА ТРЕНДУ ВАГИ", archive: "АРХІВ ДНЯ",
-                pathPremium: "Шлях до Преміуму 👑", scrollHint: "* Гортай, щоб побачити всі нагороди",
-                yourAch: "Твої досягнення", statInvite: "СТАТИСТИКА ЗАПРОШЕНЬ",
-                refTitle: "РЕФЕРАЛЬНА ПРОГРАМА", refDesc: "За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+5 AI генерацій</b>!",
-                inviteBtn: "ЗАПРОСИТИ ДРУГА", coachTitle: "AI ТРЕНЕР PRO", coachPrompt: "ПЕРСОНАЛІЗОВАНИЙ ЗАПИТ",
-                coachPlaceholder: "Наприклад: Тренування вдома на 15 хв...",
-                coachBalance: "БАЛАНС ГЕНЕРАЦІЙ:", coachGenBtn: "СФОРМУВАТИ PDF ПЛАН", coachChart: "ККАЛ ЗА ОСТАННІЙ ТИЖДЕНЬ",
-                adminUsers: "Юзерів", adminLogs: "Логів їжі", history: "Перегляд історії", unlimited: "Безліміт 👑",
-                activityTitle: "Щоденник тренувань", muscleMap: "Теплова карта м'язів", cardioTitle: "🏃 Кардіо / Активність", cardioBtn: "Записати Кардіо", strengthTitle: "🏋️ Силове тренування", strengthBtn: "Записати Вправу", activityArchive: "Історія за сьогодні",
-                achT1: "Новачок", achD1: "Просто зареєструйся", achT2: "Стрік 3 дні", achD2: "Записуй дані 3 дні поспіль",
-                achT3: "Залізна воля", achD3: "Записуй дані 7 днів поспіль", achT4: "Здорове меню", achD4: "Запиши 10 страв",
-                achT5: "Шеф-кухар", achD5: "Запиши 50 страв", achT6: "Експерт", achD6: "Запиши 100 страв",
-                achT7: "Водний магнат", achD7: "Виконай норму води", achT8: "Вагомий крок", achD8: "Запиши вагу 3 рази",
-                achT9: "Трансформація", achD9: "Запиши вагу 10 разів", achT10: "ШІ-Атлет", achD10: "Згенеруй 1 план",
-                achT11: "Амбасадор", achD11: "Запроси 1 друга", achT12: "Лідер думок", achD12: "Запроси 5 друзів"
-            },
-            en: {
-                tabHome: "HOME", tabAch: "AWARDS", tabCoach: "COACH", tabActivity: "MOVE",
-                hello: "Hello", aiInsight: "AI INSIGHT", aiBalance: "AI BALANCE",
-                hint: "To calculate calories, simply send a <b>photo of the meal</b> or its <b>text</b> to the chat.",
-                dailyNorm: "DAILY GOAL", p: "Protein", f: "Fats", c: "Carbs", eaten: "🍏 Eaten:", burned: "🔥 Burned:", net: "net kcal",
-                settingsTitle: "⚙️ Setup Goals", setCal: "Kcal Target", setWater: "Water (ml)",
-                setP: "Proteins (g)", setF: "Fats (g)", setC: "Carbs (g)", saveBtn: "Save Goals",
-                waterTracker: "💧 WATER TRACKER", weightNow: "CURRENT WEIGHT", weightTarget: "TARGET WEIGHT",
-                weightTrend: "WEIGHT TREND ANALYTICS", archive: "DAILY ARCHIVE",
-                pathPremium: "Path to Premium 👑", scrollHint: "* Swipe to see all rewards",
-                yourAch: "Your Achievements", statInvite: "INVITE STATISTICS",
-                refTitle: "REFERRAL PROGRAM", refDesc: "Get <b>+200 XP</b> for each friend! <br>Each new level grants <b>+5 AI generations</b>!",
-                inviteBtn: "INVITE A FRIEND", coachTitle: "AI COACH PRO", coachPrompt: "PERSONALIZED REQUEST",
-                coachPlaceholder: "Example: Home workout for 15 min...",
-                coachBalance: "GENERATIONS BALANCE:", coachGenBtn: "GENERATE PDF PLAN", coachChart: "KCAL LAST WEEK",
-                adminUsers: "Users", adminLogs: "Food Logs", history: "History View", unlimited: "Unlimited 👑",
-                activityTitle: "Workout Log", muscleMap: "Muscle Heatmap", cardioTitle: "🏃 Cardio / Activity", cardioBtn: "Log Cardio", strengthTitle: "🏋️ Strength Training", strengthBtn: "Log Exercise", activityArchive: "Today's History",
-                achT1: "Newbie", achD1: "Just register", achT2: "3-Day Streak", achD2: "Log data 3 days in a row",
-                achT3: "Iron Will", achD3: "Log data 7 days in a row", achT4: "Healthy Menu", achD4: "Log 10 meals",
-                achT5: "Chef", achD5: "Log 50 meals", achT6: "Expert", achD6: "Log 100 meals",
-                achT7: "Water Tycoon", achD7: "Reach water goal", achT8: "Weight Step", achD8: "Log weight 3 times",
-                achT9: "Transformation", achD9: "Log weight 10 times", achT10: "AI Athlete", achD10: "Generate 1 plan",
-                achT11: "Ambassador", achD11: "Invite 1 friend", achT12: "Influencer", achD12: "Invite 5 friends"
-            },
-            ru: {
-                tabHome: "ГЛАВНАЯ", tabAch: "УСПЕХИ", tabCoach: "ТРЕНЕР", tabActivity: "ДВИЖЕНИЕ",
-                hello: "Привет", aiInsight: "АНАЛИЗ AI", aiBalance: "БАЛАНС ИИ",
-                hint: "Чтобы рассчитать калории, просто отправьте боту <b>фото еды</b> или её <b>текст</b> в чат.",
-                dailyNorm: "ДНЕВНАЯ НОРМА", p: "Белки", f: "Жиры", c: "Угл.", eaten: "🍏 Съедено:", burned: "🔥 Сожжено:", net: "чистых ккал",
-                settingsTitle: "⚙️ Настроить нормы", setCal: "Ккал цель", setWater: "Вода (мл)",
-                setP: "Белки (г)", setF: "Жиры (г)", setC: "Углеводы (г)", saveBtn: "Сохранить нормы",
-                waterTracker: "💧 ТРЕКЕР ВОДЫ", weightNow: "ВЕС СЕЙЧАС", weightTarget: "ЦЕЛЕВОЙ ВЕС",
-                weightTrend: "АНАЛИТИКА ТРЕНДА ВЕСА", archive: "АРХИВ ДНЯ",
-                pathPremium: "Путь к Премиуму 👑", scrollHint: "* Листайте, чтобы увидеть все награды",
-                yourAch: "Твои достижения", statInvite: "СТАТИСТИКА ПРИГЛАШЕНИЙ",
-                refTitle: "РЕФЕРАЛЬНАЯ ПРОГРАММА", refDesc: "За каждого друга получай <b>+200 XP</b>! <br>Каждый новый уровень дает <b>+5 AI генераций</b>!",
-                inviteBtn: "ПРИГЛАСИТЬ ДРУГА", coachTitle: "AI ТРЕНЕР PRO", coachPrompt: "ПЕРСОНАЛИЗИРОВАННЫЙ ЗАПРОС",
-                coachPlaceholder: "Например: Тренировка дома на 15 мин...",
-                coachBalance: "БАЛАНС ГЕНЕРАЦИЙ:", coachGenBtn: "СФОРМИРОВАТЬ PDF ПЛАН", coachChart: "ККАЛ ЗА ПОСЛЕДНЮЮ НЕДЕЛЮ",
-                adminUsers: "Юзеров", adminLogs: "Логов еды", history: "Просмотр истории", unlimited: "Безлимит 👑",
-                activityTitle: "Дневник тренировок", muscleMap: "Тепловая карта мышц", cardioTitle: "🏃 Кардио / Активность", cardioBtn: "Записать Кардио", strengthTitle: "🏋️ Силовая тренировка", strengthBtn: "Записать Упражнение", activityArchive: "История за сегодня",
-                achT1: "Новичок", achD1: "Просто зарегистрируйся", achT2: "Стрик 3 дня", achD2: "Записывай данные 3 дня подряд",
-                achT3: "Железная воля", achD3: "Записывай данные 7 дней подряд", achT4: "Здоровое меню", achD4: "Запиши 10 блюд",
-                achT5: "Шеф-повар", achD5: "Запиши 50 блюд", achT6: "Эксперт", achD6: "Запиши 100 блюд",
-                achT7: "Водный магнат", achD7: "Выполни норму воды", achT8: "Весомый шаг", achD8: "Запиши вес 3 раза",
-                achT9: "Трансформация", achD9: "Запиши вес 10 раз", achT10: "ИИ-Атлет", achD10: "Сгенерируй 1 план",
-                achT11: "Амбассадор", achD11: "Пригласи 1 друга", achT12: "Лидер мнений", achD12: "Пригласи 5 друзей"
-            }
+            ua: { tabHome: "ГОЛОВНА", tabAch: "УСПІХИ", tabCoach: "ТРЕНЕР", tabActivity: "РУХ", hello: "Привіт", aiInsight: "АНАЛІЗ AI", aiBalance: "БАЛАНС ІІ", hint: "Щоб розрахувати калорії, просто надішліть боту <b>фото страви</b> або її <b>текст</b> у чат.", dailyNorm: "ДЕННА НОРМА", p: "Білки", f: "Жири", c: "Вугл.", eaten: "🍏 З'їдено:", burned: "🔥 Спалено:", net: "чистих ккал", settingsTitle: "⚙️ Налаштувати норми", setCal: "Ккал ціль", setWater: "Вода (мл)", setP: "Білки (г)", setF: "Жири (г)", setC: "Вуглеводи (г)", saveBtn: "Зберегти норми", waterTracker: "💧 ТРЕКЕР ВОДИ", weightNow: "ВАГА ЗАРАЗ", weightTarget: "ЦІЛЬОВА ВАГА", weightTrend: "АНАЛІТИКА ТРЕНДУ ВАГИ", archive: "АРХІВ ДНЯ", pathPremium: "Шлях до Преміуму 👑", scrollHint: "* Гортай, щоб побачити всі нагороди", yourAch: "Твої досягнення", statInvite: "СТАТИСТИКА ЗАПРОШЕНЬ", refTitle: "РЕФЕРАЛЬНА ПРОГРАМА", refDesc: "За кожного друга отримуй <b>+200 XP</b>! <br>Кожен новий рівень дає <b>+5 AI генерацій</b>!", inviteBtn: "ЗАПРОСИТИ ДРУГА", coachTitle: "AI ТРЕНЕР PRO", coachPrompt: "ПЕРСОНАЛІЗОВАНИЙ ЗАПРОС", coachPlaceholder: "Наприклад: Тренування вдома на 15 хв...", coachBalance: "БАЛАНС ГЕНЕРАЦІЙ:", coachGenBtn: "СФОРМУВАТИ PDF ПЛАН", coachChart: "ККАЛ ЗА ОСТАННІЙ ТИЖДЕНЬ", adminUsers: "Юзерів", adminLogs: "Логів їжі", history: "Перегляд історії", unlimited: "Безліміт 👑", activityTitle: "Щоденник тренувань", muscleMap: "Теплова карта м'язів", cardioTitle: "🏃 Кардіо / Активність", cardioBtn: "Записати Кардіо", strengthTitle: "🏋️ Силове тренування", strengthBtn: "Записати Вправу", activityArchive: "Історія за сьогодні", achT1: "Новачок", achD1: "Просто зареєструйся", achT2: "Стрік 3 дні", achD2: "Записуй дані 3 дні поспіль", achT3: "Залізна воля", achD3: "Записуй дані 7 днів поспіль", achT4: "Здорове меню", achD4: "Запиши 10 страв", achT5: "Шеф-кухар", achD5: "Запиши 50 страв", achT6: "Експерт", achD6: "Запиши 100 страв", achT7: "Водний магнат", achD7: "Виконай норму води", achT8: "Вагомий крок", achD8: "Запиши вагу 3 рази", achT9: "Трансформация", achD9: "Запиши вагу 10 разів", achT10: "ШІ-Атлет", achD10: "Згенеруй 1 план", achT11: "Амбасадор", achD11: "Запроси 1 друга", achT12: "Лідер думок", achD12: "Запроси 5 друзів" },
+            en: { tabHome: "HOME", tabAch: "AWARDS", tabCoach: "COACH", tabActivity: "MOVE", hello: "Hello", aiInsight: "AI INSIGHT", aiBalance: "AI BALANCE", hint: "To calculate calories, simply send a <b>photo of the meal</b> or its <b>text</b> to the chat.", dailyNorm: "DAILY GOAL", p: "Protein", f: "Fats", c: "Carbs", eaten: "🍏 Eaten:", burned: "🔥 Burned:", net: "net kcal", settingsTitle: "⚙️ Setup Goals", setCal: "Kcal Target", setWater: "Water (ml)", setP: "Proteins (g)", setF: "Fats (g)", setC: "Carbs (g)", saveBtn: "Save Goals", waterTracker: "💧 WATER TRACKER", weightNow: "CURRENT WEIGHT", weightTarget: "TARGET WEIGHT", weightTrend: "WEIGHT TREND ANALYTICS", archive: "DAILY ARCHIVE", pathPremium: "Path to Premium 👑", scrollHint: "* Swipe to see all rewards", yourAch: "Your Achievements", statInvite: "INVITE STATISTICS", refTitle: "REFERRAL PROGRAM", refDesc: "Get <b>+200 XP</b> for each friend! <br>Each new level grants <b>+5 AI generations</b>!", inviteBtn: "INVITE A FRIEND", coachTitle: "AI COACH PRO", coachPrompt: "PERSONALIZED REQUEST", coachPlaceholder: "Example: Home workout for 15 min...", coachBalance: "GENERATIONS BALANCE:", coachGenBtn: "GENERATE PDF PLAN", coachChart: "KCAL LAST WEEK", adminUsers: "Users", adminLogs: "Food Logs", history: "History View", unlimited: "Unlimited 👑", activityTitle: "Workout Log", muscleMap: "Muscle Heatmap", cardioTitle: "🏃 Cardio / Activity", cardioBtn: "Log Cardio", strengthTitle: "🏋️ Strength Training", strengthBtn: "Log Exercise", activityArchive: "Today's History", achT1: "Newbie", achD1: "Just register", achT2: "3-Day Streak", achD2: "Log data 3 days in a row", achT3: "Iron Will", achD3: "Log data 7 days in a row", achT4: "Healthy Menu", achD4: "Log 10 meals", achT5: "Chef", achD5: "Log 50 meals", achT6: "Expert", achD6: "Log 100 meals", achT7: "Water Tycoon", achD7: "Reach water goal", achT8: "Weight Step", achD8: "Log weight 3 times", achT9: "Transformation", achD9: "Log weight 10 times", achT10: "AI Athlete", achD10: "Generate 1 plan", achT11: "Ambassador", achD11: "Invite 1 friend", achT12: "Influencer", achD12: "Invite 5 friends" },
+            ru: { tabHome: "ГЛАВНАЯ", tabAch: "УСПЕХИ", tabCoach: "ТРЕНЕР", tabActivity: "ДВИЖЕНИЕ", hello: "Привет", aiInsight: "АНАЛИЗ AI", aiBalance: "БАЛАНС ИИ", hint: "Чтобы рассчитать калории, просто отправьте боту <b>фото еды</b> или её <b>текст</b> в чат.", dailyNorm: "ДНЕВНАЯ НОРМА", p: "Белки", f: "Жиры", c: "Угл.", eaten: "🍏 Съедено:", burned: "🔥 Сожжено:", net: "чистых ккал", settingsTitle: "⚙️ Настроить нормы", setCal: "Ккал цель", setWater: "Вода (мл)", setP: "Белки (г)", setF: "Жиры (г)", setC: "Углеводы (г)", saveBtn: "Сохранить нормы", waterTracker: "💧 ТРЕКЕР ВОДЫ", weightNow: "ВЕС СЕЙЧАС", weightTarget: "ЦЕЛЕВОЙ ВЕС", weightTrend: "АНАЛИТИКА ТРЕНДА ВЕСА", archive: "АРХИВ ДНЯ", pathPremium: "Путь к Премиуму 👑", scrollHint: "* Листайте, чтобы увидеть все награды", yourAch: "Твои достижения", statInvite: "СТАТИСТИКА ПРИГЛАШЕНИЙ", refTitle: "РЕФЕРАЛЬНАЯ ПРОГРАММА", refDesc: "За каждого друга получай <b>+200 XP</b>! <br>Каждый новый уровень дает <b>+5 AI генераций</b>!", inviteBtn: "ПРИГЛАСИТЬ ДРУГА", coachTitle: "AI ТРЕНЕР PRO", coachPrompt: "ПЕРСОНАЛИЗИРОВАННЫЙ ЗАПРОС", coachPlaceholder: "Например: Тренировка дома на 15 мин...", coachBalance: "БАЛАНС ГЕНЕРАЦИЙ:", coachGenBtn: "СФОРМИРОВАТЬ PDF ПЛАН", coachChart: "ККАЛ ЗА ПОСЛЕДНЮЮ НЕДЕЛЮ", adminUsers: "Юзеров", adminLogs: "Логов еды", history: "Просмотр истории", unlimited: "Безлимит 👑", activityTitle: "Дневник тренировок", muscleMap: "Тепловая карта мышц", cardioTitle: "🏃 Кардио / Активность", cardioBtn: "Записать Кардио", strengthTitle: "🏋️ Силовая тренировка", strengthBtn: "Записать Упражнение", activityArchive: "История за сегодня", achT1: "Новичок", achD1: "Просто зарегистрируйся", achT2: "Стрик 3 дня", achD2: "Записывай данные 3 дня подряд", achT3: "Железная воля", achD3: "Записывай данные 7 дней подряд", achT4: "Здоровое меню", achD4: "Запиши 10 блюд", achT5: "Шеф-повар", achD5: "Запиши 50 блюд", achT6: "Эксперт", achD6: "Запиши 100 блюд", achT7: "Водный магнат", achD7: "Выполни норму воды", achT8: "Весомый шаг", achD8: "Запиши вес 3 раза", achT9: "Трансформация", achD9: "Запиши вес 10 раз", achT10: "ИИ-Атлет", achD10: "Сгенерируй 1 план", achT11: "Амбассадор", achD11: "Пригласи 1 друга", achT12: "Лидер мнений", achD12: "Пригласи 5 друзей" },
+            kk: { tabHome: "БАСТЫ БЕТ", tabAch: "ЖЕТІСТІКТЕР", tabCoach: "ЖАТТЫҚТЫРУШЫ", tabActivity: "ҚОЗҒАЛЫС", hello: "Сәлем", aiInsight: "ЖИ АНАЛИЗІ", aiBalance: "ЖИ БАЛАНСЫ", hint: "Калорияларды есептеу үшін чатқа <b>тамақтың суретін</b> немесе <b>мәтінін</b> жіберіңіз.", dailyNorm: "КҮНДЕЛІКТІ НОРМА", p: "Ақуыздар", f: "Майлар", c: "Көмірсу.", eaten: "🍏 Желінді:", burned: "🔥 Жанды:", net: "таза ккал", settingsTitle: "⚙️ Нормаларды баптау", setCal: "Ккал мақсаты", setWater: "Су (мл)", setP: "Ақуыздар (г)", setF: "Майлар (г)", setC: "Көмірсулар (г)", saveBtn: "Нормаларды сақтау", waterTracker: "💧 СУ ТРЕКЕРІ", weightNow: "ҚАЗІРГІ САЛМАҚ", weightTarget: "МАҚСАТТЫ САЛМАҚ", weightTrend: "САЛМАҚ ТРЕНДІНІҢ АНАЛИТИКАСЫ", archive: "КҮН МҰРАҒАТЫ", pathPremium: "Премиумға жол 👑", scrollHint: "* Барлық марапаттарды көру үшін айналдырыңыз", yourAch: "Сіздің жетістіктеріңіз", statInvite: "ШАҚЫРУЛАР СТАТИСТИКАСЫ", refTitle: "РЕФЕРАЛДЫҚ БАҒДАРЛАМА", refDesc: "Әрбір дос үшін <b>+200 XP</b> алыңыз! <br>Әр жаңа деңгей <b>+5 ЖИ генерациясын</b> береді!", inviteBtn: "ДОСТЫ ШАҚЫРУ", coachTitle: "AI ЖАТТЫҚТЫРУШЫ PRO", coachPrompt: "ЖЕКЕ СҰРАНЫС", coachPlaceholder: "Мысалы: Үйдегі 15 минуттық жаттығу...", coachBalance: "ГЕНЕРАЦИЯЛАР БАЛАНСЫ:", coachGenBtn: "PDF ЖОСПАРЫН ЖАСАУ", coachChart: "СОҢҒЫ АПТАДАҒЫ ККАЛ", adminUsers: "Қолданушылар", adminLogs: "Тамақ логтары", history: "Тарихты көру", unlimited: "Шексіз 👑", activityTitle: "Жаттығулар күнделігі", muscleMap: "Бұлшықеттердің жылу картасы", cardioTitle: "🏃 Кардио / Белсенділік", cardioBtn: "Кардионы жазу", strengthTitle: "🏋️ Күштік жаттығу", strengthBtn: "Жаттығуды жазу", activityArchive: "Бүгінгі тарих", achT1: "Жаңадан бастаушы", achD1: "Тек тіркел", achT2: "Стрик 3 күн", achD2: "Мәліметтерді 3 күн қатарынан жаз", achT3: "Темір ерік", achD3: "Мәліметтерді 7 күн қатарынан жаз", achT4: "Дені сау мәзір", achD4: "10 тағамды жаз", achT5: "Аспаз", achD5: "50 тағамды жаз", achT6: "Сарапшы", achD6: "100 тағамды жаз", achT7: "Су магнаты", achD7: "Су нормасын орында", achT8: "Салмақты қадам", achD8: "Салмақты 3 рет жаз", achT9: "Трансформация", achD9: "Салмақты 10 рет жаз", achT10: "ЖИ-Атлет", achD10: "1 жоспар жаса", achT11: "Елші", achD11: "1 досты шақыр", achT12: "Пікір көшбасшысы", achD12: "5 досты шақыр" }
         };
 
         function setText(id, text) {
@@ -442,7 +376,7 @@
                     else {
                         claimedAchievements = claimedAchievements.replace(/premium_expires:\d+,?/g, '');
                         newGenerations = (newGenerations > 9000) ? 5 : newGenerations; needsUpdate = true;
-                        tg.showAlert(currentLang === 'en' ? "Premium expired!" : "Термін дії Преміуму закінчився!");
+                        tg.showAlert(currentLang === 'en' ? "Premium expired!" : (currentLang === 'kk' ? "Премиум мерзімі аяқталды!" : "Термін дії Преміуму закінчився!"));
                     }
                 }
 
@@ -450,7 +384,7 @@
                     let expireTime = Date.now() + (30 * 24 * 60 * 60 * 1000); 
                     claimedAchievements += `premium_expires:${expireTime},`;
                     newGenerations = 9999; isPremium = true; needsUpdate = true;
-                    tg.showAlert(currentLang === 'en' ? "Level 10! You got 1 Month Premium!" : `🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА на 1 МІСЯЦЬ! 👑`);
+                    tg.showAlert(currentLang === 'en' ? "Level 10! You got 1 Month Premium!" : (currentLang === 'kk' ? "10 деңгей! Сіз 1 айлық Премиум алдыңыз!" : `🎉 ВАУ! ТИ ДОСЯГ 10 РІВНЯ! 🎉\nТвоя нагорода: ПРЕМІУМ ПІДПИСКА на 1 МІСЯЦЬ! 👑`));
                 }
 
                 if (currentXp >= 10000) {
@@ -462,13 +396,13 @@
                     let expireStr = expireMatch ? expireMatch[0] : `premium_expires:${Date.now() + (30 * 24 * 60 * 60 * 1000)},`;
                     claimedAchievements = `${expireStr}p_food:${fCount||0},p_weight:${wCount||0},p_refs:${bRefs},p_time:${pTime},`; 
                     newGenerations = 9999; needsUpdate = true;
-                    tg.showAlert(currentLang === 'en' ? "Legend status! Level reset, Premium kept!" : `🌟 ЛЕГЕНДА! Ти повністю пройшов гру!\nТвій рівень скинуто до 1, щоб заробляти нагороди знову. Преміум залишається! 👑`);
+                    tg.showAlert(currentLang === 'en' ? "Legend status! Level reset, Premium kept!" : (currentLang === 'kk' ? "Аңыз мәртебесі! Деңгей қалпына келтірілді, Премиум сақталды!" : `🌟 ЛЕГЕНДА! Ти повністю пройшов гру!\nТвій рівень скинуто до 1, щоб заробляти нагороди знову. Преміум залишається! 👑`));
                 } 
                 else if (targetLevel > currentLevel && targetLevel < 10) {
                     const levelDiff = targetLevel - currentLevel; let bonusGens = levelDiff * 5; 
                     if (targetLevel === 5) {
                         bonusGens += 20; 
-                        tg.showAlert(currentLang === 'en' ? `Level 5! Bonus +${bonusGens} Gen!` : `🎁 ЕКВАТОР ПРОЙДЕНО! 5 РІВЕНЬ! 🎁\nЗамість 5 генерацій ти отримуєш мега-бонус: +${bonusGens} ⚡ генерацій!`);
+                        tg.showAlert(currentLang === 'en' ? `Level 5! Bonus +${bonusGens} Gen!` : (currentLang === 'kk' ? `5 деңгей! Бонус +${bonusGens} генерация!` : `🎁 ЕКВАТОР ПРОЙДЕНО! 5 РІВЕНЬ! 🎁\nЗамість 5 генерацій ти отримуєш мега-бонус: +${bonusGens} ⚡ генерацій!`));
                     } else { tg.showAlert(`🚀 Level UP: ${targetLevel}! (+${bonusGens} ⚡)`); }
                     if (!isPremium) newGenerations += bonusGens;
                     needsUpdate = true;
@@ -520,7 +454,8 @@
             const c = parseInt(document.getElementById('goal-c').value) || 250;
             userGoals.cal = cal; userGoals.water = water; userGoals.p = p; userGoals.f = f; userGoals.c = c;
             await supabaseClient.from('users').update({ daily_cal_goal: cal, water_goal: water, daily_p_goal: p, daily_f_goal: f, daily_c_goal: c }).eq('user_id', currentUserId);
-            tg.HapticFeedback.notificationOccurred('success'); tg.showAlert(currentLang === 'en' ? "Saved!" : "Збережено!");
+            tg.HapticFeedback.notificationOccurred('success'); 
+            tg.showAlert(currentLang === 'en' ? "Saved!" : (currentLang === 'kk' ? "Сақталды!" : "Збережено!"));
             await refreshScreen();
         }
 
@@ -594,7 +529,12 @@
             if (newXp > 0) {
                 const finalXp = (userData.xp || 0) + newXp;
                 await supabaseClient.from('users').update({ xp: finalXp, achievements: claimed }).eq('user_id', currentUserId);
-                if(alerts.length > 0) tg.showAlert(currentLang === 'en' ? `🏆 New achievements:\n${alerts.join('\n')}` : `🏆 ВІТАЄМО! Нові досягнення:\n${alerts.join('\n')}`);
+                
+                let alertPrefix = "🏆 ВІТАЄМО! Нові досягнення:\n";
+                if(currentLang === 'en') alertPrefix = "🏆 New achievements:\n";
+                if(currentLang === 'kk') alertPrefix = "🏆 ҚҰТТЫҚТАЙМЫЗ! Жаңа жетістіктер:\n";
+                
+                if(alerts.length > 0) tg.showAlert(alertPrefix + alerts.join('\n'));
                 await loadUserData();
             }
         }
@@ -602,9 +542,13 @@
         function generateAIInsight(logs, water) {
             const el = document.getElementById('ai-insight'); const textEl = document.getElementById('insight-text');
             if (!el || !textEl) return; el.classList.remove('hidden');
-            if (logs.length === 0) textEl.innerText = currentLang === 'en' ? "Start by logging a meal! 🍎 Send a photo to the bot." : "Почніть день із запису їжі! 🍎 Надішліть фото боту.";
-            else if (water < userGoals.water) textEl.innerText = currentLang === 'en' ? "Don't forget to drink water! 💧" : "Не забувайте пити воду! 💧";
-            else textEl.innerText = currentLang === 'en' ? "Great progress today! 🚀" : "Чудовий прогрес! Ви виконали всі норми. 🚀";
+            if (logs.length === 0) {
+                textEl.innerText = currentLang === 'en' ? "Start by logging a meal! 🍎 Send a photo to the bot." : (currentLang === 'kk' ? "Күнді тамақ жазудан бастаңыз! 🍎 Ботқа сурет жіберіңіз." : "Почніть день із запису їжі! 🍎 Надішліть фото боту.");
+            } else if (water < userGoals.water) {
+                textEl.innerText = currentLang === 'en' ? "Don't forget to drink water! 💧" : (currentLang === 'kk' ? "Су ішуді ұмытпаңыз! 💧" : "Не забувайте пити воду! 💧");
+            } else {
+                textEl.innerText = currentLang === 'en' ? "Great progress today! 🚀" : (currentLang === 'kk' ? "Тамаша прогресс! Барлық нормалар орындалды. 🚀" : "Чудовий прогрес! Ви виконали всі норми. 🚀");
+            }
         }
 
         async function checkAdmin() {
@@ -643,7 +587,8 @@
         }
         
         async function resetWater() { 
-            if(confirm(currentLang === 'en' ? 'Reset water?' : 'Скинути воду?')) { 
+            let msg = currentLang === 'en' ? 'Reset water?' : (currentLang === 'kk' ? 'Суды қалпына келтіру керек пе?' : 'Скинути воду?');
+            if(confirm(msg)) { 
                 await supabaseClient.from('users').update({ water_today: 0 }).eq('user_id', currentUserId); await loadUserData(); refreshScreen();
             } 
         }
@@ -653,7 +598,13 @@
         async function refreshScreen() {
             try {
                 const dateStr = selectedDate.toLocaleDateString('sv'); const isToday = dateStr === new Date().toLocaleDateString('sv');
-                setText('display-date', isToday ? (currentLang === 'en' ? "Today" : "Сьогодні") : selectedDate.toLocaleDateString(currentLang==='en'?'en-US':'uk', {day:'numeric', month:'long'}));
+                
+                let todayText = "Сьогодні";
+                if(currentLang === 'en') todayText = "Today";
+                if(currentLang === 'kk') todayText = "Бүгін";
+                
+                setText('display-date', isToday ? todayText : selectedDate.toLocaleDateString(currentLang==='en'?'en-US':(currentLang==='kk'?'kk-KZ':'uk'), {day:'numeric', month:'long'}));
+                
                 const waterControls = document.getElementById('water-controls'); if(waterControls) waterControls.style.display = isToday ? 'flex' : 'none';
                 
                 let startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0);
@@ -661,7 +612,6 @@
 
                 const { data: logs } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString()).order('created_at', {ascending: false});
                 
-                // Отримуємо спалені калорії для відображення в головному меню
                 const { data: cardio } = await supabaseClient.from('workouts_cardio').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
                 let burnedCals = 0;
                 if(cardio) cardio.forEach(c => burnedCals += c.calories_burned);
@@ -678,14 +628,12 @@
         function updateUI(logs, water, burnedCals) {
             const totals = logs.reduce((acc, curr) => ({ cal: acc.cal + curr.calories, p: acc.p + curr.proteins, f: acc.f + curr.fats, c: acc.c + curr.carbs }), { cal: 0, p: 0, f: 0, c: 0 });
             
-            // Розрахунок ЧИСТИХ калорій
             let netCals = totals.cal - burnedCals;
             
             setText('eaten-cal', totals.cal);
             setText('burned-cal', burnedCals);
             setText('total-cal', netCals);
 
-            // Кільце рахує відсоток по ЧИСТИХ калоріях (але не менше 0%)
             const calPercent = Math.min(Math.max((netCals / userGoals.cal) * 100, 0), 100);
             const circle = document.getElementById('cal-circle'); if(circle) circle.style.strokeDashoffset = 220 - (220 * calPercent / 100);
             setText('cal-percent', Math.round(calPercent) + '%');
@@ -699,6 +647,10 @@
             
             const foodListEl = document.getElementById('food-list');
             if(foodListEl) {
+                let noRecordsText = "Записів немає";
+                if(currentLang === 'en') noRecordsText = "No records";
+                if(currentLang === 'kk') noRecordsText = "Жазбалар жоқ";
+                
                 foodListEl.innerHTML = logs.map(i => `
                     <div class="flex justify-between items-center py-2 border-b border-white/5">
                         <div>
@@ -709,12 +661,13 @@
                             <div class="accent-text font-black text-xs">${i.calories} ккал</div>
                             <button onclick="deleteFood(${i.id})" class="opacity-30 hover:opacity-100 p-2 text-white transition-opacity">🗑️</button>
                         </div>
-                    </div>`).join('') || `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${currentLang==='en'?'No records':'Записів немає'}</p>`;
+                    </div>`).join('') || `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${noRecordsText}</p>`;
             }
         }
 
         async function deleteFood(id) { 
-            if(confirm(currentLang === 'en' ? 'Delete log?' : 'Видалити запис?')) { 
+            let msg = currentLang === 'en' ? 'Delete log?' : (currentLang === 'kk' ? 'Жазбаны өшіру керек пе?' : 'Видалити запис?');
+            if(confirm(msg)) { 
                 await supabaseClient.from('nutrition_logs').delete().eq('id', id); refreshScreen(); checkAchievements(); 
             } 
         }
@@ -784,16 +737,21 @@
 
         async function generateAIWorkout() {
             const prompt = document.getElementById('ai-request-box').value;
-            if (!prompt) return alert(currentLang === 'en' ? "Please enter a request!" : "Будь ласка, введіть запит!");
-            if (userData.ai_generations <= 0 && userData.ai_generations <= 9000) return alert(currentLang === 'en' ? "No generations left!" : "Немає генерацій!");
+            
+            let reqMsg = currentLang === 'en' ? "Please enter a request!" : (currentLang === 'kk' ? "Сұранысты енгізіңіз!" : "Будь ласка, введіть запит!");
+            if (!prompt) return alert(reqMsg);
+            
+            let genMsg = currentLang === 'en' ? "No generations left!" : (currentLang === 'kk' ? "Генерация қалмады!" : "Немає генерацій!");
+            if (userData.ai_generations <= 0 && userData.ai_generations <= 9000) return alert(genMsg);
 
-            tg.showConfirm(currentLang === 'en' ? "Spend 1 ⚡ to generate plan?" : "Витратити 1 ⚡ на генерацію плану?", async (ok) => {
+            let confMsg = currentLang === 'en' ? "Spend 1 ⚡ to generate plan?" : (currentLang === 'kk' ? "Жоспарды жасауға 1 ⚡ жұмсау керек пе?" : "Витратити 1 ⚡ на генерацію плану?");
+            tg.showConfirm(confMsg, async (ok) => {
                 if (ok) {
-                    tg.MainButton.text = currentLang === 'en' ? "GENERATING... ⏳" : "ГЕНЕРУЮ ПЛАН... ⏳";
+                    let btnText = currentLang === 'en' ? "GENERATING... ⏳" : (currentLang === 'kk' ? "ЖАСАЛУДА... ⏳" : "ГЕНЕРУЮ ПЛАН... ⏳");
+                    tg.MainButton.text = btnText;
                     tg.MainButton.show(); tg.MainButton.showProgress();
 
                     try {
-                        // РОЗУМНИЙ ПРОМПТ ДЛЯ КАЛОРІЙ ТА ЧАСУ
                         const finalPromptForAI = prompt + "\n\nВАЖЛИВО: В самому кінці свого повідомлення обов'язково додай точний розрахунок спалених калорій та часу на основі твого плану. Використай СУВОРО такий формат англійськими літерами (без пробілів): [CAL:XXX|MIN:YYY] (де XXX - сумарні калорії, YYY - тривалість у хвилинах). Наприклад: [CAL:320|MIN:40]";
 
                         const { data: newReq, error: insertErr } = await supabaseClient.from('ai_requests').insert({
@@ -803,7 +761,6 @@
                         if (insertErr) throw new Error("Database error: " + insertErr.message);
 
                         let aiResponseText = ""; let attempts = 0;
-                        // ПРИШВИДШЕННЯ ПЕРЕВІРКИ: Кожні 1.5 секунди замість 3 секунд
                         while(attempts < 80) {
                             await new Promise(r => setTimeout(r, 1500));
                             const { data: checkData } = await supabaseClient.from('ai_requests').select('*').eq('id', newReq.id).single();
@@ -818,23 +775,22 @@
                         let claimed = userData.achievements || ""; let xpBonus = 0;
                         if (!claimed.includes('ai_pro')) {
                             claimed += "ai_pro,"; xpBonus = 200;
-                            tg.showAlert(`🏆 ${i18n[currentLang].achT10} unlocked! +200 XP`);
+                            let achT10Name = i18n[currentLang] ? i18n[currentLang].achT10 : i18n['ua'].achT10;
+                            tg.showAlert(`🏆 ${achT10Name} unlocked! +200 XP`);
                         }
                         const finalXp = (userData.xp || 0) + xpBonus;
                         const newBal = userData.ai_generations > 9000 ? userData.ai_generations : userData.ai_generations - 1;
                         await supabaseClient.from('users').update({ ai_generations: newBal, xp: finalXp, achievements: claimed }).eq('user_id', currentUserId);
                         
-                        // МАГІЯ ВИЛУЧЕННЯ КАЛОРІЙ І ЧАСУ З ТЕКСТУ
-                        let calcCals = 200; // значення за замовчуванням
-                        let calcMins = 30; // значення за замовчуванням
+                        let calcCals = 200; 
+                        let calcMins = 30; 
                         const match = aiResponseText.match(/\[CAL:(\d+)\|MIN:(\d+)\]/i);
                         if (match) {
                             calcCals = parseInt(match[1]);
                             calcMins = parseInt(match[2]);
-                            aiResponseText = aiResponseText.replace(match[0], '').trim(); // Видаляємо тег з тексту, щоб не псувати PDF
+                            aiResponseText = aiResponseText.replace(match[0], '').trim(); 
                         }
 
-                        // ТЕПЕР ЗАПИСУЄМО У БАНК ПРОГРАМ (А НЕ В ЖУРНАЛ ОДРАЗУ)
                         let safeTitle = prompt.substring(0, 30) + "...";
                         try {
                             await supabaseClient.from('saved_programs').insert({
@@ -848,12 +804,16 @@
                         printDiv.style.color = 'black'; printDiv.style.fontFamily = 'sans-serif';
                         printDiv.style.position = 'absolute'; printDiv.style.left = '-9999px'; printDiv.style.top = '-9999px';
                         
+                        let planTitle = currentLang === 'en' ? 'AI Coach Plan' : (currentLang === 'kk' ? 'ЖИ-Жаттықтырушы Жоспары' : (currentLang === 'ru' ? 'План от ИИ-Тренера' : 'План від ШІ-Тренера'));
+                        let athlTitle = currentLang === 'en' ? 'Athlete' : (currentLang === 'kk' ? 'Атлет' : 'Атлет');
+                        let reqTitle = currentLang === 'en' ? 'Your Request' : (currentLang === 'kk' ? 'Сіздің сұранысыңыз' : (currentLang === 'ru' ? 'Ваш запрос' : 'Ваш запит'));
+
                         printDiv.innerHTML = `
-                            <h1 style="font-size: 32px; color: #1a1a1a; margin-bottom: 10px;">${currentLang === 'en' ? 'AI Coach Plan' : (currentLang === 'ru' ? 'План от ИИ-Тренера' : 'План від ШІ-Тренера')}: Virtus Fit</h1>
-                            <p style="font-size: 18px; color: #666; margin-bottom: 20px;">${currentLang === 'en' ? 'Athlete' : 'Атлет'}: <b>${userData.name || 'User'}</b></p>
+                            <h1 style="font-size: 32px; color: #1a1a1a; margin-bottom: 10px;">${planTitle}: Virtus Fit</h1>
+                            <p style="font-size: 18px; color: #666; margin-bottom: 20px;">${athlTitle}: <b>${userData.name || 'User'}</b></p>
                             <div style="width: 100%; height: 3px; background-color: #3390ec; margin-bottom: 30px;"></div>
                             <div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #3390ec; margin-bottom: 25px;">
-                                <p style="font-size: 14px; color: #555; margin: 0;"><b>${currentLang === 'en' ? 'Your Request' : (currentLang === 'ru' ? 'Ваш запрос' : 'Ваш запит')}:</b> ${prompt}</p>
+                                <p style="font-size: 14px; color: #555; margin: 0;"><b>${reqTitle}:</b> ${prompt}</p>
                             </div>
                             <div style="font-size: 16px; line-height: 1.6; color: #222;">${formattedAI}</div>
                             <br><br><br>
@@ -885,7 +845,6 @@
             });
         }
 
-        // --- ЛОГІКА ДОДАВАННЯ ТРЕНУВАНЬ З БАНКУ ---
         async function logSavedProgram(title, duration, cals) {
             await supabaseClient.from('workouts_cardio').insert({
                 user_id: currentUserId, activity_type: "🤖 " + title, duration_min: duration, distance_km: 0, calories_burned: cals
@@ -894,14 +853,14 @@
             await refreshScreen();
         }
 
-        // --- НОВИЙ МОДУЛЬ: АКТИВНІСТЬ ТА ТРЕНУВАННЯ ---
         async function addCardio() {
             const type = document.getElementById('cardio-type').value;
             const duration = parseInt(document.getElementById('cardio-duration').value) || 0;
             const distance = parseFloat(document.getElementById('cardio-distance').value) || 0;
             let cals = parseInt(document.getElementById('cardio-cals').value) || 0;
 
-            if(!type || duration <= 0) return alert(currentLang === 'en' ? 'Enter type and time!' : 'Введіть тип та час!');
+            let errTypeMsg = currentLang === 'en' ? 'Enter type and time!' : (currentLang === 'kk' ? 'Түрі мен уақытты енгізіңіз!' : 'Введіть тип та час!');
+            if(!type || duration <= 0) return alert(errTypeMsg);
             
             if (cals === 0) { cals = duration * 8; } 
 
@@ -923,7 +882,8 @@
             const weight = parseFloat(document.getElementById('strength-weight').value) || 0;
             const muscle = document.getElementById('strength-muscle').value;
 
-            if(!name || sets <= 0 || reps <= 0) return alert(currentLang === 'en' ? 'Enter all data!' : 'Введіть назву, підходи та повторення!');
+            let errStrMsg = currentLang === 'en' ? 'Enter all data!' : (currentLang === 'kk' ? 'Барлық мәліметтерді енгізіңіз!' : 'Введіть назву, підходи та повторення!');
+            if(!name || sets <= 0 || reps <= 0) return alert(errStrMsg);
 
             await supabaseClient.from('workouts_strength').insert({
                 user_id: currentUserId, exercise_name: name, sets: sets, reps: reps, weight_kg: weight, muscle_group: muscle
@@ -944,7 +904,6 @@
                 const { data: cardio } = await supabaseClient.from('workouts_cardio').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
                 const { data: strength } = await supabaseClient.from('workouts_strength').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
 
-                // ЛОГІКА БАНЕРА
                 const promptEl = document.getElementById('training-daily-prompt');
                 if(promptEl) {
                     if((!cardio || cardio.length === 0) && (!strength || strength.length === 0) && selectedDate.toDateString() === new Date().toDateString()) {
@@ -952,15 +911,18 @@
                     } else { promptEl.classList.add('hidden'); }
                 }
 
-                // ЗАВАНТАЖЕННЯ БАНКУ ПРОГРАМ
                 try {
                     const { data: programs } = await supabaseClient.from('saved_programs').select('*').eq('user_id', currentUserId).order('created_at', {ascending: false});
                     const progEl = document.getElementById('saved-programs-list'); let p_html = '';
+                    
+                    let doneBtnTxt = currentLang === 'en' ? 'Done this' : (currentLang === 'kk' ? 'Орындадым' : 'Я виконав це');
+                    let noProgTxt = currentLang === 'en' ? 'Generate a program with AI Coach' : (currentLang === 'kk' ? 'ЖИ Жаттықтырушыда бағдарлама жасаңыз' : 'Згенеруй програму у ШІ Тренера');
+
                     if(programs && programs.length > 0) {
                         programs.forEach(p => {
-                            p_html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-[11px] font-bold text-white mb-1">🤖 ${p.title}</div><div class="text-[9px] opacity-50 text-white">${p.duration_min} хв | 🔥 ${p.calories_burned} ккал</div></div><button onclick="logSavedProgram('${p.title.replace(/'/g, "\\'")}', ${p.duration_min}, ${p.calories_burned})" class="bg-blue-500 text-white text-[9px] font-bold px-3 py-2 rounded-lg active:scale-95 shadow-lg shadow-blue-500/30">Я виконав це</button></div>`;
+                            p_html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-[11px] font-bold text-white mb-1">🤖 ${p.title}</div><div class="text-[9px] opacity-50 text-white">${p.duration_min} хв | 🔥 ${p.calories_burned} ккал</div></div><button onclick="logSavedProgram('${p.title.replace(/'/g, "\\'")}', ${p.duration_min}, ${p.calories_burned})" class="bg-blue-500 text-white text-[9px] font-bold px-3 py-2 rounded-lg active:scale-95 shadow-lg shadow-blue-500/30">${doneBtnTxt}</button></div>`;
                         });
-                    } else { p_html = `<p class="text-center opacity-30 py-2 text-[10px] italic text-white">Згенеруй програму у ШІ Тренера</p>`; }
+                    } else { p_html = `<p class="text-center opacity-30 py-2 text-[10px] italic text-white">${noProgTxt}</p>`; }
                     if(progEl) progEl.innerHTML = p_html;
                 } catch(e) { console.log("Таблиця saved_programs відсутня"); }
 
@@ -975,7 +937,8 @@
                     html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-orange-400">🏋️ ${s.exercise_name}</div><div class="text-[9px] opacity-50 text-white">${s.sets}x${s.reps} | ${s.weight_kg} кг | Об'єм: ${vol} кг</div></div><div><button onclick="deleteActivity('workouts_strength', ${s.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`;
                 });
 
-                if(html === '') html = `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${currentLang==='en'?'No workouts':'Тренувань немає'}</p>`;
+                let noWorkoutsTxt = currentLang === 'en' ? 'No workouts' : (currentLang === 'kk' ? 'Жаттығулар жоқ' : 'Тренувань немає');
+                if(html === '') html = `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${noWorkoutsTxt}</p>`;
                 if(listEl) listEl.innerHTML = html;
 
                 await renderMuscleChart();
@@ -983,7 +946,8 @@
         }
 
         async function deleteActivity(table, id) {
-            if(confirm(currentLang==='en'?'Delete?':'Видалити запис?')) {
+            let delMsg = currentLang === 'en' ? 'Delete?' : (currentLang === 'kk' ? 'Жою керек пе?' : 'Видалити запис?');
+            if(confirm(delMsg)) {
                 await supabaseClient.from(table).delete().eq('id', id); await refreshScreen();
             }
         }
@@ -999,10 +963,15 @@
             const mCanvas = document.getElementById('muscleChart');
             if(mCanvas) {
                 if(muscleChartInstance) muscleChartInstance.destroy();
+                
+                let labels = ['Груди', 'Спина', 'Ноги', 'Руки', 'Плечі', 'Прес'];
+                if(currentLang === 'en') labels = ['Chest', 'Back', 'Legs', 'Arms', 'Shoulders', 'Core'];
+                if(currentLang === 'kk') labels = ['Кеуде', 'Арқа', 'Аяқтар', 'Қолдар', 'Иықтар', 'Прес'];
+
                 muscleChartInstance = new Chart(mCanvas, {
                     type: 'radar',
                     data: {
-                        labels: ['Груди', 'Спина', 'Ноги', 'Руки', 'Плечі', 'Прес'],
+                        labels: labels,
                         datasets: [{ data: [muscles.chest, muscles.back, muscles.legs, muscles.arms, muscles.shoulders, muscles.core], backgroundColor: 'rgba(51, 144, 236, 0.2)', borderColor: '#3390ec', pointBackgroundColor: '#3390ec', pointBorderColor: '#fff' }]
                     },
                     options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, pointLabels: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 10 } }, ticks: { display: false } } }, plugins: { legend: { display: false } } }
@@ -1012,7 +981,8 @@
 
         function shareReferral() { 
             const link = `https://t.me/medbotlab_bot?start=${currentUserId}`;
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Прокачуй своє тіло разом зі мною у Virtus Fit AI!")}`); 
+            let refText = currentLang === 'en' ? "Upgrade your body with me in Virtus Fit AI!" : (currentLang === 'kk' ? "Virtus Fit AI арқылы менімен бірге денеңізді жаттықтырыңыз!" : "Прокачуй своє тіло разом зі мною у Virtus Fit AI!");
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(refText)}`); 
         }
 
         initApp();
