@@ -35,6 +35,11 @@
         .custom-scroll::-webkit-scrollbar { height: 8px; display: block !important; }
         .custom-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(51, 144, 236, 0.8); border-radius: 10px; }
+        /* СТИЛІ ДЛЯ СПЛИВАЮЧОГО ВІКНА ПРОГРАМИ */
+        #program-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 999; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(2px); }
+        #program-modal.active { opacity: 1; pointer-events: auto; }
+        .modal-content { background: var(--tg-theme-secondary-bg-color, #2d2d2d); width: 100%; max-height: 85vh; border-radius: 20px 20px 0 0; padding: 20px; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border-top: 1px solid rgba(255,255,255,0.1); }
+        #program-modal.active .modal-content { transform: translateY(0); }
     </style>
 </head>
 <body class="p-4 pb-28">
@@ -271,6 +276,17 @@
         </div>
     </div>
 
+    <div id="program-modal">
+        <div class="modal-content custom-scroll">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/10">
+                <h3 class="text-[12px] font-black text-blue-400 uppercase" id="modal-title">Програма</h3>
+                <button onclick="closeModal()" class="text-xl opacity-50 hover:opacity-100 transition-opacity p-2">❌</button>
+            </div>
+            <div id="modal-body" class="text-[13px] leading-relaxed opacity-90 text-white space-y-3 pb-6">
+                </div>
+        </div>
+    </div>
+    
     <div class="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-2xl border-t border-white/5 p-4 flex justify-around items-center z-50">
         <button onclick="showPage('main')" id="btn-main" class="tab-btn active text-white"><div class="text-xl mb-1">🏠</div><div id="lang-tab-home">ГОЛОВНА</div></button>
         <button onclick="showPage('achievements')" id="btn-achievements" class="tab-btn text-white"><div class="text-xl mb-1">🏆</div><div id="lang-tab-ach">УСПІХИ</div></button>
@@ -915,12 +931,28 @@
                     const { data: programs } = await supabaseClient.from('saved_programs').select('*').eq('user_id', currentUserId).order('created_at', {ascending: false});
                     const progEl = document.getElementById('saved-programs-list'); let p_html = '';
                     
-                    let doneBtnTxt = currentLang === 'en' ? 'Done this' : (currentLang === 'kk' ? 'Орындадым' : 'Я виконав це');
+                    let doneBtnTxt = currentLang === 'en' ? 'Done' : (currentLang === 'kk' ? 'Орындадым' : 'Виконав');
+                    let viewBtnTxt = currentLang === 'en' ? 'View' : (currentLang === 'kk' ? 'Көру' : 'Відкрити');
                     let noProgTxt = currentLang === 'en' ? 'Generate a program with AI Coach' : (currentLang === 'kk' ? 'ЖИ Жаттықтырушыда бағдарлама жасаңыз' : 'Згенеруй програму у ШІ Тренера');
 
+                    savedProgramsData = {}; // Очищуємо глобальне сховище
                     if(programs && programs.length > 0) {
                         programs.forEach(p => {
-                            p_html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-[11px] font-bold text-white mb-1">🤖 ${p.title}</div><div class="text-[9px] opacity-50 text-white">${p.duration_min} хв | 🔥 ${p.calories_burned} ккал</div></div><button onclick="logSavedProgram('${p.title.replace(/'/g, "\\'")}', ${p.duration_min}, ${p.calories_burned})" class="bg-blue-500 text-white text-[9px] font-bold px-3 py-2 rounded-lg active:scale-95 shadow-lg shadow-blue-500/30">${doneBtnTxt}</button></div>`;
+                            savedProgramsData[p.id] = p; // Зберігаємо програму для перегляду
+                            p_html += `
+                            <div class="flex flex-col py-3 border-b border-white/5">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="cursor-pointer" onclick="viewProgram(${p.id})">
+                                        <div class="text-[12px] font-bold text-white mb-1 line-clamp-1">🤖 ${p.title}</div>
+                                        <div class="text-[9px] opacity-50 text-white">${p.duration_min} хв | 🔥 ${p.calories_burned} ккал</div>
+                                    </div>
+                                    <button onclick="deleteProgram(${p.id})" class="opacity-30 active:opacity-100 text-white p-1 text-lg">🗑️</button>
+                                </div>
+                                <div class="flex gap-2 w-full mt-1">
+                                    <button onclick="viewProgram(${p.id})" class="flex-1 bg-white/10 text-white text-[10px] font-bold px-3 py-2 rounded-lg active:scale-95 border border-white/5">👁️ ${viewBtnTxt}</button>
+                                    <button onclick="logSavedProgram('${p.title.replace(/'/g, "\\'")}', ${p.duration_min}, ${p.calories_burned})" class="flex-1 bg-blue-500 text-white text-[10px] font-bold px-3 py-2 rounded-lg active:scale-95 shadow-lg shadow-blue-500/30">✅ ${doneBtnTxt}</button>
+                                </div>
+                            </div>`;
                         });
                     } else { p_html = `<p class="text-center opacity-30 py-2 text-[10px] italic text-white">${noProgTxt}</p>`; }
                     if(progEl) progEl.innerHTML = p_html;
@@ -985,7 +1017,33 @@
             tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(refText)}`); 
         }
 
+        // ВІДКРИТТЯ І ЗАКРИТТЯ МОДАЛКИ
+        function viewProgram(id) {
+            const p = savedProgramsData[id];
+            if(!p) return;
+            document.getElementById('modal-title').innerText = p.title;
+            // Якщо контенту ще немає (старі програми), виводимо заглушку
+            let emptyText = currentLang === 'en' ? 'Program text missing.' : (currentLang === 'kk' ? 'Бағдарлама мәтіні жоқ.' : 'Текст програми відсутній (старий запис).');
+            document.getElementById('modal-body').innerHTML = p.content ? formatMarkdown(p.content) : `<p class='opacity-50 italic text-center'>${emptyText}</p>`;
+            document.getElementById('program-modal').classList.add('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function closeModal() {
+            document.getElementById('program-modal').classList.remove('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        async function deleteProgram(id) {
+            let delMsg = currentLang === 'en' ? 'Delete program?' : (currentLang === 'kk' ? 'Бағдарламаны жою керек пе?' : 'Видалити програму?');
+            if(confirm(delMsg)) {
+                await supabaseClient.from('saved_programs').delete().eq('id', id); 
+                await refreshScreen();
+            }
+        }
+        
         initApp();
     </script>
 </body>
 </html>
+
