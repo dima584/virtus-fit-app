@@ -257,7 +257,7 @@
                 <input type="number" id="strength-sets" placeholder="Підходи">
                 <input type="number" id="strength-reps" placeholder="Повтори">
                 <input type="number" id="strength-weight" step="0.5" placeholder="Вага (кг)">
-                <select id="strength-muscle" class="col-span-3 bg-white/5 border border-white/10 text-white rounded-xl p-2 text-sm outline-none focus:border-blue-500">
+                <select id="strength-muscle" class="col-span-2 bg-white/5 border border-white/10 text-white rounded-xl p-2 text-sm outline-none focus:border-blue-500">
                     <option value="chest" class="bg-gray-800">Груди</option>
                     <option value="back" class="bg-gray-800">Спина</option>
                     <option value="legs" class="bg-gray-800">Ноги</option>
@@ -265,6 +265,7 @@
                     <option value="shoulders" class="bg-gray-800">Плечі</option>
                     <option value="core" class="bg-gray-800">Прес/Кор</option>
                 </select>
+                <input type="number" id="strength-cals" placeholder="Ккал" class="col-span-1">
             </div>
             <button onclick="addStrength()" class="btn-main w-full py-3 text-xs font-bold uppercase shadow-lg bg-orange-500/20 text-orange-400 border border-orange-500/30" id="lang-strength-btn">Записати Вправу</button>
         </div>
@@ -566,7 +567,11 @@
                 let startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0); let endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
                 const { data: logs } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString()).order('created_at', {ascending: false});
                 const { data: cardio } = await supabaseClient.from('workouts_cardio').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
-                let burnedCals = 0; if(cardio) cardio.forEach(c => burnedCals += c.calories_burned);
+                const { data: strength } = await supabaseClient.from('workouts_strength').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
+                
+                let burnedCals = 0; 
+                if(cardio) cardio.forEach(c => burnedCals += (c.calories_burned || 0));
+                if(strength) strength.forEach(s => burnedCals += (s.calories_burned || 0));
                 let waterVal = isToday ? (userData?.water_today || 0) : 0;
                 updateUI(logs || [], waterVal, burnedCals); await loadCharts(); generateAIInsight(logs || [], waterVal); await loadActivity();
             } catch(e) { console.error(e); }
@@ -734,10 +739,17 @@
         async function addStrength() { 
             const name = document.getElementById('strength-name').value; const sets = parseInt(document.getElementById('strength-sets').value) || 0;
             const reps = parseInt(document.getElementById('strength-reps').value) || 0; const weight = parseFloat(document.getElementById('strength-weight').value) || 0; const muscle = document.getElementById('strength-muscle').value;
+            let cals = parseInt(document.getElementById('strength-cals').value) || 0;
+
             let errStrMsg = currentLang === 'en' ? 'Enter all data!' : (currentLang === 'kk' ? 'Барлық мәліметтерді енгізіңіз!' : 'Введіть назву, підходи та повторення!');
             if(!name || sets <= 0 || reps <= 0) return alert(errStrMsg);
-            await supabaseClient.from('workouts_strength').insert({ user_id: currentUserId, exercise_name: name, sets: sets, reps: reps, weight_kg: weight, muscle_group: muscle });
-            document.getElementById('strength-name').value = ''; document.getElementById('strength-sets').value = ''; document.getElementById('strength-reps').value = ''; document.getElementById('strength-weight').value = '';
+            
+            // Якщо не введено калорії, рахуємо автоматично (~0.8 ккал за одне підняття ваги)
+            if (cals === 0) { cals = Math.round(sets * reps * 0.8); }
+
+            await supabaseClient.from('workouts_strength').insert({ user_id: currentUserId, exercise_name: name, sets: sets, reps: reps, weight_kg: weight, muscle_group: muscle, calories_burned: cals });
+            
+            document.getElementById('strength-name').value = ''; document.getElementById('strength-sets').value = ''; document.getElementById('strength-reps').value = ''; document.getElementById('strength-weight').value = ''; document.getElementById('strength-cals').value = '';
             tg.HapticFeedback.notificationOccurred('success'); await refreshScreen();
         }
 
@@ -909,7 +921,11 @@
 
                 const listEl = document.getElementById('activity-list'); let html = '';
                 if(cardio) cardio.forEach(c => { html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-green-400">🏃 ${c.activity_type}</div><div class="text-[9px] opacity-50 text-white">${c.duration_min} хв | ${c.distance_km} км</div></div><div class="flex items-center gap-3"><span class="text-xs font-bold text-green-400">-${c.calories_burned} ккал</span><button onclick="deleteActivity('workouts_cardio', ${c.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`; });
-                if(strength) strength.forEach(s => { const vol = s.sets * s.reps * s.weight_kg; html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-orange-400">🏋️ ${s.exercise_name}</div><div class="text-[9px] opacity-50 text-white">${s.sets}x${s.reps} | ${s.weight_kg} кг | Об'єм: ${vol} кг</div></div><div><button onclick="deleteActivity('workouts_strength', ${s.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`; });
+                if(strength) strength.forEach(s => { 
+                    const vol = s.sets * s.reps * s.weight_kg; 
+                    let calsText = s.calories_burned ? `<span class="text-xs font-bold text-orange-400">-${s.calories_burned} ккал</span>` : '';
+                    html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-orange-400">🏋️ ${s.exercise_name}</div><div class="text-[9px] opacity-50 text-white">${s.sets}x${s.reps} | ${s.weight_kg} кг | Об'єм: ${vol} кг</div></div><div class="flex items-center gap-3">${calsText}<button onclick="deleteActivity('workouts_strength', ${s.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`; 
+                });
                 let noWorkoutsTxt = currentLang === 'en' ? 'No workouts' : (currentLang === 'kk' ? 'Жаттығулар жоқ' : 'Тренувань немає');
                 if(html === '') html = `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${noWorkoutsTxt}</p>`;
                 if(listEl) listEl.innerHTML = html;
@@ -936,4 +952,5 @@
     </script>
 </body>
 </html>
+
 
