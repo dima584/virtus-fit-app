@@ -156,7 +156,6 @@
     </div>
 
     <div id="page-achievements" class="page-content hidden space-y-6">
-        
         <div class="card p-4 shadow-xl border-blue-500/10 mb-6 relative overflow-hidden">
             <h3 class="text-[10px] font-bold opacity-50 uppercase mb-3 text-white tracking-widest text-center" id="lang-path-premium">Шлях до Преміуму 👑</h3>
             <div class="flex gap-3 pb-4 snap-x custom-scroll" id="level-roadmap"></div>
@@ -164,7 +163,6 @@
         </div>
 
         <h2 class="text-xl font-black italic mb-4 uppercase text-white px-2" id="lang-your-achievements">Твої досягнення</h2>
-        
         <div class="grid grid-cols-2 gap-4" id="achievements-grid">
             <div id="ach-newbie" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🐣</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-1">Новачок</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-1">Просто зареєструйся</div><div class="text-[8px] text-blue-400 font-bold">+100 XP</div></div>
             <div id="ach-streak" class="card p-4 text-center achievement-card achievement-locked"><div class="text-2xl mb-1">🔥</div><div class="text-[10px] font-bold uppercase text-white" id="ach-t-2">Стрік 3 дні</div><div class="text-[7px] opacity-60 mb-1 text-white" id="ach-d-2">Записуй дані 3 дні поспіль</div><div class="text-[8px] text-blue-400 font-bold">+300 XP</div></div>
@@ -210,6 +208,18 @@
 
     <div id="page-activity" class="page-content hidden pb-6">
         <h2 class="text-xl font-black italic mb-4 uppercase text-white px-2" id="lang-activity-title">Щоденник тренувань</h2>
+        
+        <div id="training-daily-prompt" class="card bg-blue-500/20 border border-blue-500/50 p-4 mb-4 text-center hidden shadow-lg shadow-blue-500/20">
+            <h3 class="text-[12px] font-black text-blue-400 uppercase mb-1">Ти тренувався сьогодні? 💪</h3>
+            <p class="text-[9px] opacity-80 text-white mb-3">Обери програму зі збережених або додай ручну активність нижче, щоб спалити калорії!</p>
+        </div>
+
+        <div class="card p-5 mb-4 border border-white/5 shadow-lg">
+            <h3 class="text-[10px] font-bold text-blue-400 uppercase mb-3">📋 Мої ШІ-Програми</h3>
+            <div id="saved-programs-list" class="space-y-2">
+                <p class="text-center opacity-30 py-2 text-[10px] italic text-white">Завантаження...</p>
+            </div>
+        </div>
         
         <div class="card p-5 mb-4 border border-white/5 shadow-xl">
             <div class="flex justify-between items-center mb-4">
@@ -824,10 +834,13 @@
                             aiResponseText = aiResponseText.replace(match[0], '').trim(); // Видаляємо тег з тексту, щоб не псувати PDF
                         }
 
-                        // РОЗУМНИЙ ЗАПИС У ЩОДЕННИК (на основі розрахунків ШІ)
-                        await supabaseClient.from('workouts_cardio').insert({
-                            user_id: currentUserId, activity_type: "🤖 ШІ-Тренування (План)", duration_min: calcMins, distance_km: 0, calories_burned: calcCals
-                        });
+                        // ТЕПЕР ЗАПИСУЄМО У БАНК ПРОГРАМ (А НЕ В ЖУРНАЛ ОДРАЗУ)
+                        let safeTitle = prompt.substring(0, 30) + "...";
+                        try {
+                            await supabaseClient.from('saved_programs').insert({
+                                user_id: currentUserId, title: safeTitle, duration_min: calcMins, calories_burned: calcCals
+                            });
+                        } catch(e) { console.log("Таблиця saved_programs ще не створена"); }
                         
                         const formattedAI = formatMarkdown(aiResponseText);
                         const printDiv = document.createElement('div');
@@ -870,6 +883,15 @@
                     }
                 }
             });
+        }
+
+        // --- ЛОГІКА ДОДАВАННЯ ТРЕНУВАНЬ З БАНКУ ---
+        async function logSavedProgram(title, duration, cals) {
+            await supabaseClient.from('workouts_cardio').insert({
+                user_id: currentUserId, activity_type: "🤖 " + title, duration_min: duration, distance_km: 0, calories_burned: cals
+            });
+            tg.HapticFeedback.notificationOccurred('success');
+            await refreshScreen();
         }
 
         // --- НОВИЙ МОДУЛЬ: АКТИВНІСТЬ ТА ТРЕНУВАННЯ ---
@@ -921,6 +943,26 @@
 
                 const { data: cardio } = await supabaseClient.from('workouts_cardio').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
                 const { data: strength } = await supabaseClient.from('workouts_strength').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
+
+                // ЛОГІКА БАНЕРА
+                const promptEl = document.getElementById('training-daily-prompt');
+                if(promptEl) {
+                    if((!cardio || cardio.length === 0) && (!strength || strength.length === 0) && selectedDate.toDateString() === new Date().toDateString()) {
+                        promptEl.classList.remove('hidden');
+                    } else { promptEl.classList.add('hidden'); }
+                }
+
+                // ЗАВАНТАЖЕННЯ БАНКУ ПРОГРАМ
+                try {
+                    const { data: programs } = await supabaseClient.from('saved_programs').select('*').eq('user_id', currentUserId).order('created_at', {ascending: false});
+                    const progEl = document.getElementById('saved-programs-list'); let p_html = '';
+                    if(programs && programs.length > 0) {
+                        programs.forEach(p => {
+                            p_html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-[11px] font-bold text-white mb-1">🤖 ${p.title}</div><div class="text-[9px] opacity-50 text-white">${p.duration_min} хв | 🔥 ${p.calories_burned} ккал</div></div><button onclick="logSavedProgram('${p.title.replace(/'/g, "\\'")}', ${p.duration_min}, ${p.calories_burned})" class="bg-blue-500 text-white text-[9px] font-bold px-3 py-2 rounded-lg active:scale-95 shadow-lg shadow-blue-500/30">Я виконав це</button></div>`;
+                        });
+                    } else { p_html = `<p class="text-center opacity-30 py-2 text-[10px] italic text-white">Згенеруй програму у ШІ Тренера</p>`; }
+                    if(progEl) progEl.innerHTML = p_html;
+                } catch(e) { console.log("Таблиця saved_programs відсутня"); }
 
                 const listEl = document.getElementById('activity-list'); let html = '';
                 
