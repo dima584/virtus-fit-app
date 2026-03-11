@@ -864,8 +864,16 @@
                 } catch(e) { console.log("Таблиця saved_programs відсутня"); }
 
                 const listEl = document.getElementById('activity-list'); let html = '';
-                if(cardio) cardio.forEach(c => { html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-green-400">🏃 ${c.activity_type}</div><div class="text-[9px] opacity-50 text-white">${c.duration_min} хв | ${c.distance_km} км</div></div><div class="flex items-center gap-3"><span class="text-xs font-bold text-green-400">-${c.calories_burned} ккал</span><button onclick="deleteActivity('workouts_cardio', ${c.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`; });
+                
+                if(cardio) cardio.forEach(c => { 
+                    let isAI = c.activity_type.startsWith("🤖");
+                    let safeTitle = c.activity_type.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-green-400">🏃 ${c.activity_type}</div><div class="text-[9px] opacity-50 text-white">${c.duration_min} хв | ${c.distance_km} км</div></div><div class="flex items-center gap-3"><span class="text-xs font-bold text-green-400">-${c.calories_burned} ккал</span><button onclick="deleteActivity('workouts_cardio', ${c.id}, ${isAI}, '${safeTitle}')" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`; 
+                });
+                
                 if(strength) strength.forEach(s => { 
+                    if (s.exercise_name.startsWith("🤖")) return; // 💡 ОСЬ ТУТ МИ ХОВАЄМО ТЕХНІЧНІ ЗАПИСИ
+                    
                     const vol = s.sets * s.reps * s.weight_kg; 
                     let calsText = s.calories_burned ? `<span class="text-xs font-bold text-orange-400">-${s.calories_burned} ккал</span>` : '';
                     html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-orange-400">🏋️ ${s.exercise_name}</div><div class="text-[9px] opacity-50 text-white">${s.sets}x${s.reps} | ${s.weight_kg} кг | Об'єм: ${vol} кг</div></div><div class="flex items-center gap-3">${calsText}<button onclick="deleteActivity('workouts_strength', ${s.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`; 
@@ -878,7 +886,20 @@
             } catch(e) { console.log(e); }
         }
 
-        async function deleteActivity(table, id) { let delMsg = currentLang === 'en' ? 'Delete?' : (currentLang === 'kk' ? 'Жою керек пе?' : 'Видалити запис?'); if(confirm(delMsg)) { await supabaseClient.from(table).delete().eq('id', id); await refreshScreen(); } }
+        async function deleteActivity(table, id, isAI = false, title = "") { 
+            let delMsg = currentLang === 'en' ? 'Delete?' : (currentLang === 'kk' ? 'Жою керек пе?' : 'Видалити запис?'); 
+            if(confirm(delMsg)) { 
+                await supabaseClient.from(table).delete().eq('id', id); 
+                
+                // Якщо юзер видаляє ШІ-програму, ми тихо видаляємо і її приховані м'язи
+                if (isAI && title) {
+                    let shortTitle = title.substring(0, 23);
+                    await supabaseClient.from('workouts_strength').delete().eq('user_id', currentUserId).ilike('exercise_name', shortTitle + '%');
+                }
+                
+                await refreshScreen(); 
+            } 
+        }
 
         async function renderMuscleChart() { 
             const { data: strengthData } = await supabaseClient.from('workouts_strength').select('muscle_group, sets, reps').eq('user_id', currentUserId).gte('created_at', new Date(Date.now() - muscleFilterDays*86400000).toISOString());
@@ -897,4 +918,5 @@
     </script>
 </body>
 </html>
+
 
