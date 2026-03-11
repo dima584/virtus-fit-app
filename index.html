@@ -562,25 +562,37 @@
         }
 
         // НОВА ЛОГІКА ДЛЯ ЗАПИСУ ВСІХ М'ЯЗІВ ПРИ НАТИСКАННІ "✅ ВИКОНАВ"
+        // НОВА ЛОГІКА ДЛЯ ЗАПИСУ ВСІХ М'ЯЗІВ ПРИ НАТИСКАННІ "✅ ВИКОНАВ"
         async function logSavedProgram(id) {
             const p = savedProgramsData[id];
             if(!p) return;
             
-            await supabaseClient.from('workouts_cardio').insert({ user_id: currentUserId, activity_type: "🤖 " + p.title, duration_min: p.duration_min, distance_km: 0, calories_burned: p.calories_burned });
+            // 1. Записуємо кардіо (спалені калорії та час)
+            await supabaseClient.from('workouts_cardio').insert({ 
+                user_id: currentUserId, activity_type: "🤖 " + p.title, duration_min: p.duration_min, distance_km: 0, calories_burned: p.calories_burned 
+            });
             
+            // 2. Шукаємо приховані теги м'язів і записуємо їх
             if(p.content) {
-                const chestM = p.content.match(/CHEST:\s*(\d+)/i);
-                const backM = p.content.match(/BACK:\s*(\d+)/i);
-                const legsM = p.content.match(/LEGS:\s*(\d+)/i);
-                const armsM = p.content.match(/ARMS:\s*(\d+)/i);
-                const shouldersM = p.content.match(/SHOULDERS:\s*(\d+)/i);
-                const coreM = p.content.match(/CORE:\s*(\d+)/i);
+                // Покращені регулярні вирази, які розуміють пробіли (напр. CHEST: 50)
+                const chestM = p.content.match(/CHEST\s*[:=]\s*(\d+)/i);
+                const backM = p.content.match(/BACK\s*[:=]\s*(\d+)/i);
+                const legsM = p.content.match(/LEGS\s*[:=]\s*(\d+)/i);
+                const armsM = p.content.match(/ARMS\s*[:=]\s*(\d+)/i);
+                const shouldersM = p.content.match(/SHOULDERS\s*[:=]\s*(\d+)/i);
+                const coreM = p.content.match(/CORE\s*[:=]\s*(\d+)/i);
                 
                 let promises = [];
                 const addMuscle = (matchData, mName) => {
                     if(matchData && parseInt(matchData[1]) > 0) {
                         promises.push(supabaseClient.from('workouts_strength').insert({
-                            user_id: currentUserId, exercise_name: "🤖 " + p.title.substring(0,20), sets: 1, reps: parseInt(matchData[1]), weight_kg: 0, muscle_group: mName, calories_burned: 0
+                            user_id: currentUserId, 
+                            exercise_name: "🤖 " + p.title.substring(0,20), 
+                            sets: 1, 
+                            reps: parseInt(matchData[1]), 
+                            weight_kg: 0, 
+                            muscle_group: mName, 
+                            calories_burned: 0 // Калорії вже записані в кардіо вище, щоб не дублювати
                         }));
                     }
                 };
@@ -592,6 +604,7 @@
                 addMuscle(shouldersM, 'shoulders');
                 addMuscle(coreM, 'core');
                 
+                // Чекаємо, поки всі м'язи збережуться в базу
                 if(promises.length > 0) await Promise.all(promises);
             }
             
@@ -884,3 +897,4 @@
     </script>
 </body>
 </html>
+
