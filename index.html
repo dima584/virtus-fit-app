@@ -14,32 +14,35 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        body { background-color: #121212 !important; color: #ffffff !important; font-family: sans-serif; user-select: none; }
-        .card { background-color: #1e1e1e !important; color: #ffffff !important; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); }
+        body, html { background-color: #121212 !important; color: #ffffff !important; font-family: sans-serif; user-select: none; }
+        .card { background-color: #1e1e1e !important; color: #ffffff !important; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important; }
         .accent-text { color: #3390ec !important; }
         .btn-main { background-color: #3390ec !important; color: #ffffff !important; border-radius: 12px; transition: transform 0.2s; }
         .btn-main:active { transform: scale(0.95); }
-        input, textarea, select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 12px; padding: 10px; font-size: 14px; outline: none; transition: 0.3s; }
-        input:focus, textarea:focus, select:focus { border-color: #3390ec; background: rgba(51, 144, 236, 0.05); }
+        input, textarea, select { background-color: #2d2d2d !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #ffffff !important; border-radius: 12px; padding: 10px; font-size: 14px; outline: none; transition: 0.3s; }
+        input:focus, textarea:focus, select:focus { border-color: #3390ec !important; background-color: #383838 !important; }
         .progress-ring { transition: stroke-dashoffset 0.5s ease; }
-        .btn-filter { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; background: rgba(255,255,255,0.05); opacity: 0.5; transition: 0.3s; color: white; border: none; }
-        .btn-filter.active { background: #3390ec; opacity: 1; }
-        .tab-btn { opacity: 0.4; transition: 0.3s; font-size: 10px; font-weight: bold; text-align: center; }
-        .tab-btn.active { opacity: 1; color: #3390ec; }
+        .btn-filter { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; background: rgba(255,255,255,0.1) !important; opacity: 0.7; transition: 0.3s; color: white !important; border: none; }
+        .btn-filter.active { background: #3390ec !important; opacity: 1; }
+        .tab-btn { opacity: 0.4; transition: 0.3s; font-size: 10px; font-weight: bold; text-align: center; color: white !important; }
+        .tab-btn.active { opacity: 1; color: #3390ec !important; }
         .xp-bar-inner { transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .hidden { display: none !important; }
-        .achievement-card { transition: 0.5s; border: 1px solid rgba(255,255,255,0.03); }
+        .achievement-card { transition: 0.5s; border: 1px solid rgba(255,255,255,0.03); background-color: #2d2d2d !important; }
         .achievement-locked { filter: grayscale(1); opacity: 0.3; }
-        .achievement-card.unlocked { filter: none !important; opacity: 1 !important; border-color: #3390ec !important; box-shadow: 0 0 15px rgba(51, 144, 236, 0.2); background: rgba(51, 144, 236, 0.05); }
+        .achievement-card.unlocked { filter: none !important; opacity: 1 !important; border-color: #3390ec !important; box-shadow: 0 0 15px rgba(51, 144, 236, 0.2); background: rgba(51, 144, 236, 0.1) !important; }
         .custom-scroll { overflow-x: scroll !important; scrollbar-width: thin; scrollbar-color: #3390ec rgba(255,255,255,0.05); }
         .custom-scroll::-webkit-scrollbar { height: 8px; display: block !important; }
         .custom-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(51, 144, 236, 0.8); border-radius: 10px; }
         
-        #program-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 999; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(2px); }
+        #program-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8) !important; z-index: 999; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(2px); }
         #program-modal.active { opacity: 1; pointer-events: auto; }
-        .modal-content { background: var(--tg-theme-secondary-bg-color, #2d2d2d); width: 100%; max-height: 85vh; border-radius: 20px 20px 0 0; padding: 20px; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border-top: 1px solid rgba(255,255,255,0.1); }
+        .modal-content { background-color: #1e1e1e !important; color: white !important; width: 100%; max-height: 85vh; border-radius: 20px 20px 0 0; padding: 20px; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border-top: 1px solid rgba(255,255,255,0.1); }
         #program-modal.active .modal-content { transform: translateY(0); }
+        
+        /* Гарантія, що напівпрозорі класи Tailwind не зроблять фон білим */
+        .bg-white\/5 { background-color: rgba(255, 255, 255, 0.05) !important; }
     </style>
 </head>
 <body class="p-4 pb-28">
@@ -918,6 +921,7 @@
     </script>
 </body>
 </html>
+
 
 
 
