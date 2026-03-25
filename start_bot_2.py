@@ -58,8 +58,9 @@ except ImportError:
 
 if not CryptoInstance:
     print("❌ Помилка: Бібліотека aiocryptopay не знайдена!")
-else:
-    crypto = CryptoInstance(token=os.getenv("CRYPTO_PAY_TOKEN"))
+
+# Создаем пустую переменную, запустим крипту позже!
+crypto = None
 
 async def get_user_language(user_id: int) -> str:
     try:
@@ -1095,7 +1096,10 @@ async def success_payment_handler(message: types.Message):
 
 
 async def main():  
+    global crypto
+    # Включаем крипто-бота здесь, когда движок уже запущен:
+    if CryptoInstance:
+        crypto = CryptoInstance(token=os.getenv("CRYPTO_PAY_TOKEN"))
+        
     asyncio.create_task(process_ai_requests()) 
     await dp.start_polling(bot)
-
-if __name__ == "__main__": asyncio.run(main())
