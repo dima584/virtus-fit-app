@@ -59,7 +59,7 @@ except ImportError:
 if not CryptoInstance:
     print("❌ Помилка: Бібліотека aiocryptopay не знайдена!")
 else:
-    crypto = CryptoInstance(token='532741:AAYnHeR1kgbiu7hlxeCjU6H0MQponezJsfr')
+    crypto = CryptoInstance(token=os.getenv("CRYPTO_PAY_TOKEN"))
 
 async def get_user_language(user_id: int) -> str:
     try:
@@ -367,18 +367,17 @@ TRANSLATIONS = {
 
 def get_text(lang: str, key: str) -> str:
     return TRANSLATIONS.get(lang, TRANSLATIONS["ru"]).get(key, key)
-
 # --- НАСТРОЙКИ ---
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel('models/gemini-3-flash-preview') 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TOKEN = "8245348261:AAHbsrMfbZum2JcTEXHss_lLjbhNmPSZnXQ"
-ADMIN_ID = 983710534 
-PAYMENT_TOKEN = "8245348261:AAHbsrMfbZum2JcTEXHss_lLjbhNmPSZnXQ" 
+TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = int(os.getenv("ADMIN_ID", 983710534))
+PAYMENT_TOKEN = os.getenv("BOT_TOKEN") # Используем тот же токен
 WELCOME_IMAGE_PATH = os.path.join(BASE_DIR, "white.jpg")
-SUPABASE_URL = "https://ckokeseagvvghxpmulwp.supabase.co"
-SUPABASE_KEY = "sb_publishable_Ir8nKEcq4o3ap05_4MIaPg_ZtJGPG1Z"
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 REQUIRED_CHANNELS = []
 
@@ -1065,24 +1064,7 @@ async def create_crypto_invoice(callback: types.CallbackQuery):
     builder.row(types.InlineKeyboardButton(text="✅ Проверить оплату", callback_data=f"check_crypto_{invoice.invoice_id}"))
     await callback.message.answer(f"Счет создан! Сумма: 6 USDT\nПосле оплаты нажмите кнопку ниже:", reply_markup=builder.as_markup())
 
-@dp.callback_query(F.data.startswith("check_crypto_"))
-async def check_crypto_payment(callback: types.CallbackQuery):
-    invoice_id = int(callback.data.split("_")[-1])
-    invoices = await crypto.get_invoices(invoice_ids=invoice_id)
-    
-    inv_list = invoices if isinstance(invoices, list) else getattr(invoices, 'items', [invoices])
-    
-    if inv_list and any(inv.status == 'paid' for inv in inv_list):
-        # ОПЛАТА УСПІШНА -> ДАЄМО БЕЗЛІМІТ (9999)
-        supabase.table("users").update({
-            "balance": 9999,
-            "ai_generations": 9999
-        }).eq("user_id", callback.from_user.id).execute()
-        
-        await callback.message.answer("🎉 Оплата USDT отримана! Вам активовано Безліміт 👑 на місяць.")
-        await callback.answer()
-    else:
-        await callback.answer("❌ Оплата ще не надійшла.", show_alert=True)
+ 
 
 @dp.callback_query(F.data == "pay_stars_250")
 async def send_invoice_stars(callback: types.CallbackQuery):
