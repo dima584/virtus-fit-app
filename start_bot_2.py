@@ -25,6 +25,8 @@ import time
 import os
 from dotenv import load_dotenv
 import logging
+import sys
+import traceback
 
 logging.basicConfig(level=logging.INFO)
 load_dotenv()
@@ -1102,10 +1104,30 @@ async def success_payment_handler(message: types.Message):
 
 
 async def main():  
-    global crypto
-    # Включаем крипто-бота здесь, когда движок уже запущен:
-    if CryptoInstance:
-        crypto = CryptoInstance(token=os.getenv("CRYPTO_PAY_TOKEN"))
+    try:
+        print("=== БОТ ПОЧИНАЄ ЗАПУСК ===", flush=True)
+        global crypto
         
-    asyncio.create_task(process_ai_requests()) 
-    await dp.start_polling(bot)
+        if CryptoInstance:
+            c_token = os.getenv("CRYPTO_PAY_TOKEN")
+            print(f"Крипто-токен знайдено: {bool(c_token)}", flush=True)
+            crypto = CryptoInstance(token=c_token)
+            
+        print("Запускаю фонові задачі ШІ...", flush=True)
+        asyncio.create_task(process_ai_requests()) 
+        
+        print("Підключаюся до Telegram (start_polling)...", flush=True)
+        await dp.start_polling(bot)
+        
+    except Exception as e:
+        print(f"❌ ФАТАЛЬНА ПОМИЛКА: {e}", flush=True)
+        print("=== ДЕТАЛІ ПОМИЛКИ ===", flush=True)
+        traceback.print_exc()
+        sys.stdout.flush()
+        
+        # Штучна затримка, щоб Render гарантовано встиг показати лог до вимкнення
+        import time
+        time.sleep(10)
+
+if __name__ == "__main__": 
+    asyncio.run(main())
