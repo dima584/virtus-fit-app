@@ -3,3 +3,5 @@ python-dotenv
 google-generativeai
 supabase
 aiocryptopay
+Pillow
+cachetools
