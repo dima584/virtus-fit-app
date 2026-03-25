@@ -35,6 +35,10 @@ class KeepAliveServer(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"Virtus Fit Bot is ALIVE!")
+        
+    def do_HEAD(self):
+        self.send_response(200)
+        self.end_headers()
 
 def run_web_server():
     port = int(os.environ.get("PORT", 8080)) # Render сам выдаст нужный порт
