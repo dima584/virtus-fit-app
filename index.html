@@ -390,6 +390,7 @@
                 applyLanguage(data.language || tg.initDataUnsafe?.user?.language_code || 'ua');
                 let currentXp = data.xp || 0; let currentLevel = data.level || 1; let targetLevel = Math.floor(currentXp / 1000) + 1;
                 let newGenerations = data.ai_generations || 0; let claimedAchievements = data.achievements || ""; let needsUpdate = false;
+                let currentBalance = data.balance || 0;
 
                 let premiumMatch = claimedAchievements.match(/premium_expires:(\d+)/); let isPremium = false;
                 if (premiumMatch) {
@@ -427,7 +428,7 @@
 
                 setText('user-name', data.name || "User"); setText('user-name-top', data.name || "User");
                 setText('weight-display', (data.weight || 0) + " кг"); setText('goal-display', data.target_weight ? data.target_weight + " кг" : "...");
-                const t = i18n[currentLang] || i18n['ua']; const displayBalance = (data.ai_generations && data.ai_generations > 9000) ? t.unlimited : (data.ai_generations || 0);
+                const t = i18n[currentLang] || i18n['ua']; const displayBalance = (currentBalance > 9000) ? t.unlimited : currentBalance;
                 setText('user-balance', displayBalance); setText('ai-balance-display', displayBalance); setText('ref-count-display', data.referrals_count || 0);
                 if (data.target_weight && data.weight) { const diff = Math.abs(data.weight - data.target_weight).toFixed(1); document.getElementById('status-msg').innerText = data.weight > data.target_weight ? `-${diff} кг` : `+${diff} кг`; } else { document.getElementById('status-msg').innerText = "🚀"; }
                 updateXPUI(data.xp || 0, data.level || 1);
