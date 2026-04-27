@@ -22,6 +22,10 @@ from PIL import Image
 from typing import Callable, Dict, Any, Awaitable
 from aiogram.types import Message
 import time
+import os
+from dotenv import load_dotenv
+
+load_dotenv() # Эта функция заставит Python прочитать твой файл .env
 
 # --- БЕЗПЕЧНИЙ ІМПОРТ CRYPTOBOT ---
 try:
@@ -38,7 +42,7 @@ except ImportError:
 if not CryptoInstance:
     print("❌ Помилка: Бібліотека aiocryptopay не знайдена!")
 else:
-    crypto = CryptoInstance(token='532741:AAYnHeR1kgbiu7hlxeCjU6H0MQponezJsfr')
+    crypto = CryptoInstance(token=os.getenv("CRYPTO_PAY_TOKEN"))
 
 async def get_user_language(user_id: int) -> str:
     try:
@@ -48,6 +52,7 @@ async def get_user_language(user_id: int) -> str:
     except Exception as e:
         print(f"Помилка отримання мови: {e}")
     return "ru"
+
 
 TRANSLATIONS = {
     "ru": {
@@ -122,6 +127,14 @@ TRANSLATIONS = {
         "kg": "кг, цель: ",
         "user_text": "Текст от пользователя: ",
         "input_placeholder": "Можешь спросить тут что угодно...",
+        "workout_start": "🏃‍♂️ Начать тренировку",
+        "workout_choose": "Как будем тренироваться сегодня?",
+        "btn_saved_prog": "📁 Мои программы",
+        "btn_fast_workout": "⚡ Быстрая от ИИ",
+        "loc_home": "🏠 Дома",
+        "loc_gym": "🏋️‍♂️ В зале",
+        "loc_street": "🌳 На улице",
+        "where_train": "Где будем тренироваться?",
     },
     "en": {
         "welcome": "👊 Hello! 👋😊 Welcome to Virtus — your digital coach.\n\n❌ No template programs — only an individual approach!\n🤖 Our neural network creates the perfect plan. Here you can consult with a coach, psychologist, and doctor.\n🍔 Here you can find out how many calories are in your favorite burger right from the photo!\n\n🎁 Subscribe to sponsor channels and get 10 free generations!",
@@ -195,6 +208,14 @@ TRANSLATIONS = {
         "kg": "kg, goal: ",
         "user_text": "User message: ",
         "input_placeholder": "You can ask anything here...",
+        "workout_start": "🏃‍♂️ Start Workout",
+        "workout_choose": "How are we training today?",
+        "btn_saved_prog": "📁 My Programs",
+        "btn_fast_workout": "⚡ Fast AI Workout",
+        "loc_home": "🏠 At Home",
+        "loc_gym": "🏋️‍♂️ In the Gym",
+        "loc_street": "🌳 Outdoors",
+        "where_train": "Where will we train?",
     },
     "ua": {
         "welcome": "👊 Привіт! 👋😊 Ласкаво просимо до Virtus — твого цифрового тренера.\n\n❌ Без шаблонних програм — лише індивідуальний підхід!\n🤖 Наша нейромережа створює ідеальний план. Тут ти можеш консультуватися з тренером, психологом і лікарем.\n🍔 Тут ти зможеш дізнатися скільки калорій у твоєму улюбленому бургері прямо по фото!\n\n🎁 Підпишись на канали спонсорів і отримай 10 безкоштовних генерацій!",
@@ -268,6 +289,14 @@ TRANSLATIONS = {
         "kg": "кг, мета: ",
         "user_text": "Текст від користувача: ",
         "input_placeholder": "Можеш спитати тут будь-що...",
+        "workout_start": "🏃‍♂️ Почати тренування",
+        "workout_choose": "Як будемо тренуватися сьогодні?",
+        "btn_saved_prog": "📁 Мої програми",
+        "btn_fast_workout": "⚡ Швидка від ШІ",
+        "loc_home": "🏠 Вдома",
+        "loc_gym": "🏋️‍♂️ У залі",
+        "loc_street": "🌳 На вулиці",
+        "where_train": "Де будемо тренуватися?",
     },
     "kk": {
         "welcome": "👊 Сәлем! 👋😊 Virtus-қа қош келдіңіз — сіздің цифрлық тренеріңіз.\n\n❌ Шаблондық бағдарламалар жоқ — тек жеке тәсіл!\n🤖 Біздің нейрондық желі мінсіз жоспар құрады. Мұнда сіз жаттықтырушымен, психологпен және дәрігермен кеңесе аласыз. \n🍔 Мұнда сіз өзіңіздің сүйікті бургеріңізде қанша калория бар екенін фотодан біле аласыз!\n\n🎁 Демеушілердің арналарына жазылып, 10 тегін генерация алыңыз!",
@@ -341,6 +370,14 @@ TRANSLATIONS = {
         "kg": "кг, мақсаты: ",
         "user_text": "Пайдаланушы мәтіні: ",
         "input_placeholder": "Осында кез келген сұрақ қоя аласыз...",
+        "workout_start": "🏃‍♂️ Жаттығуды бастау",
+        "workout_choose": "Бүгін қалай жаттығамыз?",
+        "btn_saved_prog": "📁 Менің бағдарламаларым",
+        "btn_fast_workout": "⚡ ЖИ-ден жылдам",
+        "loc_home": "🏠 Үйде",
+        "loc_gym": "🏋️‍♂️ Жаттығу залында",
+        "loc_street": "🌳 Далада",
+        "where_train": "Қайда жаттығамыз?",
     }
 }
 
@@ -348,16 +385,23 @@ def get_text(lang: str, key: str) -> str:
     return TRANSLATIONS.get(lang, TRANSLATIONS["ru"]).get(key, key)
 
 # --- НАСТРОЙКИ ---
-genai.configure(api_key="AIzaSyDXQjiQErpgpIQPasv0rmCIdUPWfHOE9aQ")
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel('models/gemini-3-flash-preview') 
+# --- ПАМЯТЬ БОТА (Храним контекст диалогов) ---
+USER_HISTORY = {}
+
+# --- НАСТРОЙКИ ---
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel('models/gemini-3-flash-preview')
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TOKEN = "8245348261:AAHbsrMfbZum2JcTEXHss_lLjbhNmPSZnXQ"
-ADMIN_ID = 983710534 
-PAYMENT_TOKEN = "8245348261:AAHbsrMfbZum2JcTEXHss_lLjbhNmPSZnXQ" 
-WELCOME_IMAGE_PATH = os.path.join(BASE_DIR, "white.jpg")
-SUPABASE_URL = "https://ckokeseagvvghxpmulwp.supabase.co"
-SUPABASE_KEY = "sb_publishable_Ir8nKEcq4o3ap05_4MIaPg_ZtJGPG1Z"
+TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = int(os.getenv("ADMIN_ID")) # Переводим в число, так как ID — это integer
+PAYMENT_TOKEN = os.getenv("CRYPTO_PAY_TOKEN")
+WELCOME_IMAGE_PATH = os.path.join(BASE_DIR, "black.jpg")
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 REQUIRED_CHANNELS = []
 
@@ -418,7 +462,7 @@ async def process_ai_requests():
                 try:
                     print(f"Генерую план для запиту {req_id}...")
                     full_prompt = f"Ти професійний фітнес-тренер та дієтолог. Склади детальний, структурований план. Відповідай мовою запиту користувача. Запит користувача: {user_prompt}"
-                    ai_response = model.generate_content(full_prompt)
+                    ai_response = await model.generate_content_async(full_prompt)
                     reply_text = ai_response.text
                     supabase.table("ai_requests").update({
                         "status": "completed",
@@ -440,6 +484,38 @@ class Registration(StatesGroup):
 
 class Support(StatesGroup):
     waiting_for_bug_report = State()
+
+class WorkoutFSM(StatesGroup):
+    choosing_type = State()      # Выбор: сохраненная программа или новая
+    waiting_location = State()   # Опрос: Дом или Зал?
+    waiting_time = State() 
+    waiting_difficulty = State()      # Опрос: Сколько минут?
+    active_exercise = State()    # Выполнение упражнения
+    resting = State()            # Отдых между подходами
+
+@dp.callback_query(F.data == "workout_fast", WorkoutFSM.choosing_type)
+async def fast_workout_start(callback: types.CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id) # Получаем язык юзера из БД
+    
+    # --- ВОТ ЭТОТ БЛОК, ПРО КОТОРЫЙ ТЫ СПРАШИВАЛ ---
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        types.InlineKeyboardButton(text=get_text(lang, "loc_home"), callback_data="loc_home"),
+        types.InlineKeyboardButton(text=get_text(lang, "loc_gym"), callback_data="loc_gym")
+    )
+    builder.row(types.InlineKeyboardButton(text=get_text(lang, "loc_street"), callback_data="loc_street"))
+
+    text_ask = get_text(lang, "where_train")
+    
+    # Редактируем старое сообщение, заменяя его на опросник
+    await callback.message.edit_text(text_ask, reply_markup=builder.as_markup())
+    
+    # Переключаем состояние: теперь бот ждет локацию
+    await state.set_state(WorkoutFSM.waiting_location)
+    # -----------------------------------------------
+    
+    await callback.answer() # Убираем "часики" на кнопке в ТГ
 
 # --- КЛАВИАТУРЫ ---
 def get_sub_keyboard(lang: str):
@@ -767,6 +843,23 @@ async def get_click_stats(message: types.Message):
 
     await message.answer(report, parse_mode="Markdown")
 
+async def start_workout_mode(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    lang = await get_user_language(user_id)
+    
+    # Перевіряємо наявність програм у Supabase
+    res = supabase.table("saved_programs").select("id").eq("user_id", user_id).execute()
+    has_programs = len(res.data) > 0 if res.data else False
+    
+    builder = InlineKeyboardBuilder()
+    if has_programs:
+        builder.row(types.InlineKeyboardButton(text=get_text(lang, "btn_saved_prog"), callback_data="workout_saved"))
+    
+    builder.row(types.InlineKeyboardButton(text=get_text(lang, "btn_fast_workout"), callback_data="workout_fast"))
+    
+    await message.answer(get_text(lang, "workout_choose"), reply_markup=builder.as_markup())
+    await state.set_state(WorkoutFSM.choosing_type)
+
 @dp.message(F.text)
 async def handle_text(message: types.Message, state: FSMContext):
     if await state.get_state() is not None:
@@ -775,6 +868,9 @@ async def handle_text(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     lang = await get_user_language(user_id)
+    # Визначаємо мову для відповіді
+    lang_map = {"ru": "Russian", "ua": "Ukrainian", "uk": "Ukrainian", "en": "English"}
+    target_lang = lang_map.get(lang, "English")
 
     # 1. ОБРОБКА СИСТЕМНИХ КНОПОК
     if text == get_text(lang, "account"):
@@ -818,6 +914,37 @@ async def handle_text(message: types.Message, state: FSMContext):
         builder.row(types.InlineKeyboardButton(text="⭐️ Оплатить Stars (250 ⭐)", callback_data="pay_stars_250"))
         await message.answer("Выберите способ получения Безлимита 👑 на месяц:", reply_markup=builder.as_markup())
         return
+    
+    elif text == get_text(lang, "subscription"):
+        builder = InlineKeyboardBuilder()
+        tribute_url = "https://t.me/tribute/app?startapp=priw" 
+        builder.row(types.InlineKeyboardButton(text="💳 Карта (UAH/USD/EUR/RUB)", url=tribute_url))
+        builder.row(types.InlineKeyboardButton(text="₿ Оплатить Криптой (USDT)", callback_data="buy_crypto_1000"))
+        builder.row(types.InlineKeyboardButton(text="⭐️ Оплатить Stars (250 ⭐)", callback_data="pay_stars_250"))
+        await message.answer("Выберите способ получения Безлимита 👑 на месяц:", reply_markup=builder.as_markup())
+        return
+
+    elif text == get_text(lang, "workout_start"):
+        # Проверяем, есть ли у юзера сохраненные программы в БД
+        res = supabase.table("saved_programs").select("id").eq("user_id", user_id).execute()
+        has_programs = len(res.data) > 0 if res.data else False
+        
+        builder = InlineKeyboardBuilder()
+        
+        # Если есть программы, показываем кнопку "Мои программы"
+        if has_programs:
+            builder.row(types.InlineKeyboardButton(text=get_text(lang, "btn_saved_prog"), callback_data="workout_saved"))
+        
+        # Кнопка быстрой тренировки есть всегда
+        builder.row(types.InlineKeyboardButton(text=get_text(lang, "btn_fast_workout"), callback_data="workout_fast"))
+        
+        await message.answer(get_text(lang, "workout_choose"), reply_markup=builder.as_markup())
+        await state.set_state(WorkoutFSM.choosing_type) # Переводим юзера в состояние выбора тренировки
+        return
+
+    elif text == get_text(lang, "food_analysis"):
+        await message.answer(get_text(lang, "prompt_nutrition"))
+        return
 
     elif text == get_text(lang, "food_analysis"):
         await message.answer(get_text(lang, "prompt_nutrition"))
@@ -839,20 +966,29 @@ async def handle_text(message: types.Message, state: FSMContext):
 
     query_text = get_text(lang, "prompt_diet") if text == get_text(lang, "nutrition") else text
 
+    # === ДОСТАЕМ ПАМЯТЬ ЮЗЕРА ===
+    history_list = USER_HISTORY.get(user_id, [])
+    history_text = "\n".join(history_list) if history_list else "No previous history."
+
     # 3. ЄДИНИЙ РОЗУМНИЙ ЗАПИТ ДО ШІ (Визначаємо і намір, і відповідь)
     prompt = f"""You are an AI assistant in a fitness app. 
-    User info: {user.get('age')} years old, {user.get('weight')}kg. Target language: {target_lang}.
-    Analyze the user's text: "{query_text}"
-    
+    User info: {user.get('age')} years old, {user.get('weight')}kg. 
+    CRITICAL: Respond strictly in {target_lang}.
+
+    Recent conversation history:
+    {history_text}
+
+    Analyze the CURRENT user's text: "{query_text}"
+
     CRITICAL INSTRUCTION (Intent Recognition):
     1. If the text is JUST a food item, a dish, ingredients, or a meal description with/without portions (e.g., "30 пельменей с мясом", "гречка 100 грамм", "яблоко", "я съел суп") -> This is a FOOD LOG.
-       Output ONLY JSON:
-       {{"intent": "food", "calories": 1050, "proteins": 45, "fats": 51, "carbs": 102, "food_name": "Name in {target_lang}"}}
-       
-    2. If the text is a QUESTION, a COMPLAINT, a REQUEST FOR ADVICE, or a general conversation (e.g., "почему я не худею?", "я на стрессе скинул вес", "как тренироваться?") -> This is CHAT.
-       Output ONLY JSON:
-       {{"intent": "chat", "reply": "Your detailed expert response in {target_lang}."}}
-       
+    Output ONLY JSON:
+    {{"intent": "food", "calories": 1050, "proteins": 45, "fats": 51, "carbs": 102, "food_name": "Name in {target_lang}"}}
+   
+    2. If the text is a QUESTION, a COMPLAINT, a REQUEST FOR ADVICE, or a general conversation -> This is CHAT.
+    Output ONLY JSON:
+    {{"intent": "chat", "reply": "Your detailed expert response in {target_lang}."}}
+   
     Output MUST be valid JSON only. Do not add markdown or text outside the JSON.
     """
 
@@ -896,6 +1032,12 @@ async def handle_text(message: types.Message, state: FSMContext):
         else:
             # Якщо це розмова - відправляємо відповідь експерта
             chat_reply = result.get("reply", "...")
+            
+            # === ЗАПИСЫВАЕМ В ПАМЯТЬ ===
+            history_list.append(f"User: {query_text}")
+            history_list.append(f"AI: {chat_reply}")
+            USER_HISTORY[user_id] = history_list[-6:] # Помним только последние 3 пары вопросов-ответов
+            
             await msg.edit_text(chat_reply)
 
     except asyncio.TimeoutError:
@@ -909,6 +1051,9 @@ async def handle_text(message: types.Message, state: FSMContext):
 async def analyze_food_with_text(message: types.Message):
     user_id = message.from_user.id
     lang = await get_user_language(user_id)
+
+    lang_map = {"ru": "Russian", "ua": "Ukrainian", "uk": "Ukrainian", "en": "English", "kk": "Kazakh"}
+    target_lang = lang_map.get(lang, "English")
     
     t = {
         "en": {"added": "added!", "cal": "Calories", "prot": "Proteins", "fat": "Fats", "carb": "Carbs", "err_parse": "❌ Failed to recognize the food.", "err_time": "⏳ AI timeout."},
@@ -939,10 +1084,11 @@ async def analyze_food_with_text(message: types.Message):
         # 2. ПРОМПТ ДЛЯ ЧИСТОГО JSON
         prompt = (
             f"Analyze this meal. User text: {user_text}. Context: {ctx}. "
+            f"Respond strictly in {target_lang}. "  # <--- Додана строга інструкція мови
             f"Estimate calories, proteins, fats, carbs. "
             f"CRITICAL RULE: Output ONLY a valid JSON object. "
             f'Format EXACTLY like this: {{"calories": 100, "proteins": 10, "fats": 5, "carbs": 20, "food_name": "Name in {target_lang}"}}'
-        )
+                )
         
         # 3. ГЕНЕРАЦІЯ (з примусовим форматом JSON, що виключає помилки парсингу)
         response = await asyncio.wait_for(
@@ -1003,10 +1149,14 @@ async def handle_ai(message: types.Message):
     }
     target_lang = lang_map.get(lang, "Russian")
     
+    history_list = USER_HISTORY.get(user_id, [])
+    history_text = "\n".join(history_list) if history_list else "No previous history."
+    
     ctx = (
         f"Answer strictly in {target_lang}. "
         f"{get_text(lang, 'user_context')}, {user.get('age')} {get_text(lang, 'years_old')} "
-        f"{user.get('weight')} {get_text(lang, 'kg')} {user.get('goal')}"
+        f"{user.get('weight')} {get_text(lang, 'kg')} {user.get('goal')}\n\n"
+        f"Recent conversation history:\n{history_text}"
     )
     
     try:
@@ -1016,12 +1166,17 @@ async def handle_ai(message: types.Message):
             
         audio_file = genai.upload_file(path=v_path, mime_type="audio/ogg")
         
-        response = model.generate_content([audio_file, ctx])
+        response = await model.generate_content_async([audio_file, ctx])
         os.remove(v_path)
 
         # ВІДНІМАННЯ БАЛАНСУ (З ПЕРЕВІРКОЮ БЕЗЛІМІТУ)
         new_bal = user['balance'] if user['balance'] > 9000 else user['balance'] - 1
         supabase.table("users").update({"balance": new_bal}).eq("user_id", user_id).execute()
+        
+        # === ЗАПИСЫВАЕМ ГОЛОС В ПАМЯТЬ ===
+        history_list.append(f"User: [Voice Message]")
+        history_list.append(f"AI: {response.text}")
+        USER_HISTORY[user_id] = history_list[-6:]
         
         await message.answer(response.text)
 
@@ -1031,6 +1186,423 @@ async def handle_ai(message: types.Message):
         # Гарантоване видалення голосового файлу
         if os.path.exists(v_path):
             os.remove(v_path)
+
+# === ЭТАП 2: АДАПТИВНЫЙ ОПРОСНИК ДЛЯ ТРЕНИРОВКИ ===
+
+@dp.callback_query(F.data == "workout_fast", WorkoutFSM.choosing_type)
+async def fast_workout_start(callback: types.CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+    
+    # Спрашиваем локацию
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        types.InlineKeyboardButton(text="🏠 Дома" if lang == "ru" else "🏠 Вдома", callback_data="loc_home"),
+        types.InlineKeyboardButton(text="🏋️‍♂️ В зале" if lang == "ru" else "🏋️‍♂️ У залі", callback_data="loc_gym")
+    )
+    builder.row(types.InlineKeyboardButton(text="🌳 На улице" if lang == "ru" else "🌳 На вулиці", callback_data="loc_street"))
+    
+    text_ask = "Где будем тренироваться?" if lang == "ru" else "Де будемо тренуватися?"
+    await callback.message.edit_text(text_ask, reply_markup=builder.as_markup())
+    await state.set_state(WorkoutFSM.waiting_location)
+
+@dp.callback_query(F.data.startswith("loc_"), WorkoutFSM.waiting_location)
+async def workout_location_chosen(callback: types.CallbackQuery, state: FSMContext):
+    location = callback.data.split("_")[1] # Получим: home, gym или street
+    await state.update_data(workout_location=location) # Запоминаем выбор в оперативную память
+    
+    lang = await get_user_language(callback.from_user.id)
+
+    # === БАГАТОМОВНИЙ ВИБІР ЧАСУ ===
+    if lang == "ru":
+        btn_15, btn_30, btn_60 = "15 мин", "30 мин", "60+ мин"
+        text_ask = "Сколько времени у нас есть?"
+    elif lang == "en":
+        btn_15, btn_30, btn_60 = "15 min", "30 min", "60+ min"
+        text_ask = "How much time do we have?"
+    elif lang == "kk":
+        btn_15, btn_30, btn_60 = "15 мин", "30 мин", "60+ мин"
+        text_ask = "Қанша уақытымыз бар?"
+    else:
+        btn_15, btn_30, btn_60 = "15 хв", "30 хв", "60+ хв"
+        text_ask = "Скільки часу у нас є?"
+    
+    # Спрашиваем время
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        types.InlineKeyboardButton(text=btn_15, callback_data="time_15"),
+        types.InlineKeyboardButton(text=btn_30, callback_data="time_30"),
+        types.InlineKeyboardButton(text=btn_60, callback_data="time_60")
+    )
+    
+    await callback.message.edit_text(text_ask, reply_markup=builder.as_markup())
+    await state.set_state(WorkoutFSM.waiting_time)
+
+
+import json
+
+@dp.callback_query(F.data.startswith("time_"), WorkoutFSM.waiting_time)
+async def workout_time_chosen(callback: types.CallbackQuery, state: FSMContext):
+    time_val = callback.data.split("_")[1]
+    await state.update_data(workout_time=time_val)
+    
+    lang = await get_user_language(callback.from_user.id)
+
+    # === БАГАТОМОВНИЙ ВИБІР СКЛАДНОСТІ ===
+    if lang == "ru":
+        btn_easy, btn_med, btn_hard = "🟢 Легко", "🟡 Средне", "🔴 Тяжело"
+        text_ask = "Выберите сложность:"
+    elif lang == "en":
+        btn_easy, btn_med, btn_hard = "🟢 Easy", "🟡 Medium", "🔴 Hard"
+        text_ask = "Choose difficulty:"
+    elif lang == "kk":
+        btn_easy, btn_med, btn_hard = "🟢 Оңай", "🟡 Орташа", "🔴 Қиын"
+        text_ask = "Қиындықты таңдаңыз:"
+    else:
+        btn_easy, btn_med, btn_hard = "🟢 Легко", "🟡 Середньо", "🔴 Важко"
+        text_ask = "Оберіть складність:"
+    
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        types.InlineKeyboardButton(text=btn_easy, callback_data="diff_easy"),
+        types.InlineKeyboardButton(text=btn_med, callback_data="diff_medium"),
+        types.InlineKeyboardButton(text=btn_hard, callback_data="diff_hard")
+    )
+    
+    await callback.message.edit_text(text_ask, reply_markup=builder.as_markup())
+    await state.set_state(WorkoutFSM.waiting_difficulty)
+
+
+@dp.callback_query(F.data.startswith("diff_"), WorkoutFSM.waiting_difficulty)
+async def generate_fast_workout(callback: types.CallbackQuery, state: FSMContext):
+    difficulty = callback.data.split("_")[1]
+    data = await state.get_data()
+    time_val = data.get("workout_time")
+    location = data.get("workout_location")
+    
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+    
+    # Получаем вес пользователя из БД для расчетов
+    res = supabase.table("users").select("weight").eq("user_id", user_id).execute()
+    user_weight = res.data[0].get("weight", 80) if res.data else 80
+
+    if lang == "ru": msg_wait = "⏳ Генерирую программу..."
+    elif lang == "en": msg_wait = "⏳ Generating program..."
+    elif lang == "kk": msg_wait = "⏳ Бағдарлама жасалуда..."
+    else: msg_wait = "⏳ Генерую програму..."
+    
+    await callback.message.edit_text(msg_wait)
+    
+    lang_map = {"ru": "Russian", "ua": "Ukrainian", "uk": "Ukrainian", "en": "English"}
+    target_lang = lang_map.get(lang, "English")
+    
+    loc_text = {"home": "дома", "gym": "в тренажерном зале", "street": "на улице"}.get(location, "дома")
+    
+    # Обновленный промпт с весом и сложностью
+    prompt = f"""
+    You are an AI fitness coach. Create a {difficulty} workout for {time_val} minutes.
+    Location: {loc_text}. Target language: {target_lang}.
+    User weight: {user_weight} kg.
+    
+    CRITICAL: 
+    1. Respond strictly in {target_lang}.
+    2. Recommend realistic equipment weight (weight_kg) based on {difficulty} difficulty and user's {user_weight}kg bodyweight. Use 0 for bodyweight exercises.
+    3. Output ONLY a valid JSON array.
+    
+    Format EXACTLY like this:
+    [
+        {{"name": "Exercise Name", "sets": 3, "reps": 12, "rest_sec": 60, "muscle": "chest", "weight_kg": 15}}
+    ]
+    """
+    
+    try:
+        response = await model.generate_content_async(prompt, generation_config={"response_mime_type": "application/json"})
+        workout_plan = json.loads(response.text)
+        
+        await state.update_data(workout_plan=workout_plan, current_ex_index=0, current_set=1)
+        await state.set_state(WorkoutFSM.active_exercise)
+        await send_current_exercise(callback.message, state, user_id, lang)
+        
+    except Exception as e:
+        print(f"Ошибка генерации тренировки: {e}")
+        err_msg = "❌ Ошибка генерации." if lang == "ru" else "❌ Помилка генерації."
+        await callback.message.edit_text(err_msg)
+        await state.clear()
+
+# === БАЗА ВІДЕО ТА АНІМАЦІЙ (MVP) ===
+# Сюди ти зможеш додавати посилання або file_id з Telegram
+EXERCISE_GIFS = {
+    "Отжимания от пола": "https://media.giphy.com/media/xT8qBvH1pAhtfSx52U/giphy.gif",
+    "Приседания": "https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif",
+    "Скручивания": "https://media.giphy.com/media/2Faz12o20p9C0Z98Q/giphy.gif"
+}
+
+# === ЕТАП 3: ЯДРО ТРЕНУВАННЯ (FSM) ===
+
+async def send_current_exercise(message: types.Message, state: FSMContext, user_id: int, lang: str):
+    data = await state.get_data()
+    plan = data.get("workout_plan", [])
+    ex_idx = data.get("current_ex_index", 0)
+    curr_set = data.get("current_set", 1)
+    
+    if ex_idx >= len(plan):
+        await finish_workout(message, state, user_id, lang)
+        return
+
+    ex = plan[ex_idx]
+    weight_kg = ex.get('weight_kg', 0)
+    
+    # МУЛЬТИЯЗЫЧНЫЙ ИНТЕРФЕЙС
+    # === БАГАТОМОВНИЙ ІНТЕРФЕЙС ===
+    if lang == "ru":
+        text = f"🏋️‍♂️ <b>Упражнение {ex_idx + 1}/{len(plan)}: {ex.get('name', 'Без названия')}</b>\n\n"
+        text += f"🎯 Подход: <b>{curr_set} из {ex.get('sets', 1)}</b>\n"
+        text += f"🔄 Повторения: <b>{ex.get('reps', 1)}</b>\n"
+        if weight_kg > 0: text += f"⚖️ Вес снаряда: <b>{weight_kg} кг</b>\n"
+        btn_done = f"✅ Выполнено (отдых {ex.get('rest_sec', 60)}с)"
+        btn_skip = "⏭ Пропустить"
+        btn_stop = "🛑 Завершить"
+    elif lang == "en":
+        text = f"🏋️‍♂️ <b>Exercise {ex_idx + 1}/{len(plan)}: {ex.get('name', 'Unnamed')}</b>\n\n"
+        text += f"🎯 Set: <b>{curr_set} of {ex.get('sets', 1)}</b>\n"
+        text += f"🔄 Reps: <b>{ex.get('reps', 1)}</b>\n"
+        if weight_kg > 0: text += f"⚖️ Weight: <b>{weight_kg} kg</b>\n"
+        btn_done = f"✅ Done (rest {ex.get('rest_sec', 60)}s)"
+        btn_skip = "⏭ Skip"
+        btn_stop = "🛑 Stop"
+    elif lang == "kk":
+        text = f"🏋️‍♂️ <b>Жаттығу {ex_idx + 1}/{len(plan)}: {ex.get('name', 'Атаусыз')}</b>\n\n"
+        text += f"🎯 Тәсіл: <b>{curr_set} / {ex.get('sets', 1)}</b>\n"
+        text += f"🔄 Қайталау: <b>{ex.get('reps', 1)}</b>\n"
+        if weight_kg > 0: text += f"⚖️ Салмақ: <b>{weight_kg} кг</b>\n"
+        btn_done = f"✅ Орындалды (демалыс {ex.get('rest_sec', 60)}с)"
+        btn_skip = "⏭ Өткізіп жіберу"
+        btn_stop = "🛑 Аяқтау"
+    else: # За замовчуванням "ua"
+        text = f"🏋️‍♂️ <b>Вправа {ex_idx + 1}/{len(plan)}: {ex.get('name', 'Без назви')}</b>\n\n"
+        text += f"🎯 Підхід: <b>{curr_set} з {ex.get('sets', 1)}</b>\n"
+        text += f"🔄 Повторення: <b>{ex.get('reps', 1)}</b>\n"
+        if weight_kg > 0: text += f"⚖️ Вага снаряда: <b>{weight_kg} кг</b>\n"
+        btn_done = f"✅ Виконано (відпочинок {ex.get('rest_sec', 60)}с)"
+        btn_skip = "⏭ Пропустити"
+        btn_stop = "🛑 Завершити"
+    # ===============================
+    
+    builder = InlineKeyboardBuilder()
+    builder.row(types.InlineKeyboardButton(text=btn_done, callback_data="wo_set_done"))
+    builder.row(
+        types.InlineKeyboardButton(text=btn_skip, callback_data="wo_skip_ex"),
+        types.InlineKeyboardButton(text=btn_stop, callback_data="wo_stop")
+    )
+
+    try:
+        if curr_set == 1 and ex.get('name') in EXERCISE_GIFS:
+            try: await message.delete()
+            except: pass
+            await bot.send_animation(chat_id=user_id, animation=EXERCISE_GIFS[ex['name']], caption=text, reply_markup=builder.as_markup(), parse_mode="HTML")
+        else:
+            await message.edit_text(text, reply_markup=builder.as_markup(), parse_mode="HTML")
+    except Exception:
+        await bot.send_message(user_id, text, reply_markup=builder.as_markup(), parse_mode="HTML")
+
+
+@dp.callback_query(F.data == "wo_set_done", WorkoutFSM.active_exercise)
+async def workout_set_done(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    plan = data.get("workout_plan", [])
+    ex_idx = data.get("current_ex_index", 0)
+    curr_set = data.get("current_set", 1)
+
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+
+    if ex_idx >= len(plan):
+        await finish_workout(callback.message, state, user_id, lang)
+        await callback.answer()
+        return
+    ex = plan[ex_idx]
+
+    await state.set_state(WorkoutFSM.resting)
+
+    # Оновлюємо лічильники та текст відпочинку
+    if curr_set >= ex.get('sets', 1):
+        await state.update_data(current_ex_index=ex_idx + 1, current_set=1)
+        if lang == "ru":
+            rest_text = f"🎉 Упражнение завершено!\n\n⏱ Отдохни {ex.get('rest_sec', 60)} сек перед следующим."
+        elif lang == "en": 
+            rest_text = f"🎉 Exercise completed!\n\n⏱ Rest {ex.get('rest_sec', 60)} sec before the next one."
+        elif lang == "kk": 
+            rest_text = f"🎉 Жаттығу аяқталды!\n\n⏱ Келесі жаттығу алдында {ex.get('rest_sec', 60)} сек демалыңыз."
+        else: rest_text = f"🎉 Вправу завершено!\n\n⏱ Відпочинь {ex.get('rest_sec', 60)} сек перед наступною."
+    else:
+        await state.update_data(current_set=curr_set + 1)
+        if lang == "ru": 
+            rest_text = f"Отличная работа! 👏\n\n⏱ Отдых {ex.get('rest_sec', 60)} секунд."
+        elif lang == "en": 
+            rest_text = f"Great job! 👏\n\n⏱ Rest {ex.get('rest_sec', 60)} seconds."
+        elif lang == "kk": 
+            rest_text = f"Керемет жұмыс! 👏\n\n⏱ Демалыс {ex.get('rest_sec', 60)} секунд."
+        else: rest_text = f"Чудова робота! 👏\n\n⏱ Відпочинок {ex.get('rest_sec', 60)} секунд."
+
+    # Кнопка пропуску відпочинку
+    if lang == "ru": btn_skip_rest = "⏭ Пропустить отдых"
+    elif lang == "en": btn_skip_rest = "⏭ Skip rest"
+    elif lang == "kk": btn_skip_rest = "⏭ Демалысты өткізіп жіберу"
+    else: btn_skip_rest = "⏭ Пропустити відпочинок"
+
+    builder = InlineKeyboardBuilder()
+    builder.row(types.InlineKeyboardButton(text=btn_skip_rest, callback_data="wo_skip_rest"))
+    
+    try:
+        await callback.message.delete()
+    except: pass
+    
+    await callback.message.answer(rest_text, reply_markup=builder.as_markup())
+    await callback.answer()
+
+
+@dp.callback_query(F.data == "wo_skip_rest", WorkoutFSM.resting)
+async def workout_skip_rest(callback: types.CallbackQuery, state: FSMContext):
+    await state.set_state(WorkoutFSM.active_exercise)
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+    await send_current_exercise(callback.message, state, user_id, lang)
+    await callback.answer()
+
+
+@dp.callback_query(F.data == "wo_skip_ex", WorkoutFSM.active_exercise)
+async def workout_skip_ex(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    ex_idx = data.get("current_ex_index", 0)
+    await state.update_data(current_ex_index=ex_idx + 1, current_set=1)
+    
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+    await send_current_exercise(callback.message, state, user_id, lang)
+    await callback.answer()
+
+
+@dp.callback_query(F.data == "wo_stop")
+async def workout_stop(callback: types.CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+    await finish_workout(callback.message, state, user_id, lang, forced=True)
+    await callback.answer()
+
+
+# === ЕТАП 4: ФІНАЛІЗАЦІЯ ТА СИНХРОНІЗАЦІЯ З WEB APP ===
+
+import re
+
+async def finish_workout(message: types.Message, state: FSMContext, user_id: int, lang: str, forced=False):
+    data = await state.get_data()
+    plan = data.get("workout_plan", [])
+    ex_idx = data.get("current_ex_index", 0)
+    
+    completed_plan = plan[:ex_idx] if forced else plan
+    
+    # ФУНКЦИЯ СПАСЕНИЯ ОТ КРАШЕЙ (Парсит числа из строк)
+    def safe_int(val):
+        if isinstance(val, int) or isinstance(val, float): return int(val)
+        nums = re.findall(r'\d+', str(val))
+        return int(nums[0]) if nums else 0
+
+    total_cals = 0
+    for ex in completed_plan:
+        sets = safe_int(ex.get('sets', 0))
+        reps = safe_int(ex.get('reps', 0))
+        weight = safe_int(ex.get('weight_kg', 0))
+        
+        cals = sets * reps * 0.5 
+        total_cals += cals
+        
+        supabase.table("workouts_strength").insert({
+            "user_id": user_id,
+            "exercise_name": f"🤖 {ex.get('name', 'Упражнение')}",
+            "sets": sets,
+            "reps": reps,
+            "weight_kg": weight,
+            "muscle_group": ex.get('muscle', 'core'),
+            "calories_burned": int(cals)
+        }).execute()
+    
+    # Начисляем XP
+    res = supabase.table("users").select("xp").eq("user_id", user_id).execute()
+    if res.data:
+        current_xp = res.data[0].get("xp", 0)
+        supabase.table("users").update({"xp": current_xp + 100}).eq("user_id", user_id).execute()
+
+    if lang == "ru":
+        text = f"🎉 <b>Тренировка завершена!</b>\nСожжено: ~{int(total_cals)} ккал." if not forced else f"🛑 <b>Тренировка прервана</b>\nСохранено ~{int(total_cals)} ккал."
+    elif lang == "en":
+        text = f"🎉 <b>Workout completed!</b>\nBurned: ~{int(total_cals)} kcal." if not forced else f"🛑 <b>Workout aborted</b>\nSaved ~{int(total_cals)} kcal."
+    elif lang == "kk":
+        text = f"🎉 <b>Жаттығу аяқталды!</b>\nЖағылды: ~{int(total_cals)} ккал." if not forced else f"🛑 <b>Жаттығу тоқтатылды</b>\nСақталды ~{int(total_cals)} ккал."
+    else:
+        text = f"🎉 <b>Тренування завершено!</b>\nСпалено: ~{int(total_cals)} ккал." if not forced else f"🛑 <b>Тренування перервано</b>\nЗбережено ~{int(total_cals)} ккал."
+        
+    try: await message.delete()
+    except: pass
+    
+    await bot.send_message(user_id, text, parse_mode="HTML")
+    await state.clear()
+
+
+@dp.callback_query(F.data == "workout_saved", WorkoutFSM.choosing_type)
+async def list_saved_programs(callback: types.CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+    
+    # Завантажуємо програми користувача з БД
+    res = supabase.table("saved_programs").select("id", "title").eq("user_id", user_id).execute()
+    
+    if not res.data:
+        msg = "У вас ще немає збережених програм." if lang != "en" else "You don't have any saved programs yet."
+        await callback.answer(msg, show_alert=True)
+        return
+
+    builder = InlineKeyboardBuilder()
+    for prog in res.data:
+        builder.row(types.InlineKeyboardButton(text=f"📋 {prog['title']}", callback_data=f"run_prog_{prog['id']}"))
+    
+    back_text = "🔙 Назад" if lang != "en" else "🔙 Back"
+    builder.row(types.InlineKeyboardButton(text=back_text, callback_data="workout_start_menu")) # Повернення в меню вибору
+    
+    title_text = "Оберіть програму:" if lang != "en" else "Choose a program:"
+    await callback.message.edit_text(title_text, reply_markup=builder.as_markup())
+
+@dp.callback_query(F.data.startswith("run_prog_"), WorkoutFSM.choosing_type)
+async def start_saved_program(callback: types.CallbackQuery, state: FSMContext):
+    prog_id = int(callback.data.split("_")[-1])
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+    
+    # Дістаємо текст програми
+    res = supabase.table("saved_programs").select("*").eq("id", prog_id).single().execute()
+    if not res.data: return
+
+    program_data = res.data
+    # ТУТ ВАЖЛИВО: Оскільки в БД текст, ми просимо Gemini швидко перетворити його на JSON для движка
+    wait_msg = "⏱ Завантаження програми..." if lang != "en" else "⏱ Loading program..."
+    await callback.message.edit_text(wait_msg)
+    
+    prompt = f"Convert this workout text into a JSON array of exercises with 'name', 'sets', 'reps', 'rest_sec', 'muscle'. Text: {program_data['content']}"
+    
+    try:
+        response = await model.generate_content_async(prompt, generation_config={"response_mime_type": "application/json"})
+        workout_plan = json.loads(response.text)
+        
+        await state.update_data(workout_plan=workout_plan, current_ex_index=0, current_set=1)
+        await state.set_state(WorkoutFSM.active_exercise)
+        await send_current_exercise(callback.message, state, user_id, lang)
+    except Exception as e:
+        print(f"Error parsing saved program: {e}")
+        await callback.message.answer("Помилка завантаження. Спробуйте іншу програму.")
+
+@dp.callback_query(F.data == "workout_start_menu")
+async def back_to_workout_menu(callback: types.CallbackQuery, state: FSMContext):
+    await start_workout_mode(callback.message, state)
 
 # ==============================================================
 # ЧИСТА, ОНОВЛЕНА ЛОГІКА ОПЛАТИ (БЕЗ ДУБЛІКАТІВ ТА З БЕЗЛІМІТОМ)
