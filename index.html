@@ -545,9 +545,40 @@
             const p = savedProgramsData[id];
             if(!p) return;
             document.getElementById('modal-title').innerText = p.title;
-            let emptyText = currentLang === 'en' ? 'Program text missing. Make sure you added "content" column to Supabase!' : (currentLang === 'kk' ? 'Бағдарлама мәтіні жоқ.' : 'Текст програми відсутній (старий запис або помилка БД).');
-            let textToShow = p.content ? p.content.replace(/\[CAL:.*?\]/i, '').trim() : '';
-            document.getElementById('modal-body').innerHTML = textToShow ? formatMarkdown(textToShow) : `<p class='opacity-50 italic text-center text-red-400'>${emptyText}</p>`;
+
+            let emptyText = currentLang === 'en' ? 'Program text missing.' : (currentLang === 'kk' ? 'Бағдарлама мәтіні жоқ.' : 'Текст програми відсутній.');
+            let finalHTML = `<p class='opacity-50 italic text-center text-red-400'>${emptyText}</p>`;
+
+            if (p.content) {
+                try {
+                    // Пробуємо розпарсити як масив JSON (НОВІ програми)
+                    const exercises = JSON.parse(p.content);
+                    let beautifulHTML = '<div class="space-y-3">';
+                    
+                    exercises.forEach((ex, index) => {
+                        beautifulHTML += `
+                            <div class="bg-white/5 border border-white/10 p-3 rounded-xl">
+                                <h4 class="text-blue-400 font-bold mb-1 text-[14px]">${index + 1}. ${ex.name}</h4>
+                                <p class="text-white opacity-80 text-[12px] mb-1">
+                                    🎯 Підходів: <b class="text-white">${ex.sets}</b> | 🔄 Повторень: <b class="text-white">${ex.reps}</b>
+                                </p>
+                                <div class="flex justify-between items-center mt-2 pt-2 border-t border-white/10">
+                                    <span class="text-[10px] opacity-50">⚖️ Вага: ${ex.weight_kg || 0} кг</span>
+                                    <span class="text-[10px] text-yellow-400">⏱ Відпочинок: ${ex.rest_sec}с</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    beautifulHTML += '</div>';
+                    finalHTML = beautifulHTML;
+                } catch (e) {
+                    // Якщо помилка - значить це СТАРА програма (просто текст)
+                    let textToShow = p.content.replace(/\[CAL:.*?\]/i, '').trim();
+                    finalHTML = formatMarkdown(textToShow);
+                }
+            }
+
+            document.getElementById('modal-body').innerHTML = finalHTML;
             document.getElementById('program-modal').classList.add('active');
             tg.HapticFeedback.selectionChanged();
         }
@@ -571,44 +602,59 @@
             const p = savedProgramsData[id];
             if(!p) return;
             
+            // Беремо цифри, враховуючи як нові, так і старі назви колонок
+            let cals = p.calories || p.calories_burned || 0;
+            let mins = p.duration || p.duration_min || 0;
+
             // 1. Записуємо кардіо (спалені калорії та час)
             await supabaseClient.from('workouts_cardio').insert({ 
-                user_id: currentUserId, activity_type: "🤖 " + p.title, duration_min: p.duration_min, distance_km: 0, calories_burned: p.calories_burned 
+                user_id: currentUserId, activity_type: "🤖 " + p.title, duration_min: mins, distance_km: 0, calories_burned: cals 
             });
             
-            // 2. Шукаємо приховані теги м'язів і записуємо їх
+            // 2. Записуємо вправи для м'язової карти
             if(p.content) {
-                // Покращені регулярні вирази, які розуміють пробіли (напр. CHEST: 50)
-                const chestM = p.content.match(/CHEST\s*[:=]\s*(\d+)/i);
-                const backM = p.content.match(/BACK\s*[:=]\s*(\d+)/i);
-                const legsM = p.content.match(/LEGS\s*[:=]\s*(\d+)/i);
-                const armsM = p.content.match(/ARMS\s*[:=]\s*(\d+)/i);
-                const shouldersM = p.content.match(/SHOULDERS\s*[:=]\s*(\d+)/i);
-                const coreM = p.content.match(/CORE\s*[:=]\s*(\d+)/i);
-                
                 let promises = [];
-                const addMuscle = (matchData, mName) => {
-                    if(matchData && parseInt(matchData[1]) > 0) {
+                try {
+                    // НОВИЙ ФОРМАТ (JSON)
+                    const exercises = JSON.parse(p.content);
+                    exercises.forEach(ex => {
+                        // Розпізнаємо групу м'язів
+                        let mDb = 'core';
+                        let mName = (ex.muscle || '').toLowerCase();
+                        if(mName.includes('груд') || mName.includes('chest')) mDb = 'chest';
+                        else if(mName.includes('спин') || mName.includes('back')) mDb = 'back';
+                        else if(mName.includes('ног') || mName.includes('квадр') || mName.includes('legs')) mDb = 'legs';
+                        else if(mName.includes('рук') || mName.includes('триц') || mName.includes('биц') || mName.includes('arms')) mDb = 'arms';
+                        else if(mName.includes('плеч') || mName.includes('дельт') || mName.includes('shoulders')) mDb = 'shoulders';
+
                         promises.push(supabaseClient.from('workouts_strength').insert({
-                            user_id: currentUserId, 
-                            exercise_name: "🤖 " + p.title.substring(0,20), 
-                            sets: 1, 
-                            reps: parseInt(matchData[1]), 
-                            weight_kg: 0, 
-                            muscle_group: mName, 
-                            calories_burned: 0 // Калорії вже записані в кардіо вище, щоб не дублювати
+                            user_id: currentUserId, exercise_name: "🤖 " + ex.name.substring(0,20), 
+                            sets: ex.sets || 1, reps: ex.reps || 10, weight_kg: ex.weight_kg || 0, 
+                            muscle_group: mDb, calories_burned: 0 
                         }));
-                    }
-                };
+                    });
+                } catch (e) {
+                    // СТАРИЙ ФОРМАТ (Парсинг тегів)
+                    const chestM = p.content.match(/CHEST\s*[:=]\s*(\d+)/i);
+                    const backM = p.content.match(/BACK\s*[:=]\s*(\d+)/i);
+                    const legsM = p.content.match(/LEGS\s*[:=]\s*(\d+)/i);
+                    const armsM = p.content.match(/ARMS\s*[:=]\s*(\d+)/i);
+                    const shouldersM = p.content.match(/SHOULDERS\s*[:=]\s*(\d+)/i);
+                    const coreM = p.content.match(/CORE\s*[:=]\s*(\d+)/i);
+                    
+                    const addMuscle = (matchData, mName) => {
+                        if(matchData && parseInt(matchData[1]) > 0) {
+                            promises.push(supabaseClient.from('workouts_strength').insert({
+                                user_id: currentUserId, exercise_name: "🤖 " + p.title.substring(0,20), 
+                                sets: 1, reps: parseInt(matchData[1]), weight_kg: 0, muscle_group: mName, calories_burned: 0
+                            }));
+                        }
+                    };
+                    addMuscle(chestM, 'chest'); addMuscle(backM, 'back'); addMuscle(legsM, 'legs');
+                    addMuscle(armsM, 'arms'); addMuscle(shouldersM, 'shoulders'); addMuscle(coreM, 'core');
+                }
                 
-                addMuscle(chestM, 'chest');
-                addMuscle(backM, 'back');
-                addMuscle(legsM, 'legs');
-                addMuscle(armsM, 'arms');
-                addMuscle(shouldersM, 'shoulders');
-                addMuscle(coreM, 'core');
-                
-                // Чекаємо, поки всі м'язи збережуться в базу
+                // Чекаємо, поки збережуться всі вправи
                 if(promises.length > 0) await Promise.all(promises);
             }
             
@@ -848,14 +894,19 @@
                     if(programs && programs.length > 0) {
                         programs.forEach(p => {
                             savedProgramsData[p.id] = p;
+                            
+                            // Дістаємо правильні цифри
+                            let cals = p.calories || p.calories_burned || 0;
+                            let mins = p.duration || p.duration_min || 0;
+                            
                             p_html += `
                             <div class="flex flex-col py-3 border-b border-white/5">
                                 <div class="flex justify-between items-start mb-2">
-                                    <div class="cursor-pointer" onclick="viewProgram(${p.id})">
+                                    <div class="cursor-pointer flex-1" onclick="viewProgram(${p.id})">
                                         <div class="text-[12px] font-bold text-white mb-1 line-clamp-1">🤖 ${p.title}</div>
-                                        <div class="text-[9px] opacity-50 text-white">${p.duration_min} хв | 🔥 ${p.calories_burned} ккал</div>
+                                        <div class="text-[9px] opacity-50 text-white">${mins} хв | 🔥 ${cals} ккал</div>
                                     </div>
-                                    <button onclick="deleteProgram(${p.id})" class="opacity-30 active:opacity-100 text-white p-1 text-lg">🗑️</button>
+                                    <button onclick="deleteProgram(${p.id})" class="opacity-30 hover:opacity-100 text-white p-1 text-lg">🗑️</button>
                                 </div>
                                 <div class="flex gap-2 w-full mt-1">
                                     <button onclick="viewProgram(${p.id})" class="flex-1 bg-white/10 text-white text-[10px] font-bold px-3 py-2 rounded-lg active:scale-95 border border-white/5">👁️ ${viewBtnTxt}</button>
