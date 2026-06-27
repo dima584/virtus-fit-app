@@ -522,13 +522,14 @@
         function generateAIInsight(logs, water) {
             const el = document.getElementById('ai-insight'); const textEl = document.getElementById('insight-text');
             if (!el || !textEl) return; el.classList.remove('hidden');
-            if (logs.length === 0) {
-                textEl.innerText = currentLang === 'en' ? "Start by logging a meal! 🍎 Send a photo to the bot." : (currentLang === 'kk' ? "Күнді тамақ жазудан бастаңыз! 🍎 Ботқа сурет жіберіңіз." : "Почніть день із запису їжі! 🍎 Надішліть фото боту.");
-            } else if (water < userGoals.water) {
-                textEl.innerText = currentLang === 'en' ? "Don't forget to drink water! 💧" : (currentLang === 'kk' ? "Су ішуді ұмытпаңыз! 💧" : "Не забувайте пити воду! 💧");
-            } else {
-                textEl.innerText = currentLang === 'en' ? "Great progress today! 🚀" : (currentLang === 'kk' ? "Тамаша прогресс! Барлық нормалар орындалды. 🚀" : "Чудовий прогрес! Ви виконали всі норми. 🚀");
-            }
+            
+            let msgEmpty = {ua: "Почніть день із запису їжі! 🍎 Надішліть фото боту.", ru: "Начните день с записи еды! 🍎 Отправьте фото боту.", en: "Start by logging a meal! 🍎 Send a photo to the bot.", kk: "Күнді тамақ жазудан бастаңыз! 🍎 Ботқа сурет жіберіңіз."};
+            let msgWater = {ua: "Не забувайте пити воду! 💧", ru: "Не забывайте пить воду! 💧", en: "Don't forget to drink water! 💧", kk: "Су ішуді ұмытпаңыз! 💧"};
+            let msgDone = {ua: "Чудовий прогрес! Ви виконали всі норми. 🚀", ru: "Отличный прогресс! Вы выполнили все нормы. 🚀", en: "Great progress today! 🚀", kk: "Тамаша прогресс! Барлық нормалар орындалды. 🚀"};
+
+            if (logs.length === 0) textEl.innerText = msgEmpty[currentLang] || msgEmpty['ua'];
+            else if (water < userGoals.water) textEl.innerText = msgWater[currentLang] || msgWater['ua'];
+            else textEl.innerText = msgDone[currentLang] || msgDone['ua'];
         }
 
         async function checkAdmin() {
@@ -681,8 +682,12 @@
         async function refreshScreen() {
             try {
                 const dateStr = selectedDate.toLocaleDateString('sv'); const isToday = dateStr === new Date().toLocaleDateString('sv');
-                let todayText = "Сьогодні"; if(currentLang === 'en') todayText = "Today"; if(currentLang === 'kk') todayText = "Бүгін";
-                setText('display-date', isToday ? todayText : selectedDate.toLocaleDateString(currentLang==='en'?'en-US':(currentLang==='kk'?'kk-KZ':'uk'), {day:'numeric', month:'long'}));
+                
+                let todayDict = {ua: "Сьогодні", ru: "Сегодня", en: "Today", kk: "Бүгін"};
+                let localeMap = {ua: 'uk-UA', ru: 'ru-RU', en: 'en-US', kk: 'kk-KZ'};
+                
+                setText('display-date', isToday ? (todayDict[currentLang] || "Сьогодні") : selectedDate.toLocaleDateString(localeMap[currentLang] || 'uk-UA', {day:'numeric', month:'long'}));
+                
                 const waterControls = document.getElementById('water-controls'); if(waterControls) waterControls.style.display = isToday ? 'flex' : 'none';
                 let startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0); let endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
                 const { data: logs } = await supabaseClient.from('nutrition_logs').select('*').eq('user_id', currentUserId).gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString()).order('created_at', {ascending: false});
@@ -886,20 +891,22 @@
                 const promptEl = document.getElementById('training-daily-prompt');
                 if(promptEl) { if((!cardio || cardio.length === 0) && (!strength || strength.length === 0) && selectedDate.toDateString() === new Date().toDateString()) { promptEl.classList.remove('hidden'); } else { promptEl.classList.add('hidden'); } }
 
+                // --- МУЛЬТИЯЗЫЧНЫЕ ПЕРЕМЕННЫЕ ---
+                let t_done = {ua: 'Виконав', ru: 'Выполнил', en: 'Done', kk: 'Орындадым'}[currentLang] || 'Виконав';
+                let t_view = {ua: 'Відкрити', ru: 'Открыть', en: 'View', kk: 'Көру'}[currentLang] || 'Відкрити';
+                let t_no_prog = {ua: 'Згенеруй програму у ШІ Тренера', ru: 'Сгенерируйте программу у ИИ Тренера', en: 'Generate a program with AI Coach', kk: 'ЖИ Жаттықтырушыда бағдарлама жасаңыз'}[currentLang] || 'Згенеруй програму у ШІ Тренера';
+                let t_min = {ua: 'хв', ru: 'мин', en: 'min', kk: 'мин'}[currentLang] || 'хв';
+                let t_no_work = {ua: 'Тренувань немає', ru: 'Тренировок нет', en: 'No workouts', kk: 'Жаттығулар жоқ'}[currentLang] || 'Тренувань немає';
+                let t_vol = {ua: "Об'єм", ru: 'Объем', en: 'Volume', kk: 'Көлемі'}[currentLang] || "Об'єм";
+
                 try {
                     const { data: programs } = await supabaseClient.from('saved_programs').select('*').eq('user_id', currentUserId).order('created_at', {ascending: false});
                     const progEl = document.getElementById('saved-programs-list'); let p_html = '';
                     
-                    let doneBtnTxt = currentLang === 'en' ? 'Done' : (currentLang === 'kk' ? 'Орындадым' : 'Виконав');
-                    let viewBtnTxt = currentLang === 'en' ? 'View' : (currentLang === 'kk' ? 'Көру' : 'Відкрити');
-                    let noProgTxt = currentLang === 'en' ? 'Generate a program with AI Coach' : (currentLang === 'kk' ? 'ЖИ Жаттықтырушыда бағдарлама жасаңыз' : 'Згенеруй програму у ШІ Тренера');
-
                     savedProgramsData = {};
                     if(programs && programs.length > 0) {
                         programs.forEach(p => {
                             savedProgramsData[p.id] = p;
-                            
-                            // Дістаємо правильні цифри
                             let cals = p.calories || p.calories_burned || 0;
                             let mins = p.duration || p.duration_min || 0;
                             
@@ -908,17 +915,17 @@
                                 <div class="flex justify-between items-start mb-2">
                                     <div class="cursor-pointer flex-1" onclick="viewProgram(${p.id})">
                                         <div class="text-[12px] font-bold text-white mb-1 line-clamp-1">🤖 ${p.title}</div>
-                                        <div class="text-[9px] opacity-50 text-white">${mins} хв | 🔥 ${cals} ккал</div>
+                                        <div class="text-[9px] opacity-50 text-white">${mins} ${t_min} | 🔥 ${cals} ккал</div>
                                     </div>
                                     <button onclick="deleteProgram(${p.id})" class="opacity-30 hover:opacity-100 text-white p-1 text-lg">🗑️</button>
                                 </div>
                                 <div class="flex gap-2 w-full mt-1">
-                                    <button onclick="viewProgram(${p.id})" class="flex-1 bg-white/10 text-white text-[10px] font-bold px-3 py-2 rounded-lg active:scale-95 border border-white/5">👁️ ${viewBtnTxt}</button>
-                                    <button onclick="logSavedProgram(${p.id})" class="flex-1 bg-blue-500 text-white text-[10px] font-bold px-3 py-2 rounded-lg active:scale-95 shadow-lg shadow-blue-500/30">✅ ${doneBtnTxt}</button>
+                                    <button onclick="viewProgram(${p.id})" class="flex-1 bg-white/10 text-white text-[10px] font-bold px-3 py-2 rounded-lg active:scale-95 border border-white/5">👁️ ${t_view}</button>
+                                    <button onclick="logSavedProgram(${p.id})" class="flex-1 bg-blue-500 text-white text-[10px] font-bold px-3 py-2 rounded-lg active:scale-95 shadow-lg shadow-blue-500/30">✅ ${t_done}</button>
                                 </div>
                             </div>`;
                         });
-                    } else { p_html = `<p class="text-center opacity-30 py-2 text-[10px] italic text-white" id="lang-loading-progs">${noProgTxt}</p>`; }
+                    } else { p_html = `<p class="text-center opacity-30 py-2 text-[10px] italic text-white">${t_no_prog}</p>`; }
                     if(progEl) progEl.innerHTML = p_html;
                 } catch(e) { console.log("Таблиця saved_programs відсутня"); }
 
@@ -927,18 +934,18 @@
                 if(cardio) cardio.forEach(c => { 
                     let isAI = c.activity_type.startsWith("🤖");
                     let safeTitle = c.activity_type.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                    html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-green-400">🏃 ${c.activity_type}</div><div class="text-[9px] opacity-50 text-white">${c.duration_min} хв | ${c.distance_km} км</div></div><div class="flex items-center gap-3"><span class="text-xs font-bold text-green-400">-${c.calories_burned} ккал</span><button onclick="deleteActivity('workouts_cardio', ${c.id}, ${isAI}, '${safeTitle}')" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`; 
+                    html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-green-400">🏃 ${c.activity_type}</div><div class="text-[9px] opacity-50 text-white">${c.duration_min} ${t_min} | ${c.distance_km} км</div></div><div class="flex items-center gap-3"><span class="text-xs font-bold text-green-400">-${c.calories_burned} ккал</span><button onclick="deleteActivity('workouts_cardio', ${c.id}, ${isAI}, '${safeTitle}')" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`; 
                 });
                 
                 if(strength) strength.forEach(s => { 
-                    if (s.exercise_name.startsWith("🤖")) return; // 💡 ОСЬ ТУТ МИ ХОВАЄМО ТЕХНІЧНІ ЗАПИСИ
+                    if (s.exercise_name.startsWith("🤖")) return;
                     
                     const vol = s.sets * s.reps * s.weight_kg; 
                     let calsText = s.calories_burned ? `<span class="text-xs font-bold text-orange-400">-${s.calories_burned} ккал</span>` : '';
-                    html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-orange-400">🏋️ ${s.exercise_name}</div><div class="text-[9px] opacity-50 text-white">${s.sets}x${s.reps} | ${s.weight_kg} кг | Об'єм: ${vol} кг</div></div><div class="flex items-center gap-3">${calsText}<button onclick="deleteActivity('workouts_strength', ${s.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`; 
+                    html += `<div class="flex justify-between items-center py-2 border-b border-white/5"><div><div class="text-xs font-bold text-orange-400">🏋️ ${s.exercise_name}</div><div class="text-[9px] opacity-50 text-white">${s.sets}x${s.reps} | ${s.weight_kg} кг | ${t_vol}: ${vol} кг</div></div><div class="flex items-center gap-3">${calsText}<button onclick="deleteActivity('workouts_strength', ${s.id})" class="opacity-30 active:opacity-100 p-2 text-white">🗑️</button></div></div>`; 
                 });
-                let noWorkoutsTxt = currentLang === 'en' ? 'No workouts' : (currentLang === 'kk' ? 'Жаттығулар жоқ' : 'Тренувань немає');
-                if(html === '') html = `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${noWorkoutsTxt}</p>`;
+                
+                if(html === '') html = `<p class="text-center opacity-30 py-4 text-[10px] italic text-white">${t_no_work}</p>`;
                 if(listEl) listEl.innerHTML = html;
 
                 await renderMuscleChart();
@@ -967,7 +974,15 @@
             const mCanvas = document.getElementById('muscleChart');
             if(mCanvas) {
                 if(muscleChartInstance) muscleChartInstance.destroy();
-                let labels = ['Груди', 'Спина', 'Ноги', 'Руки', 'Плечі', 'Прес']; if(currentLang === 'en') labels = ['Chest', 'Back', 'Legs', 'Arms', 'Shoulders', 'Core']; if(currentLang === 'kk') labels = ['Кеуде', 'Арқа', 'Аяқтар', 'Қолдар', 'Иықтар', 'Прес'];
+                
+                let labelsDict = {
+                    ua: ['Груди', 'Спина', 'Ноги', 'Руки', 'Плечі', 'Прес'],
+                    ru: ['Грудь', 'Спина', 'Ноги', 'Руки', 'Плечи', 'Пресс'],
+                    en: ['Chest', 'Back', 'Legs', 'Arms', 'Shoulders', 'Core'],
+                    kk: ['Кеуде', 'Арқа', 'Аяқтар', 'Қолдар', 'Иықтар', 'Прес']
+                };
+                let labels = labelsDict[currentLang] || labelsDict['ua'];
+
                 muscleChartInstance = new Chart(mCanvas, { type: 'radar', data: { labels: labels, datasets: [{ data: [muscles.chest, muscles.back, muscles.legs, muscles.arms, muscles.shoulders, muscles.core], backgroundColor: 'rgba(51, 144, 236, 0.2)', borderColor: '#3390ec', pointBackgroundColor: '#3390ec', pointBorderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, pointLabels: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 10 } }, ticks: { display: false } } }, plugins: { legend: { display: false } } } });
             }
         }
