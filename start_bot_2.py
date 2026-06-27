@@ -24,8 +24,38 @@ from aiogram.types import Message
 import time
 import os
 from dotenv import load_dotenv
+from aiogram.types import FSInputFile
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 load_dotenv() # Эта функция заставит Python прочитать твой файл .env
+
+import re
+
+def get_available_exercises_menu():
+    """Сканує папку і повертає список доступних sys_id"""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    videos_dir = os.path.join(base_dir, "selected_videos")
+    
+    available_exercises = []
+    
+    try:
+        files = os.listdir(videos_dir)
+        for f in files:
+            if f.endswith(('.gif', '.mp4')):
+                clean_name = os.path.splitext(f)[0]
+                clean_name = clean_name.replace('.gif', '').replace('.mp4', '')
+                available_exercises.append(clean_name)
+    except Exception as e:
+        print(f"Помилка читання папки: {e}")
+        
+    return ", ".join(available_exercises)
+
+def get_clean_sys_id(text_string):
+    """Превращает любое название ('3/4 sit-up', 'Bench Press') в идеальный формат ('3_4_sit_up', 'bench_press')"""
+    if not text_string:
+        return None
+    clean = re.sub(r'[^a-zA-Z0-9]', '_', text_string.lower())
+    return re.sub(r'_+', '_', clean).strip('_')
 
 # --- БЕЗПЕЧНИЙ ІМПОРТ CRYPTOBOT ---
 try:
@@ -381,6 +411,85 @@ TRANSLATIONS = {
     }
 }
 
+EXERCISE_GIFS = {
+    # === ГРУДЬ (CHEST) ===
+    "push_ups": "YOUR_FILE_ID_HERE",
+    "bench_press": "YOUR_FILE_ID_HERE",
+    "incline_bench_press": "YOUR_FILE_ID_HERE",
+    "dumbbell_flyes": "YOUR_FILE_ID_HERE",
+    "cable_crossover": "YOUR_FILE_ID_HERE",
+    "dips": "YOUR_FILE_ID_HERE", # Отжимания на брусьях
+    "machine_chest_press": "YOUR_FILE_ID_HERE",
+
+    # === СПИНА (BACK) ===
+    "pull_ups": "YOUR_FILE_ID_HERE", # Подтягивания
+    "lat_pulldown": "YOUR_FILE_ID_HERE", # Тяга верхнего блока
+    "barbell_row": "YOUR_FILE_ID_HERE", # Тяга штанги в наклоне
+    "dumbbell_row": "YOUR_FILE_ID_HERE",
+    "seated_cable_row": "YOUR_FILE_ID_HERE", # Тяга нижнего блока
+    "t_bar_row": "YOUR_FILE_ID_HERE",
+    "deadlift": "YOUR_FILE_ID_HERE", # Становая тяга
+    "hyperextension": "YOUR_FILE_ID_HERE",
+
+    # === НОГИ И ЯГОДИЦЫ (LEGS & GLUTES) ===
+    "barbell_squat": "YOUR_FILE_ID_HERE",
+    "goblet_squat": "YOUR_FILE_ID_HERE",
+    "leg_press": "YOUR_FILE_ID_HERE",
+    "lunges": "YOUR_FILE_ID_HERE", # Выпады
+    "bulgarian_split_squat": "YOUR_FILE_ID_HERE",
+    "leg_extension": "YOUR_FILE_ID_HERE", # Разгибание ног
+    "leg_curl": "YOUR_FILE_ID_HERE", # Сгибание ног
+    "calf_raise": "YOUR_FILE_ID_HERE", # Икры
+    "romanian_deadlift": "YOUR_FILE_ID_HERE",
+    "hip_thrust": "YOUR_FILE_ID_HERE", # Ягодичный мостик
+
+    # === ПЛЕЧИ (SHOULDERS) ===
+    "overhead_press": "YOUR_FILE_ID_HERE", # Армейский жим
+    "dumbbell_shoulder_press": "YOUR_FILE_ID_HERE",
+    "lateral_raises": "YOUR_FILE_ID_HERE", # Махи в стороны
+    "front_raises": "YOUR_FILE_ID_HERE", # Махи перед собой
+    "reverse_pec_deck": "YOUR_FILE_ID_HERE", # Обратная бабочка
+    "face_pull": "YOUR_FILE_ID_HERE",
+    "upright_row": "YOUR_FILE_ID_HERE", # Тяга к подбородку
+
+    # === РУКИ: БИЦЕПС И ТРИЦЕПС (ARMS) ===
+    "barbell_bicep_curl": "YOUR_FILE_ID_HERE",
+    "dumbbell_bicep_curl": "YOUR_FILE_ID_HERE",
+    "hammer_curls": "YOUR_FILE_ID_HERE",
+    "preacher_curl": "YOUR_FILE_ID_HERE",
+    "tricep_pushdown": "YOUR_FILE_ID_HERE", # Разгибание на блоке
+    "overhead_tricep_extension": "YOUR_FILE_ID_HERE",
+    "skull_crushers": "YOUR_FILE_ID_HERE", # Французский жим
+    "tricep_kickbacks": "YOUR_FILE_ID_HERE",
+    "close_grip_bench_press": "YOUR_FILE_ID_HERE",
+
+    # === ПРЕСС И КОР (CORE) ===
+    "plank": "YOUR_FILE_ID_HERE",
+    "crunches": "YOUR_FILE_ID_HERE", # Скручивания
+    "leg_raises": "YOUR_FILE_ID_HERE", # Подъем ног
+    "russian_twist": "YOUR_FILE_ID_HERE",
+    "bicycle_crunches": "YOUR_FILE_ID_HERE",
+    "ab_wheel_rollout": "YOUR_FILE_ID_HERE",
+    "mountain_climbers": "YOUR_FILE_ID_HERE",
+    "hanging_leg_raises": "YOUR_FILE_ID_HERE",
+
+    # === КАРДИО И РАЗМИНКА (CARDIO & WARMUP) ===
+    "jumping_jacks": "YOUR_FILE_ID_HERE",
+    "high_knees": "YOUR_FILE_ID_HERE",
+    "burpees": "YOUR_FILE_ID_HERE",
+    "jump_rope": "YOUR_FILE_ID_HERE",
+    "box_jumps": "YOUR_FILE_ID_HERE",
+    "kettlebell_swing": "YOUR_FILE_ID_HERE",
+
+    # === АРМРЕСТЛИНГ / СПЕЦИФИКА (ARM WRESTLING / GRIP) ===
+    "wrist_curls": "YOUR_FILE_ID_HERE",
+    "reverse_wrist_curls": "YOUR_FILE_ID_HERE",
+    "farmers_walk": "YOUR_FILE_ID_HERE",
+    "pronator_work": "YOUR_FILE_ID_HERE",
+    "static_hold": "YOUR_FILE_ID_HERE"
+}
+
+
 def get_text(lang: str, key: str) -> str:
     return TRANSLATIONS.get(lang, TRANSLATIONS["ru"]).get(key, key)
 
@@ -389,6 +498,7 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel('models/gemini-3-flash-preview') 
 # --- ПАМЯТЬ БОТА (Храним контекст диалогов) ---
 USER_HISTORY = {}
+
 
 # --- НАСТРОЙКИ ---
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
@@ -476,6 +586,53 @@ async def process_ai_requests():
             pass
         await asyncio.sleep(3)
 
+async def daily_reminder_task():
+    print("⏳ Запуск проверки дневных норм...")
+    try:
+        users = supabase.table("users").select("user_id, language, daily_cal_goal, water_goal").execute().data
+    except Exception as e:
+        print(f"❌ Ошибка получения пользователей для напоминаний: {e}")
+        return
+    
+    for user in users:
+        uid = user.get('user_id')
+        lang = user.get('language', 'ru')
+        cal_goal = user.get('daily_cal_goal', 2000)
+        
+        # Получаем данные за сегодня
+        today = time.strftime("%Y-%m-%d")
+        try:
+            logs = supabase.table("nutrition_logs").select("calories").eq("user_id", uid).gte("created_at", today).execute().data
+            total_eaten = sum(item.get('calories', 0) for item in logs)
+        except:
+            total_eaten = 0
+        
+        # Проверка нормы (менее 80% от цели)
+        if total_eaten < cal_goal * 0.8:
+            # Словарь сообщений для всех языков
+            messages = {
+                "ru": "🍎 Вы сегодня недобрали калорий! Не забывайте питаться полноценно.",
+                "ua": "🍎 Ви сьогодні недобрали калорій! Не забувайте харчуватися повноцінно.",
+                "en": "🍎 You didn't meet your calorie goal today! Don't forget to eat well.",
+                "kk": "🍎 Бүгін калория нормасын толтырмадыңыз! Толыққанды тамақтануды ұмытпаңыз."
+            }
+            
+            # Выбираем сообщение, по умолчанию RU
+            msg = messages.get(lang, messages["ru"])
+            
+            try:
+                await bot.send_message(uid, msg)
+                await asyncio.sleep(0.1) # Пауза между сообщениями, чтобы не получить бан от ТГ
+            except Exception as e:
+                print(f"⚠️ Не удалось отправить напоминание пользователю {uid}: {e}")
+
+@dp.message(Command("test_remind"))
+async def admin_test_remind(message: types.Message):
+    if message.from_user.id == ADMIN_ID:
+        await message.answer("🧪 Запускаю тестовую проверку норм...")
+        await daily_reminder_task()
+        await message.answer("✅ Проверка завершена.")
+
 class Registration(StatesGroup):
     waiting_for_name = State()
     waiting_for_age = State()
@@ -491,7 +648,15 @@ class WorkoutFSM(StatesGroup):
     waiting_time = State() 
     waiting_difficulty = State()      # Опрос: Сколько минут?
     active_exercise = State()    # Выполнение упражнения
-    resting = State()            # Отдых между подходами
+    resting = State()
+    waiting_for_save_name = State()
+    editing_stats = State()            # Отдых между подходами
+
+
+class DietFSM(StatesGroup):
+    waiting_for_goal = State()
+    waiting_for_preferences = State()
+    waiting_for_meals = State()
 
 @dp.callback_query(F.data == "workout_fast", WorkoutFSM.choosing_type)
 async def fast_workout_start(callback: types.CallbackQuery, state: FSMContext):
@@ -548,13 +713,37 @@ def get_language_keyboard() -> types.InlineKeyboardMarkup:
 async def cmd_start(message: types.Message, command: CommandObject, state: FSMContext):
     user_id = message.from_user.id
     args = command.args
-    referrer_id = args if args and args.isdigit() else None
+    referrer_id = None
+
+    # 1. ДЕКОДИРУЕМ РЕФЕРАЛЬНУЮ ССЫЛКУ (расшифровываем буквы обратно в твой ID)
+    if args:
+        try:
+            decoded_args = decode_payload(args)
+            if decoded_args.isdigit():
+                referrer_id = int(decoded_args)
+        except Exception:
+            # На случай, если кто-то запустит бота со ссылкой с обычными цифрами
+            if args.isdigit():
+                referrer_id = int(args)
 
     try:
-        user_check = supabase.table("users").select("user_id").eq("user_id", user_id).execute()
+        # Проверяем, есть ли юзер в базе
+        user_check = supabase.table("users").select("user_id, language").eq("user_id", user_id).execute()
         is_new_user = len(user_check.data) == 0
 
-        if is_new_user and referrer_id and int(referrer_id) != user_id:
+        # 2. ЕСЛИ ЮЗЕР УЖЕ ЗАРЕГИСТРИРОВАН (случайно нажал на ссылку или просто написал /start)
+        if not is_new_user:
+            lang = user_check.data[0].get("language", "ru")
+            welcome_back = "С возвращением!" if lang == "ru" else "З поверненням!"
+            if lang == "en": welcome_back = "Welcome back!"
+            if lang == "kk": welcome_back = "Қайта оралуыңызбен!"
+            
+            # Просто здороваемся и даем ему главное меню, ПРЕРЫВАЯ функцию
+            await message.answer(welcome_back, reply_markup=get_main_menu_with_app(lang, get_text, user_id))
+            return 
+
+        # 3. ЕСЛИ ЮЗЕР НОВЫЙ И ПРИШЕЛ ПО ССЫЛКЕ - даем бонусы пригласившему
+        if is_new_user and referrer_id and referrer_id != user_id:
             res = supabase.table("users").select("xp, referrals_count, name").eq("user_id", referrer_id).execute()
             if len(res.data) > 0:
                 referrer_data = res.data[0] 
@@ -568,11 +757,13 @@ async def cmd_start(message: types.Message, command: CommandObject, state: FSMCo
                 }).eq("user_id", referrer_id).execute()
                 
                 await state.update_data(invited_by=referrer_name)
+
     except Exception as e:
-        print(f"Помилка БД: {e}")
+        print(f"Ошибка БД: {e}")
 
     await state.update_data(referrer_id=referrer_id)
 
+    # 4. ПОКАЗЫВАЕМ ВЫБОР ЯЗЫКА ТОЛЬКО НОВИЧКАМ
     builder = InlineKeyboardBuilder()
     builder.row(types.InlineKeyboardButton(text="🇷🇺 RU", callback_data="set_lang_ru"),
                 types.InlineKeyboardButton(text="🇺🇦 UA", callback_data="set_lang_ua"))
@@ -860,6 +1051,236 @@ async def start_workout_mode(message: types.Message, state: FSMContext):
     await message.answer(get_text(lang, "workout_choose"), reply_markup=builder.as_markup())
     await state.set_state(WorkoutFSM.choosing_type)
 
+# === ВРЕМЕННЫЙ ПОМОЩНИК ДЛЯ ПОЛУЧЕНИЯ FILE_ID ===
+@dp.message(F.animation | F.video)
+async def get_file_id_handler(message: Message):
+    # Если ты прислал гифку (анимацию)
+    if message.animation:
+        file_id = message.animation.file_id
+        await message.reply(f"🎯 Вот твой ID для гифки:\n\n`{file_id}`\n\n*(Нажми на текст, чтобы скопировать)*", parse_mode="Markdown")
+    
+    # Если ты прислал видео
+    elif message.video:
+        file_id = message.video.file_id
+        await message.reply(f"🎥 Вот твой ID для видео:\n\n`{file_id}`\n\n*(Нажми на текст, чтобы скопировать)*", parse_mode="Markdown")
+# ==================================================
+
+@dp.message(WorkoutFSM.waiting_for_save_name)
+async def workout_save_to_db(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    lang = await get_user_language(user_id)
+    plan_name = message.text
+
+    # Дістаємо JSON з пам'яті
+    data = await state.get_data()
+    workout_plan = data.get("workout_plan", [])
+
+    if not workout_plan:
+        await state.clear()
+        return
+
+    # --- Вираховуємо тотальні калорії та час ---
+    total_cals = 0
+    total_time_sec = 0
+    
+    for ex in workout_plan:
+        sets = int(str(ex.get('sets', 0)).split()[0] if isinstance(ex.get('sets'), str) else ex.get('sets', 0))
+        reps = int(str(ex.get('reps', 0)).split()[0] if isinstance(ex.get('reps'), str) else ex.get('reps', 0))
+        rest = int(str(ex.get('rest_sec', 0)).split()[0] if isinstance(ex.get('rest_sec'), str) else ex.get('rest_sec', 0))
+
+        total_cals += (sets * reps * 0.5)
+        total_time_sec += sets * ((reps * 3) + rest)
+
+    total_minutes = max(1, total_time_sec // 60)
+    plan_content = json.dumps(workout_plan, ensure_ascii=False)
+
+    try:
+        # ПОПЫТКА 1: Сохраняем со всеми фишками (калории, время)
+        supabase.table("saved_programs").insert({
+            "user_id": user_id,
+            "title": plan_name,
+            "content": plan_content,
+            "calories": int(total_cals),
+            "duration": int(total_minutes)
+        }).execute()
+        
+    except Exception as e:
+        err_msg = str(e).lower()
+        # Если Supabase жалуется на отсутствие колонок — включаем план "Б"
+        if "calories" in err_msg or "duration" in err_msg or "does not exist" in err_msg:
+            print("⚠️ [ВНИМАНИЕ] Колонки calories/duration не найдены в БД. Сохраняю базовую версию.")
+            try:
+                # ПОПЫТКА 2: Сохраняем по-старому, без новых колонок
+                supabase.table("saved_programs").insert({
+                    "user_id": user_id,
+                    "title": plan_name,
+                    "content": plan_content
+                }).execute()
+            except Exception as fallback_err:
+                print(f"❌ Критическая ошибка БД: {fallback_err}")
+                await state.clear()
+                return await message.answer("❌ Помилка збереження.")
+        else:
+            print(f"❌ Неизвестная ошибка: {e}")
+            await state.clear()
+            return await message.answer("❌ Помилка збереження.")
+
+    success_msg = "✅ Програму успішно збережено у 'Мої програми'!" if lang in ["ua", "uk"] else "✅ Программа успешно сохранена!"
+    await message.answer(success_msg)
+    await state.clear()
+
+# 1. Юзер нажал "Изменить вес/повторы"
+@dp.callback_query(F.data == "wo_edit_stats", WorkoutFSM.active_exercise)
+async def ask_new_stats(callback: types.CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+    
+    if lang == "ru": msg = "✍️ Напишите новые **повторения** и **вес** через пробел.\n*Например, если сделали 10 раз с весом 50 кг, напишите:* `10 50`"
+    elif lang == "en": msg = "✍️ Enter new **reps** and **weight** separated by space.\n*E.g., if you did 10 reps with 50 kg, type:* `10 50`"
+    elif lang == "kk": msg = "✍️ Жаңа **қайталаулар** мен **салмақты** бос орын арқылы жазыңыз.\n*Мысалы, 50 кг салмақпен 10 рет жасасаңыз, былай жазыңыз:* `10 50`"
+    else: msg = "✍️ Напишіть нові **повторення** та **вагу** через пробіл.\n*Наприклад, якщо зробили 10 разів з вагою 50 кг, напишіть:* `10 50`"
+    
+    # Переводим в режим ожидания текста, но удаляем старое сообщение с гифкой, чтобы не мешалось
+    await state.set_state(WorkoutFSM.editing_stats)
+    try: await callback.message.delete()
+    except: pass
+    await bot.send_message(user_id, msg, parse_mode="Markdown")
+    await callback.answer()
+
+# 2. Юзер ввел новые цифры (например: "10 50")
+@dp.message(WorkoutFSM.editing_stats)
+async def apply_new_stats(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    lang = await get_user_language(user_id)
+    text = message.text.strip()
+    
+    # Пытаемся вытащить два числа из сообщения
+    nums = re.findall(r'\d+', text)
+    
+    if len(nums) < 1:
+        err = "⚠️ Я не нашел цифр. Напишите повторения и вес (например: `10 50`):" if lang == "ru" else "⚠️ Будь ласка, напишіть цифри (наприклад: `10 50`):"
+        return await message.answer(err, parse_mode="Markdown")
+        
+    new_reps = int(nums[0])
+    new_weight = int(nums[1]) if len(nums) > 1 else 0 # Если ввели только 1 число, считаем что вес = 0 (свой вес)
+    
+    # Достаем план тренировки и текущее упражнение
+    data = await state.get_data()
+    plan = data.get("workout_plan", [])
+    ex_idx = data.get("current_ex_index", 0)
+    
+    # Обновляем данные прямо в плане
+    if ex_idx < len(plan):
+        plan[ex_idx]['reps'] = new_reps
+        plan[ex_idx]['weight_kg'] = new_weight
+        await state.update_data(workout_plan=plan)
+    
+    try: await message.delete()
+    except: pass
+    
+    # Возвращаем пользователя в режим активной тренировки и показываем обновленную карточку
+    await state.set_state(WorkoutFSM.active_exercise)
+    await send_current_exercise(message, state, user_id, lang)
+
+@dp.callback_query(F.data.startswith("diet_"), DietFSM.waiting_for_goal)
+async def diet_goal_chosen(callback: types.CallbackQuery, state: FSMContext):
+    goal = callback.data.split("_")[1] # lose, gain, maintain
+    await state.update_data(diet_goal=goal)
+    lang = await get_user_language(callback.from_user.id)
+    
+    if lang == "ru": msg = "Есть ли у вас пищевые аллергии или продукты, которые вы терпеть не можете?\n*(Напишите текстом или просто отправьте 'Нет')*"
+    elif lang == "en": msg = "Do you have any food allergies or foods you hate?\n*(Type them out or just send 'No')*"
+    elif lang == "kk": msg = "Тамаққа аллергияңыз немесе мүлдем ұнатпайтын тағамдарыңыз бар ма?\n*(Мәтінмен жазыңыз немесе 'Жоқ' деп жіберіңіз)*"
+    else: msg = "Чи є у вас харчові алергії або продукти, які ви терпіти не можете?\n*(Напишіть текстом або просто відправте 'Ні')*"
+    
+    await callback.message.edit_text(msg, parse_mode="Markdown")
+    await state.set_state(DietFSM.waiting_for_preferences)
+
+@dp.message(DietFSM.waiting_for_preferences)
+async def diet_prefs_entered(message: types.Message, state: FSMContext):
+    await state.update_data(diet_prefs=message.text)
+    user_id = message.from_user.id
+    lang = await get_user_language(user_id)
+    
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        types.InlineKeyboardButton(text="2", callback_data="meals_2"),
+        types.InlineKeyboardButton(text="3", callback_data="meals_3"),
+        types.InlineKeyboardButton(text="4", callback_data="meals_4"),
+        types.InlineKeyboardButton(text="5", callback_data="meals_5")
+    )
+    
+    if lang == "ru": msg = "Сколько приемов пищи в день вам удобно?"
+    elif lang == "en": msg = "How many meals a day are comfortable for you?"
+    elif lang == "kk": msg = "Күніне қанша рет тамақтанған ыңғайлы?"
+    else: msg = "Скільки прийомів їжі на день вам зручно?"
+    
+    await message.answer(msg, reply_markup=builder.as_markup())
+    await state.set_state(DietFSM.waiting_for_meals)
+
+@dp.callback_query(F.data.startswith("meals_"), DietFSM.waiting_for_meals)
+async def generate_diet_plan(callback: types.CallbackQuery, state: FSMContext):
+    meals = callback.data.split("_")[1]
+    data = await state.get_data()
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+    
+    wait_msg = "⏳ Составляю идеальный рацион..." if lang in ["ru", "kk"] else "⏳ Складаю ідеальний раціон..."
+    await callback.message.edit_text(wait_msg)
+    
+    # Достаем возраст, вес и общую цель из БД
+    res = supabase.table("users").select("age, weight, goal, balance").eq("user_id", user_id).execute()
+    user = res.data[0] if res.data else {"age": 25, "weight": 70, "goal": "Фитнес", "balance": 10}
+    
+    # Мапим техническую цель в понятный текст для ИИ
+    goal_map = {
+        "lose": "Похудение (дефицит калорий)", 
+        "gain": "Набор мышечной массы (профицит)", 
+        "maintain": "Поддержание веса (баланс)"
+    }
+    target_goal = goal_map.get(data.get('diet_goal'), "Здоровое питание")
+    
+    lang_map = {"ru": "Russian", "ua": "Ukrainian", "uk": "Ukrainian", "en": "English", "kk": "Kazakh"}
+    ai_lang = lang_map.get(lang, "Russian")
+    
+    # Формируем ультимативный промпт
+    prompt = f"""
+    Ты - профессиональный диетолог. Составь подробный рацион питания на 1 день.
+    
+    ДАННЫЕ КЛИЕНТА:
+    - Возраст: {user.get('age')} лет
+    - Вес: {user.get('weight')} кг
+    - Глобальная цель: {user.get('goal')}
+    - Текущая задача рациона: {target_goal}
+    - Исключить продукты/Аллергии: {data.get('diet_prefs')}
+    - Количество приемов пищи: {meals}
+    
+    ТВОЯ ЗАДАЧА:
+    1. Распиши меню с точными граммовками.
+    2. Укажи КБЖУ (Калории, Белки, Жиры, Углеводы) для каждого приема пищи.
+    3. В конце напиши ИТОГОВЫЕ КБЖУ за весь день.
+    4. Отвечай строго на языке: {ai_lang}.
+    5. Сделай текст красиво отформатированным, используй маркдаун и уместные эмодзи.
+    """
+    
+    try:
+        response = await model.generate_content_async(prompt)
+        
+        # Списываем баланс генераций
+        new_bal = user.get('balance', 1) - 1
+        if new_bal < 0: new_bal = 0
+        supabase.table("users").update({"balance": new_bal}).eq("user_id", user_id).execute()
+        
+        # Отправляем готовый рацион
+        await callback.message.edit_text(response.text, parse_mode="Markdown")
+        
+    except Exception as e:
+        print(f"Ошибка генерации рациона: {e}")
+        err_msg = "❌ Ошибка генерации." if lang in ["ru", "kk"] else "❌ Помилка генерації."
+        await callback.message.edit_text(err_msg)
+        
+    await state.clear()
+
 @dp.message(F.text)
 async def handle_text(message: types.Message, state: FSMContext):
     if await state.get_state() is not None:
@@ -949,6 +1370,33 @@ async def handle_text(message: types.Message, state: FSMContext):
     elif text == get_text(lang, "food_analysis"):
         await message.answer(get_text(lang, "prompt_nutrition"))
         return
+    
+    elif text == get_text(lang, "nutrition"):
+        builder = InlineKeyboardBuilder()
+        if lang == "ru":
+            builder.row(types.InlineKeyboardButton(text="⚖️ Похудение", callback_data="diet_lose"))
+            builder.row(types.InlineKeyboardButton(text="💪 Набор массы", callback_data="diet_gain"))
+            builder.row(types.InlineKeyboardButton(text="🍏 Поддержание", callback_data="diet_maintain"))
+            msg = "Какая у нас главная цель по питанию?"
+        elif lang == "en":
+            builder.row(types.InlineKeyboardButton(text="⚖️ Weight Loss", callback_data="diet_lose"))
+            builder.row(types.InlineKeyboardButton(text="💪 Muscle Gain", callback_data="diet_gain"))
+            builder.row(types.InlineKeyboardButton(text="🍏 Maintenance", callback_data="diet_maintain"))
+            msg = "What is our main nutrition goal?"
+        elif lang == "kk":
+            builder.row(types.InlineKeyboardButton(text="⚖️ Салмақ тастау", callback_data="diet_lose"))
+            builder.row(types.InlineKeyboardButton(text="💪 Бұлшықет қосу", callback_data="diet_gain"))
+            builder.row(types.InlineKeyboardButton(text="🍏 Қалыпты ұстау", callback_data="diet_maintain"))
+            msg = "Тамақтанудағы негізгі мақсатымыз қандай?"
+        else:
+            builder.row(types.InlineKeyboardButton(text="⚖️ Схуднення", callback_data="diet_lose"))
+            builder.row(types.InlineKeyboardButton(text="💪 Набір маси", callback_data="diet_gain"))
+            builder.row(types.InlineKeyboardButton(text="🍏 Підтримка", callback_data="diet_maintain"))
+            msg = "Яка у нас головна ціль по харчуванню?"
+
+        await message.answer(msg, reply_markup=builder.as_markup())
+        await state.set_state(DietFSM.waiting_for_goal)
+        return
 
     # 2. ПЕРЕВІРКА ПІДПИСКИ І БАЛАНСУ ПЕРЕД ШІ
     if not await is_user_subscribed(user_id):
@@ -991,6 +1439,8 @@ async def handle_text(message: types.Message, state: FSMContext):
    
     Output MUST be valid JSON only. Do not add markdown or text outside the JSON.
     """
+
+    
 
     try:
         t = {
@@ -1189,6 +1639,32 @@ async def handle_ai(message: types.Message):
 
 # === ЭТАП 2: АДАПТИВНЫЙ ОПРОСНИК ДЛЯ ТРЕНИРОВКИ ===
 
+import os
+
+def get_available_exercises_menu():
+    """Сканирует папку и возвращает список доступных sys_id в виде строки"""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    videos_dir = os.path.join(base_dir, "renamed_videos") # Убедись, что тут правильное имя папки
+    
+    available_exercises = []
+    
+    try:
+        files = os.listdir(videos_dir)
+        for f in files:
+            # Берем только медиафайлы
+            if f.endswith(('.gif', '.mp4')):
+                # Отрезаем расширение (bench_press.gif -> bench_press)
+                clean_name = os.path.splitext(f)[0]
+                # Убираем двойные расширения, если они есть (bench_press.gif.gif -> bench_press)
+                clean_name = clean_name.replace('.gif', '').replace('.mp4', '')
+                available_exercises.append(clean_name)
+                
+    except Exception as e:
+        print(f"Ошибка чтения папки: {e}")
+        
+    # Возвращаем список через запятую: "bench_press, barbell_squat, pull_ups..."
+    return ", ".join(available_exercises)
+
 @dp.callback_query(F.data == "workout_fast", WorkoutFSM.choosing_type)
 async def fast_workout_start(callback: types.CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
@@ -1294,25 +1770,41 @@ async def generate_fast_workout(callback: types.CallbackQuery, state: FSMContext
     
     await callback.message.edit_text(msg_wait)
     
-    lang_map = {"ru": "Russian", "ua": "Ukrainian", "uk": "Ukrainian", "en": "English"}
-    target_lang = lang_map.get(lang, "English")
+    lang_map = {"ru": "Russian", "ua": "Ukrainian", "uk": "Ukrainian", "en": "English", "kk": "Kazakh"}
+    target_lang = lang_map.get(lang, "Ukrainian")
     
     loc_text = {"home": "дома", "gym": "в тренажерном зале", "street": "на улице"}.get(location, "дома")
     
-    # Обновленный промпт с весом и сложностью
+    # === 1. ВИКЛИКАЄМО НАШУ ФУНКЦІЮ ДЛЯ СКАНУВАННЯ ПАПКИ ===
+    exercises_menu = get_available_exercises_menu()
+    
+    # === 2. РОЗУМНИЙ ПРОМПТ З ЖОРСТКИМ ОБМЕЖЕННЯМ ===
     prompt = f"""
-    You are an AI fitness coach. Create a {difficulty} workout for {time_val} minutes.
-    Location: {loc_text}. Target language: {target_lang}.
-    User weight: {user_weight} kg.
+    Ти - професійний фітнес-тренер. 
+    Склади тренування для користувача (вага {user_weight} кг).
+    Умови: 
+    - Локація: {loc_text}
+    - Час: {time_val} хвилин
+    - Складність: {difficulty}
     
-    CRITICAL: 
-    1. Respond strictly in {target_lang}.
-    2. Recommend realistic equipment weight (weight_kg) based on {difficulty} difficulty and user's {user_weight}kg bodyweight. Use 0 for bodyweight exercises.
-    3. Output ONLY a valid JSON array.
+    ДУЖЕ ВАЖЛИВЕ ПРАВИЛО:
+    Ти ПОВИНЕН використовувати для поля 'sys_id' вправи ТІЛЬКИ З ЦЬОГО СПИСКУ:
+    [{exercises_menu}]
     
-    Format EXACTLY like this:
+    СУВОРО ЗАБОРОНЕНО придумувати свої власні назви для sys_id. Бери їх виключно зі списку вище.
+    Поле 'name' переклади на {target_lang}.
+
+    Format EXACTLY like this JSON array:
     [
-        {{"name": "Exercise Name", "sets": 3, "reps": 12, "rest_sec": 60, "muscle": "chest", "weight_kg": 15}}
+        {{
+            "sys_id": "одне_зі_слів_зі_списку_вище", 
+            "name": "Назва мовою {target_lang}", 
+            "sets": 3, 
+            "reps": 12, 
+            "rest_sec": 60, 
+            "weight_kg": 50,
+            "muscle": "Група м'язів"
+        }}
     ]
     """
     
@@ -1325,20 +1817,151 @@ async def generate_fast_workout(callback: types.CallbackQuery, state: FSMContext
         await send_current_exercise(callback.message, state, user_id, lang)
         
     except Exception as e:
-        print(f"Ошибка генерации тренировки: {e}")
+        print(f"Помилка генерації тренування: {e}")
         err_msg = "❌ Ошибка генерации." if lang == "ru" else "❌ Помилка генерації."
         await callback.message.edit_text(err_msg)
         await state.clear()
 
-# === БАЗА ВІДЕО ТА АНІМАЦІЙ (MVP) ===
-# Сюди ти зможеш додавати посилання або file_id з Telegram
-EXERCISE_GIFS = {
-    "Отжимания от пола": "https://media.giphy.com/media/xT8qBvH1pAhtfSx52U/giphy.gif",
-    "Приседания": "https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif",
-    "Скручивания": "https://media.giphy.com/media/2Faz12o20p9C0Z98Q/giphy.gif"
-}
+
+async def run_rest_timer(message: types.Message, state: FSMContext, user_id: int, lang: str, rest_time: int, builder: InlineKeyboardBuilder, base_text: str):
+    step = 5  # Обновляем каждые 5 секунд
+    
+    for remaining in range(rest_time, 0, -step):
+        await asyncio.sleep(step)
+        
+        # Проверяем, в состоянии ли отдыха юзер (возможно, он уже нажал "Пропустить")
+        current_state = await state.get_state()
+        if current_state != WorkoutFSM.resting.state:
+            return # Тихо убиваем таймер, если юзер пошел дальше
+            
+        # Мультиязычный текст таймера
+        if lang == "ru": time_text = f"\n\n⏳ Осталось: <b>{remaining} сек</b>"
+        elif lang == "en": time_text = f"\n\n⏳ Remaining: <b>{remaining} sec</b>"
+        elif lang == "kk": time_text = f"\n\n⏳ Қалғаны: <b>{remaining} сек</b>"
+        else: time_text = f"\n\n⏳ Залишилось: <b>{remaining} сек</b>"
+        
+        try:
+            await message.edit_text(base_text + time_text, reply_markup=builder.as_markup(), parse_mode="HTML")
+        except Exception:
+            pass # Игнорируем мелкие ошибки Telegram API при редактировании
+
+    # Если цикл закончился (время вышло) и юзер всё еще отдыхает -> авто-продолжение
+    current_state = await state.get_state()
+    if current_state == WorkoutFSM.resting.state:
+        await state.set_state(WorkoutFSM.active_exercise)
+        await send_current_exercise(message, state, user_id, lang)
 
 # === ЕТАП 3: ЯДРО ТРЕНУВАННЯ (FSM) ===
+
+MEDIA_STORAGE_CHANNEL = -1003875495804
+async def get_exercise_gif(sys_id: str):
+    """
+    Шукає гіфку: пам'ять -> Supabase -> Диск.
+    Якщо вантажить з диска — зберігає в канал та Supabase.
+    """
+    if not sys_id:
+        return None
+
+    # 1. Перевірка в кеші (словник EXERCISE_GIFS у пам'яті)
+    if sys_id in EXERCISE_GIFS:
+        return EXERCISE_GIFS[sys_id]
+
+    # 2. Перевірка в Supabase
+    try:
+        response = supabase.table("exercise_media").select("file_id").eq("sys_id", sys_id).execute()
+        if response.data:
+            f_id = response.data[0]['file_id']
+            EXERCISE_GIFS[sys_id] = f_id # Кешуємо
+            return f_id
+    except Exception as e:
+        print(f"Помилка пошуку в БД для {sys_id}: {e}")
+
+    # 3. Якщо в базі немає — шукаємо фізичний файл у папці
+    # Перевіряємо обидва розширення
+    for ext in ['.gif', '.mp4']:
+        file_path = f"./renamed_videos/{sys_id}{ext}"
+        if os.path.exists(file_path):
+            try:
+                # Відправляємо файл у сховище
+                msg = await bot.send_animation(
+                    chat_id=MEDIA_STORAGE_CHANNEL, 
+                    animation=FSInputFile(file_path)
+                )
+                new_file_id = msg.animation.file_id
+                
+                # Зберігаємо в Supabase для наступних разів
+                supabase.table("exercise_media").insert({
+                    "sys_id": sys_id, 
+                    "file_id": new_file_id
+                }).execute()
+                
+                # Кешуємо в пам'ять
+                EXERCISE_GIFS[sys_id] = new_file_id
+                return new_file_id
+            except Exception as e:
+                print(f"❌ Помилка завантаження файлу {sys_id}: {e}")
+    
+    return None
+
+async def background_gif_uploader(message: types.Message, sys_id: str, text: str, builder: InlineKeyboardBuilder, user_id: int):
+    print(f"\n⏳ [ФОН] Начинаю искать гифку для: '{sys_id}'")
+    
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    videos_dir = os.path.join(base_dir, "renamed_videos")
+    
+    try:
+        # Бот физически читает все файлы, которые реально лежат в папке
+        all_files = os.listdir(videos_dir)
+    except Exception as e:
+        print(f"❌ [ФОН] Не могу открыть папку {videos_dir}. Ошибка: {e}")
+        return
+
+    # Ищем первый попавшийся файл, который начинается с нашего sys_id
+    target_file = None
+    for f in all_files:
+        if f.startswith(sys_id):
+            target_file = f
+            break
+            
+    if target_file:
+        file_path = os.path.join(videos_dir, target_file)
+        print(f"✅ [ФОН] Нашел реальный файл на диске: {target_file}")
+        
+        try:
+            # Загружаем в канал
+            storage_msg = await bot.send_animation(
+                chat_id=MEDIA_STORAGE_CHANNEL, 
+                animation=FSInputFile(file_path)
+            )
+            new_file_id = storage_msg.animation.file_id
+            print(f"✅ [ФОН] Успешно загружено. Сохраняю в БД...")
+            
+            # Сохраняем в Supabase
+            supabase.table("exercise_media").insert({
+                "sys_id": sys_id, 
+                "file_id": new_file_id
+            }).execute()
+            
+            # Сохраняем в наш словарь-кэш, чтобы больше не искать
+            EXERCISE_GIFS[sys_id] = new_file_id 
+            
+            # Отправляем пользователю
+            try: await message.delete()
+            except: pass
+            
+            await bot.send_animation(
+                chat_id=user_id, 
+                animation=new_file_id, 
+                caption=text, 
+                reply_markup=builder.as_markup(), 
+                parse_mode="HTML"
+            )
+            print(f"🎉 [ФОН] Гифка успешно отправлена юзеру!")
+            
+        except Exception as e:
+            print(f"❌ [ФОН] Ошибка загрузки или БД: {e}")
+    else:
+        print(f"⚠️ [ФОН] Файл, начинающийся на '{sys_id}', НЕ НАЙДЕН среди {len(all_files)} файлов в папке!")
 
 async def send_current_exercise(message: types.Message, state: FSMContext, user_id: int, lang: str):
     data = await state.get_data()
@@ -1353,113 +1976,159 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
     ex = plan[ex_idx]
     weight_kg = ex.get('weight_kg', 0)
     
-    # МУЛЬТИЯЗЫЧНЫЙ ИНТЕРФЕЙС
-    # === БАГАТОМОВНИЙ ІНТЕРФЕЙС ===
+    # === МАГИЯ СОВПАДЕНИЙ ===
+    # Если ИИ прислал кривой sys_id или вообще его забыл, берем name!
+    raw_name = ex.get('sys_id') or ex.get('name', 'unknown')
+    sys_id = get_clean_sys_id(raw_name) # Очищаем!
+    
+    print(f"\n▶️ [DEBUG] Сет: {curr_set} | Оригинал: '{raw_name}' -> Шукаємо файл: '{sys_id}'")
+    # =======================
+
+    # 1. МИТТЄВА ГЕНЕРАЦІЯ ТЕКСТУ (без змін)
     if lang == "ru":
-        text = f"🏋️‍♂️ <b>Упражнение {ex_idx + 1}/{len(plan)}: {ex.get('name', 'Без названия')}</b>\n\n"
+        name = ex.get('name', 'Без названия')
+        text = f"🏋️‍♂️ <b>Упражнение {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Подход: <b>{curr_set} из {ex.get('sets', 1)}</b>\n"
         text += f"🔄 Повторения: <b>{ex.get('reps', 1)}</b>\n"
         if weight_kg > 0: text += f"⚖️ Вес снаряда: <b>{weight_kg} кг</b>\n"
-        btn_done = f"✅ Выполнено (отдых {ex.get('rest_sec', 60)}с)"
+        btn_done = f"✅ Выполнено ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Пропустить"
         btn_stop = "🛑 Завершить"
+        btn_edit = "✏️ Изменить вес/повторы"
     elif lang == "en":
-        text = f"🏋️‍♂️ <b>Exercise {ex_idx + 1}/{len(plan)}: {ex.get('name', 'Unnamed')}</b>\n\n"
+        name = ex.get('name', 'Unnamed')
+        text = f"🏋️‍♂️ <b>Exercise {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Set: <b>{curr_set} of {ex.get('sets', 1)}</b>\n"
         text += f"🔄 Reps: <b>{ex.get('reps', 1)}</b>\n"
         if weight_kg > 0: text += f"⚖️ Weight: <b>{weight_kg} kg</b>\n"
-        btn_done = f"✅ Done (rest {ex.get('rest_sec', 60)}s)"
+        btn_done = f"✅ Done ({ex.get('rest_sec', 60)}s)"
         btn_skip = "⏭ Skip"
         btn_stop = "🛑 Stop"
+        btn_edit = "✏️ Edit weight/reps"
     elif lang == "kk":
-        text = f"🏋️‍♂️ <b>Жаттығу {ex_idx + 1}/{len(plan)}: {ex.get('name', 'Атаусыз')}</b>\n\n"
+        name = ex.get('name', 'Атаусыз')
+        text = f"🏋️‍♂️ <b>Жаттығу {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Тәсіл: <b>{curr_set} / {ex.get('sets', 1)}</b>\n"
         text += f"🔄 Қайталау: <b>{ex.get('reps', 1)}</b>\n"
         if weight_kg > 0: text += f"⚖️ Салмақ: <b>{weight_kg} кг</b>\n"
-        btn_done = f"✅ Орындалды (демалыс {ex.get('rest_sec', 60)}с)"
+        btn_done = f"✅ Орындалды ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Өткізіп жіберу"
         btn_stop = "🛑 Аяқтау"
-    else: # За замовчуванням "ua"
-        text = f"🏋️‍♂️ <b>Вправа {ex_idx + 1}/{len(plan)}: {ex.get('name', 'Без назви')}</b>\n\n"
+        btn_edit = "✏️ Салмақ/қайталауды өзгерту"
+    else: # "ua"
+        name = ex.get('name', 'Без назви')
+        text = f"🏋️‍♂️ <b>Вправа {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Підхід: <b>{curr_set} з {ex.get('sets', 1)}</b>\n"
         text += f"🔄 Повторення: <b>{ex.get('reps', 1)}</b>\n"
         if weight_kg > 0: text += f"⚖️ Вага снаряда: <b>{weight_kg} кг</b>\n"
-        btn_done = f"✅ Виконано (відпочинок {ex.get('rest_sec', 60)}с)"
+        btn_done = f"✅ Виконано ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Пропустити"
         btn_stop = "🛑 Завершити"
-    # ===============================
-    
+        btn_edit = "✏️ Змінити вагу/повтори"
+
     builder = InlineKeyboardBuilder()
     builder.row(types.InlineKeyboardButton(text=btn_done, callback_data="wo_set_done"))
+    builder.row(types.InlineKeyboardButton(text=btn_edit, callback_data="wo_edit_stats"))
+
     builder.row(
         types.InlineKeyboardButton(text=btn_skip, callback_data="wo_skip_ex"),
         types.InlineKeyboardButton(text=btn_stop, callback_data="wo_stop")
     )
 
+    # 2. ШВИДКА ПЕРЕВІРКА В БАЗІ / КЕШІ (без завантаження з диска!)
+    gif_id = None
+    if curr_set == 1 and sys_id:
+        if sys_id in EXERCISE_GIFS:
+            gif_id = EXERCISE_GIFS[sys_id]
+        else:
+             # ТІЛЬКИ швидкий запит до БД, без завантаження файлу
+            try:
+                response = supabase.table("exercise_media").select("file_id").eq("sys_id", sys_id).execute()
+                if response.data:
+                    gif_id = response.data[0]['file_id']
+                    EXERCISE_GIFS[sys_id] = gif_id
+            except Exception:
+                pass
+
+    # 3. МИТТЄВА ВІДПРАВКА ПОВІДОМЛЕННЯ
     try:
-        if curr_set == 1 and ex.get('name') in EXERCISE_GIFS:
+        if curr_set == 1 and gif_id:
+             # Якщо гіфка вже є (кеш або БД) - шлемо миттєво з анімацією
             try: await message.delete()
             except: pass
-            await bot.send_animation(chat_id=user_id, animation=EXERCISE_GIFS[ex['name']], caption=text, reply_markup=builder.as_markup(), parse_mode="HTML")
+            sent_msg = await bot.send_animation(chat_id=user_id, animation=gif_id, caption=text, reply_markup=builder.as_markup(), parse_mode="HTML")
         else:
-            await message.edit_text(text, reply_markup=builder.as_markup(), parse_mode="HTML")
+             # Якщо гіфки ще немає (або це 2+ сет) - МИТТЄВО оновлюємо текст!
+            sent_msg = await message.edit_text(text, reply_markup=builder.as_markup(), parse_mode="HTML")
+            
+            # А ТЕПЕР ЗАПУСКАЄМО ЗАВАНТАЖЕННЯ ГІФКИ У ФОНІ!
+            if curr_set == 1 and sys_id and not gif_id:
+                asyncio.create_task(background_gif_uploader(sent_msg, sys_id, text, builder, user_id))
+            
     except Exception:
-        await bot.send_message(user_id, text, reply_markup=builder.as_markup(), parse_mode="HTML")
+        try: await message.delete()
+        except: pass
+        sent_msg = await bot.send_message(user_id, text, reply_markup=builder.as_markup(), parse_mode="HTML")
+        
+        # Запуск фонового завантаження і тут (якщо повідомлення було видалене)
+        if curr_set == 1 and sys_id and not gif_id:
+            asyncio.create_task(background_gif_uploader(sent_msg, sys_id, text, builder, user_id))
 
 
 @dp.callback_query(F.data == "wo_set_done", WorkoutFSM.active_exercise)
 async def workout_set_done(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer() # 🛑 Миттєво зупиняємо "завантаження" кнопки, щоб уникнути подвійного кліку
+    
+    # 🛑 Одразу блокуємо повторні кліки, змінюючи стан!
+    await state.set_state(WorkoutFSM.resting)
+    
     data = await state.get_data()
     plan = data.get("workout_plan", [])
     ex_idx = data.get("current_ex_index", 0)
     curr_set = data.get("current_set", 1)
-
+    
     user_id = callback.from_user.id
     lang = await get_user_language(user_id)
 
     if ex_idx >= len(plan):
         await finish_workout(callback.message, state, user_id, lang)
-        await callback.answer()
         return
+
     ex = plan[ex_idx]
-
-    await state.set_state(WorkoutFSM.resting)
-
-    # Оновлюємо лічильники та текст відпочинку
+    
+    # Оновлюємо лічильники
     if curr_set >= ex.get('sets', 1):
         await state.update_data(current_ex_index=ex_idx + 1, current_set=1)
-        if lang == "ru":
-            rest_text = f"🎉 Упражнение завершено!\n\n⏱ Отдохни {ex.get('rest_sec', 60)} сек перед следующим."
-        elif lang == "en": 
-            rest_text = f"🎉 Exercise completed!\n\n⏱ Rest {ex.get('rest_sec', 60)} sec before the next one."
-        elif lang == "kk": 
-            rest_text = f"🎉 Жаттығу аяқталды!\n\n⏱ Келесі жаттығу алдында {ex.get('rest_sec', 60)} сек демалыңыз."
+        if lang == "ru": rest_text = f"🎉 Упражнение завершено!\n\n⏱ Отдохни {ex.get('rest_sec', 60)} сек перед следующим."
+        elif lang == "en": rest_text = f"🎉 Exercise completed!\n\n⏱ Rest {ex.get('rest_sec', 60)} sec before the next one."
+        elif lang == "kk": rest_text = f"🎉 Жаттығу аяқталды!\n\n⏱ Келесі жаттығу алдында {ex.get('rest_sec', 60)} сек демалыңыз."
         else: rest_text = f"🎉 Вправу завершено!\n\n⏱ Відпочинь {ex.get('rest_sec', 60)} сек перед наступною."
     else:
         await state.update_data(current_set=curr_set + 1)
-        if lang == "ru": 
-            rest_text = f"Отличная работа! 👏\n\n⏱ Отдых {ex.get('rest_sec', 60)} секунд."
-        elif lang == "en": 
-            rest_text = f"Great job! 👏\n\n⏱ Rest {ex.get('rest_sec', 60)} seconds."
-        elif lang == "kk": 
-            rest_text = f"Керемет жұмыс! 👏\n\n⏱ Демалыс {ex.get('rest_sec', 60)} секунд."
+        if lang == "ru": rest_text = f"Отличная работа! 👏\n\n⏱ Отдых {ex.get('rest_sec', 60)} секунд."
+        elif lang == "en": rest_text = f"Great job! 👏\n\n⏱ Rest {ex.get('rest_sec', 60)} seconds."
+        elif lang == "kk": rest_text = f"Керемет жұмыс! 👏\n\n⏱ Демалыс {ex.get('rest_sec', 60)} секунд."
         else: rest_text = f"Чудова робота! 👏\n\n⏱ Відпочинок {ex.get('rest_sec', 60)} секунд."
 
-    # Кнопка пропуску відпочинку
-    if lang == "ru": btn_skip_rest = "⏭ Пропустить отдых"
-    elif lang == "en": btn_skip_rest = "⏭ Skip rest"
-    elif lang == "kk": btn_skip_rest = "⏭ Демалысты өткізіп жіберу"
-    else: btn_skip_rest = "⏭ Пропустити відпочинок"
+    if lang == "ru": btn_skip = "⏭ Пропустить отдых"
+    elif lang == "en": btn_skip = "⏭ Skip rest"
+    elif lang == "kk": btn_skip = "⏭ Демалысты өткізіп жіберу"
+    else: btn_skip = "⏭ Пропустити відпочинок"
 
     builder = InlineKeyboardBuilder()
-    builder.row(types.InlineKeyboardButton(text=btn_skip_rest, callback_data="wo_skip_rest"))
+    builder.row(types.InlineKeyboardButton(text=btn_skip, callback_data="wo_skip_rest"))
     
+    # 🛑 ВИПРАВЛЕННЯ ДУБЛЮВАННЯ: Намагаємося змінити поточне повідомлення замість видалення
     try:
-        await callback.message.delete()
-    except: pass
+        sent_msg = await callback.message.edit_text(rest_text, reply_markup=builder.as_markup(), parse_mode="HTML")
+    except Exception:
+        # Якщо це була GIF-ка, edit_text видасть помилку. Тоді жорстко видаляємо і надсилаємо текст.
+        try: await callback.message.delete()
+        except: pass
+        sent_msg = await callback.message.answer(rest_text, reply_markup=builder.as_markup(), parse_mode="HTML")
     
-    await callback.message.answer(rest_text, reply_markup=builder.as_markup())
-    await callback.answer()
+    rest_sec = ex.get('rest_sec', 60)
+    asyncio.create_task(run_rest_timer(sent_msg, state, user_id, lang, rest_sec, builder, rest_text))
 
 
 @dp.callback_query(F.data == "wo_skip_rest", WorkoutFSM.resting)
@@ -1502,7 +2171,6 @@ async def finish_workout(message: types.Message, state: FSMContext, user_id: int
     
     completed_plan = plan[:ex_idx] if forced else plan
     
-    # ФУНКЦИЯ СПАСЕНИЯ ОТ КРАШЕЙ (Парсит числа из строк)
     def safe_int(val):
         if isinstance(val, int) or isinstance(val, float): return int(val)
         nums = re.findall(r'\d+', str(val))
@@ -1513,7 +2181,6 @@ async def finish_workout(message: types.Message, state: FSMContext, user_id: int
         sets = safe_int(ex.get('sets', 0))
         reps = safe_int(ex.get('reps', 0))
         weight = safe_int(ex.get('weight_kg', 0))
-        
         cals = sets * reps * 0.5 
         total_cals += cals
         
@@ -1533,20 +2200,66 @@ async def finish_workout(message: types.Message, state: FSMContext, user_id: int
         current_xp = res.data[0].get("xp", 0)
         supabase.table("users").update({"xp": current_xp + 100}).eq("user_id", user_id).execute()
 
+    # === ФОРМИРУЕМ ТЕКСТ И КНОПКИ ===
     if lang == "ru":
         text = f"🎉 <b>Тренировка завершена!</b>\nСожжено: ~{int(total_cals)} ккал." if not forced else f"🛑 <b>Тренировка прервана</b>\nСохранено ~{int(total_cals)} ккал."
+        btn_save = "💾 Сохранить программу"
+        btn_close = "🏠 Закрыть"
     elif lang == "en":
         text = f"🎉 <b>Workout completed!</b>\nBurned: ~{int(total_cals)} kcal." if not forced else f"🛑 <b>Workout aborted</b>\nSaved ~{int(total_cals)} kcal."
+        btn_save = "💾 Save program"
+        btn_close = "🏠 Close"
     elif lang == "kk":
         text = f"🎉 <b>Жаттығу аяқталды!</b>\nЖағылды: ~{int(total_cals)} ккал." if not forced else f"🛑 <b>Жаттығу тоқтатылды</b>\nСақталды ~{int(total_cals)} ккал."
+        btn_save = "💾 Бағдарламаны сақтау"
+        btn_close = "🏠 Жабу"
     else:
         text = f"🎉 <b>Тренування завершено!</b>\nСпалено: ~{int(total_cals)} ккал." if not forced else f"🛑 <b>Тренування перервано</b>\nЗбережено ~{int(total_cals)} ккал."
+        btn_save = "💾 Зберегти програму"
+        btn_close = "🏠 Закрити"
         
+    builder = InlineKeyboardBuilder()
+    
+    # Предлагаем сохранить только если юзер не нажал "Завершить" принудительно
+    if not forced:
+        builder.row(types.InlineKeyboardButton(text=btn_save, callback_data="wo_ask_save_name"))
+        
+    builder.row(types.InlineKeyboardButton(text=btn_close, callback_data="wo_close_clear"))
+
     try: await message.delete()
     except: pass
     
-    await bot.send_message(user_id, text, parse_mode="HTML")
+    await bot.send_message(user_id, text, reply_markup=builder.as_markup(), parse_mode="HTML")
+    
+    # Если тренировка прервана жестко, чистим память сразу, иначе оставляем висеть для сохранения
+    if forced:
+        await state.clear()
+
+
+# 1. Если юзер нажал "Закрыть" - просто чистим память
+@dp.callback_query(F.data == "wo_close_clear")
+async def workout_close_clear(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
+    try: await callback.message.delete()
+    except: pass
+    await callback.answer()
+
+# 2. Если юзер нажал "Сохранить" - просим ввести имя
+@dp.callback_query(F.data == "wo_ask_save_name")
+async def workout_ask_save_name(callback: types.CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    lang = await get_user_language(user_id)
+    
+    if lang == "ru": msg = "📝 Введите название для этой тренировки\n(например: <i>Грудь и спина от ИИ</i>):"
+    elif lang == "en": msg = "📝 Enter a name for this workout\n(e.g., <i>AI Chest & Back</i>):"
+    elif lang == "kk": msg = "📝 Бұл жаттығуға атау енгізіңіз\n(мысалы: <i>ЖИ кеуде және арқа</i>):"
+    else: msg = "📝 Введіть назву для цього тренування\n(наприклад: <i>Груди та спина від ШІ</i>):"
+
+    await callback.message.edit_text(msg, parse_mode="HTML")
+    await state.set_state(WorkoutFSM.waiting_for_save_name)
+
+# 3. Юзер ввел имя - сохраняем JSON в базу
+
 
 
 @dp.callback_query(F.data == "workout_saved", WorkoutFSM.choosing_type)
@@ -1664,7 +2377,15 @@ async def success_payment_handler(message: types.Message):
 
 
 async def main():  
+    
     asyncio.create_task(process_ai_requests()) 
+    await dp.start_polling(bot)
+
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(daily_reminder_task, 'cron', hour=21, minute=0) # Каждый день в 21:00
+    scheduler.start()
+
+    asyncio.create_task(process_ai_requests())
     await dp.start_polling(bot)
 
 if __name__ == "__main__": asyncio.run(main())
