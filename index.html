@@ -380,19 +380,28 @@
     const steps = parseInt(stepsInput.value);
     
     if (isNaN(steps) || steps <= 0) {
-        alert(currentLang === 'en' ? "Enter valid number!" : (currentLang === 'kk' ? "Санды енгізіңіз!" : "Введіть коректне число!"));
+        alert("Введіть коректне число!");
         return;
     }
     
-    await supabaseClient.from('steps_history').insert({
+    console.log("Спроба запису кроків:", steps, "для юзера:", currentUserId);
+
+    // Додаємо запис у таблицю steps_history
+    const { data, error } = await supabaseClient.from('steps_history').insert({
         user_id: currentUserId,
         steps_count: steps
     });
     
-    stepsInput.value = '';
-    tg.HapticFeedback.notificationOccurred('success');
-    await refreshSteps(); // Оновимо відображення
-    await addXP(30); // Нарахуємо трохи XP за активність
+    if (error) {
+        console.error("Помилка Supabase:", error);
+        alert("Помилка запису в базу: " + error.message);
+    } else {
+        console.log("Успішно записано!");
+        stepsInput.value = '';
+        tg.HapticFeedback.notificationOccurred('success');
+        await refreshSteps(); // Оновимо відображення
+        await addXP(30);
+    }
 }
 
 async function refreshSteps() {
