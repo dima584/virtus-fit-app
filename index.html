@@ -824,7 +824,11 @@
                         let safeTitle = prompt.substring(0, 30) + "...";
                         try {
                             const { error: saveErr } = await supabaseClient.from('saved_programs').insert({
-                                user_id: currentUserId, title: safeTitle, duration_min: calcMins, calories_burned: calcCals, content: aiResponseText
+    user_id: currentUserId, 
+    title: safeTitle, 
+    duration: calcMins,     // <-- Исправлено
+    calories: calcCals,     // <-- Исправлено
+    content: aiResponseText
                             });
                             if (saveErr) {
                                 console.error("Save Error:", saveErr);
