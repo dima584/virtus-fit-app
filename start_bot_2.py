@@ -1582,7 +1582,7 @@ async def analyze_food_with_text(message: types.Message):
         await status_msg.edit_text(t['err_parse'])
 
 @dp.message(F.voice)
-async def handle_ai(message: types.Message):
+async def handle_voice(message: types.Message):
     user_id = message.from_user.id
     lang = await get_user_language(user_id) 
 
@@ -1592,50 +1592,48 @@ async def handle_ai(message: types.Message):
         return await message.answer(get_text(lang, "insufficient_balance"))
 
     user = res.data[0]
-    await message.answer("⏳ Думаю...")
+    status_msg = await message.answer("⏳ Распознаю голосовое...")
     
     lang_map = {
         "ru": "Russian", "ua": "Ukrainian", "uk": "Ukrainian", "en": "English", "kk": "Kazakh"
     }
     target_lang = lang_map.get(lang, "Russian")
     
-    history_list = USER_HISTORY.get(user_id, [])
-    history_text = "\n".join(history_list) if history_list else "No previous history."
-    
-    ctx = (
-        f"Answer strictly in {target_lang}. "
-        f"{get_text(lang, 'user_context')}, {user.get('age')} {get_text(lang, 'years_old')} "
-        f"{user.get('weight')} {get_text(lang, 'kg')} {user.get('goal')}\n\n"
-        f"Recent conversation history:\n{history_text}"
-    )
+    v_path = f"v_{user_id}_{int(time.time())}.ogg"
     
     try:
+        # 1. Скачиваем голосовой файл во временную папочку
         f_info = await bot.get_file(message.voice.file_id)
-        v_path = f"v_{user_id}.ogg"
         await bot.download_file(f_info.file_path, v_path)
             
-        audio_file = genai.upload_file(path=v_path, mime_type="audio/ogg")
-        
-        response = await model.generate_content_async([audio_file, ctx])
-        os.remove(v_path)
+        # 2. Читаем файл как бинарные данные и передаем модели напрямую (без genai.upload_file)
+        with open(v_path, "rb") as audio_file:
+            audio_bytes = audio_file.read()
 
-        # ВІДНІМАННЯ БАЛАНСУ (З ПЕРЕВІРКОЮ БЕЗЛІМІТУ)
+        prompt = f"Listen to this voice message and answer strictly in {target_lang} as a fitness coach."
+        
+        # Передаем байты через стандартную мультимодальную структуру Gemini
+        response = await model.generate_content_async([
+            prompt,
+            {"mime_type": "audio/ogg", "data": audio_bytes}
+        ])
+
+        # 3. Списываем баланс (если баланс не безлимитный)
         new_bal = user['balance'] if user['balance'] > 9000 else user['balance'] - 1
         supabase.table("users").update({"balance": new_bal}).eq("user_id", user_id).execute()
         
-        # === ЗАПИСЫВАЕМ ГОЛОС В ПАМЯТЬ ===
-        history_list.append(f"User: [Voice Message]")
-        history_list.append(f"AI: {response.text}")
-        USER_HISTORY[user_id] = history_list[-6:]
-        
-        await message.answer(response.text)
+        await status_msg.edit_text(response.text)
 
     except Exception as e:
-        await message.answer(f"{get_text(lang, 'ai_error')} {str(e)}")
+        print(f"Ошибка обработки голоса: {e}")
+        await status_msg.edit_text(f"{get_text(lang, 'ai_error')} Не удалось обработать аудио.")
     finally:
-        # Гарантоване видалення голосового файлу
+        # Гарантированное удаление временного файла с диска
         if os.path.exists(v_path):
-            os.remove(v_path)
+            try:
+                os.remove(v_path)
+            except:
+                pass
 
 # === ЭТАП 2: АДАПТИВНЫЙ ОПРОСНИК ДЛЯ ТРЕНИРОВКИ ===
 
@@ -2377,15 +2375,16 @@ async def success_payment_handler(message: types.Message):
 
 
 async def main():  
-    
-    asyncio.create_task(process_ai_requests()) 
-    await dp.start_polling(bot)
-
+    # 1. Запускаем планировщик уведомлений
     scheduler = AsyncIOScheduler()
     scheduler.add_job(daily_reminder_task, 'cron', hour=21, minute=0) # Каждый день в 21:00
     scheduler.start()
-
-    asyncio.create_task(process_ai_requests())
+    
+    # 2. Запускаем фоновый обработчик ИИ-запросов
+    asyncio.create_task(process_ai_requests()) 
+    
+    # 3. Запускаем бота (этот метод блокирующий, он должен быть последним)
     await dp.start_polling(bot)
 
-if __name__ == "__main__": asyncio.run(main())
+if __name__ == "__main__": 
+    asyncio.run(main())
