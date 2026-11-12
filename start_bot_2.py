@@ -1,6 +1,6 @@
 import asyncio
 import os
-import google.generativeai as genai
+from cloudflare_ai import CloudflareAI
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import FSInputFile, ContentType
@@ -493,16 +493,11 @@ EXERCISE_GIFS = {
 def get_text(lang: str, key: str) -> str:
     return TRANSLATIONS.get(lang, TRANSLATIONS["ru"]).get(key, key)
 
-# --- НАСТРОЙКИ ---
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel('models/gemini-3-flash-preview') 
+# --- AI CLIENT ---
+model = CloudflareAI()
+
 # --- ПАМЯТЬ БОТА (Храним контекст диалогов) ---
 USER_HISTORY = {}
-
-
-# --- НАСТРОЙКИ ---
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel('models/gemini-3-flash-preview')
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOKEN = os.getenv("BOT_TOKEN")
@@ -561,29 +556,54 @@ dp.callback_query.middleware(AntiFloodMiddleware(1.5))
 # --- БАЗА ДАННЫХ ---
 
 # ФУНКЦІЯ ФОНОВОГО ПРОЦЕСОРА
+async def _process_one_ai_request(req):
+    req_id = req["id"]
+    try:
+        user_prompt = req["prompt"]
+        print(f"Cloudflare AI: processing request {req_id}...")
+        full_prompt = (
+            "Ти професійний фітнес-тренер та дієтолог. "
+            "Склади детальний, структурований план. "
+            "Відповідай мовою запиту користувача. "
+            f"Запит користувача: {user_prompt}"
+        )
+        ai_response = await model.generate_content_async(full_prompt)
+        supabase.table("ai_requests").update({
+            "status": "completed",
+            "response": ai_response.text,
+        }).eq("id", req_id).execute()
+        print(f"Cloudflare AI: request {req_id} completed.")
+    except Exception as e:
+        print(f"Cloudflare AI error for request {req_id}: {type(e).__name__}: {e}")
+        try:
+            supabase.table("ai_requests").update(
+                {"status": "error"}
+            ).eq("id", req_id).execute()
+        except Exception as db_error:
+            print(f"Could not mark AI request {req_id} as error: {db_error}")
+
+
 async def process_ai_requests():
-    print("ШІ-процесор запущено...")
+    """Poll Supabase and process each fetched batch concurrently."""
+    print("Cloudflare AI queue processor started.")
     while True:
         try:
-            res = supabase.table("ai_requests").select("*").eq("status", "pending").execute()
-            for req in res.data:
-                req_id = req["id"]
-                user_prompt = req["prompt"]
-                try:
-                    print(f"Генерую план для запиту {req_id}...")
-                    full_prompt = f"Ти професійний фітнес-тренер та дієтолог. Склади детальний, структурований план. Відповідай мовою запиту користувача. Запит користувача: {user_prompt}"
-                    ai_response = await model.generate_content_async(full_prompt)
-                    reply_text = ai_response.text
-                    supabase.table("ai_requests").update({
-                        "status": "completed",
-                        "response": reply_text
-                    }).eq("id", req_id).execute()
-                    print(f"Готово для {req_id}!")
-                except Exception as e:
-                    print(f"Помилка Gemini: {e}")
-                    supabase.table("ai_requests").update({"status": "error"}).eq("id", req_id).execute()
+            res = (
+                supabase.table("ai_requests")
+                .select("*")
+                .eq("status", "pending")
+                .order("id")
+                .limit(30)
+                .execute()
+            )
+            pending = res.data or []
+            if pending:
+                await asyncio.gather(
+                    *(_process_one_ai_request(req) for req in pending),
+                    return_exceptions=True,
+                )
         except Exception as e:
-            pass
+            print(f"AI queue polling failed: {type(e).__name__}: {e}")
         await asyncio.sleep(3)
 
 async def daily_reminder_task():
@@ -1610,13 +1630,17 @@ async def handle_voice(message: types.Message):
         with open(v_path, "rb") as audio_file:
             audio_bytes = audio_file.read()
 
-        prompt = f"Listen to this voice message and answer strictly in {target_lang} as a fitness coach."
-        
-        # Передаем байты через стандартную мультимодальную структуру Gemini
-        response = await model.generate_content_async([
-            prompt,
-            {"mime_type": "audio/ogg", "data": audio_bytes}
-        ])
+        transcript = await model.transcribe_audio(audio_bytes)
+        if not transcript:
+            raise RuntimeError("Whisper returned an empty transcript.")
+
+        prompt = (
+            f"You are a fitness coach. Respond strictly in {target_lang}. "
+            "Answer the user's voice message. Preserve its intent and ask "
+            "a brief clarification if the transcription is ambiguous.\n\n"
+            f"Voice transcript: {transcript}"
+        )
+        response = await model.generate_content_async(prompt)
 
         # 3. Списываем баланс (если баланс не безлимитный)
         new_bal = user['balance'] if user['balance'] > 9000 else user['balance'] - 1
@@ -2374,17 +2398,31 @@ async def success_payment_handler(message: types.Message):
     await message.answer("🎉 Оплата пройшла успішно! Вам активовано Безліміт 👑 на місяць.")
 
 
-async def main():  
-    # 1. Запускаем планировщик уведомлений
+async def main():
+    # Fail early with a clear message when Cloudflare credentials are missing.
+    await model.start()
+
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(daily_reminder_task, 'cron', hour=21, minute=0) # Каждый день в 21:00
+    scheduler.add_job(
+        daily_reminder_task,
+        "cron",
+        hour=21,
+        minute=0,
+    )
     scheduler.start()
-    
-    # 2. Запускаем фоновый обработчик ИИ-запросов
-    asyncio.create_task(process_ai_requests()) 
-    
-    # 3. Запускаем бота (этот метод блокирующий, он должен быть последним)
-    await dp.start_polling(bot)
+
+    ai_queue_task = asyncio.create_task(process_ai_requests())
+    try:
+        await dp.start_polling(bot)
+    finally:
+        ai_queue_task.cancel()
+        try:
+            await ai_queue_task
+        except asyncio.CancelledError:
+            pass
+        scheduler.shutdown(wait=False)
+        await model.close()
+        await bot.session.close()
 
 if __name__ == "__main__": 
     asyncio.run(main())

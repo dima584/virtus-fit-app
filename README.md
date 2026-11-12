@@ -43,3 +43,16 @@
    ```bash
    git clone [https://github.com/dima584/virtus-fit-app.git](https://github.com/dima584/virtus-fit-app.git)
    cd virtus-fit-app
+
+
+## Cloudflare Workers AI setup
+
+The bot uses Cloudflare Workers AI instead of the Gemini SDK:
+- `@cf/google/gemma-4-26b-a4b-it` for text and image analysis.
+- `@cf/openai/whisper` to transcribe Telegram voice messages; the transcript is then sent to Gemma.
+
+Copy `.env.example` to `.env` locally and fill in the credentials. The Cloudflare API token needs Workers AI Read/Write permission. Never commit `.env` or expose the Cloudflare token in `index.html` or GitHub Pages.
+
+Install with `pip install -r requirements.txt`, then start the bot with `python start_bot_2.py`.
+
+Workers AI Free includes a daily 10,000 Neuron allowance. This is not unlimited and does not guarantee 100 simultaneous heavy generations. Monitor usage and configure a paid fallback before public production traffic.
