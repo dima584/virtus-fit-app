@@ -556,29 +556,54 @@ dp.callback_query.middleware(AntiFloodMiddleware(1.5))
 # --- БАЗА ДАННЫХ ---
 
 # ФУНКЦІЯ ФОНОВОГО ПРОЦЕСОРА
+async def _process_one_ai_request(req):
+    req_id = req["id"]
+    try:
+        user_prompt = req["prompt"]
+        print(f"Cloudflare AI: processing request {req_id}...")
+        full_prompt = (
+            "Ти професійний фітнес-тренер та дієтолог. "
+            "Склади детальний, структурований план. "
+            "Відповідай мовою запиту користувача. "
+            f"Запит користувача: {user_prompt}"
+        )
+        ai_response = await model.generate_content_async(full_prompt)
+        supabase.table("ai_requests").update({
+            "status": "completed",
+            "response": ai_response.text,
+        }).eq("id", req_id).execute()
+        print(f"Cloudflare AI: request {req_id} completed.")
+    except Exception as e:
+        print(f"Cloudflare AI error for request {req_id}: {type(e).__name__}: {e}")
+        try:
+            supabase.table("ai_requests").update(
+                {"status": "error"}
+            ).eq("id", req_id).execute()
+        except Exception as db_error:
+            print(f"Could not mark AI request {req_id} as error: {db_error}")
+
+
 async def process_ai_requests():
-    print("ШІ-процесор запущено...")
+    """Poll Supabase and process each fetched batch concurrently."""
+    print("Cloudflare AI queue processor started.")
     while True:
         try:
-            res = supabase.table("ai_requests").select("*").eq("status", "pending").execute()
-            for req in res.data:
-                req_id = req["id"]
-                user_prompt = req["prompt"]
-                try:
-                    print(f"Генерую план для запиту {req_id}...")
-                    full_prompt = f"Ти професійний фітнес-тренер та дієтолог. Склади детальний, структурований план. Відповідай мовою запиту користувача. Запит користувача: {user_prompt}"
-                    ai_response = await model.generate_content_async(full_prompt)
-                    reply_text = ai_response.text
-                    supabase.table("ai_requests").update({
-                        "status": "completed",
-                        "response": reply_text
-                    }).eq("id", req_id).execute()
-                    print(f"Готово для {req_id}!")
-                except Exception as e:
-                    print(f"Помилка Gemini: {e}")
-                    supabase.table("ai_requests").update({"status": "error"}).eq("id", req_id).execute()
+            res = (
+                supabase.table("ai_requests")
+                .select("*")
+                .eq("status", "pending")
+                .order("id")
+                .limit(30)
+                .execute()
+            )
+            pending = res.data or []
+            if pending:
+                await asyncio.gather(
+                    *(_process_one_ai_request(req) for req in pending),
+                    return_exceptions=True,
+                )
         except Exception as e:
-            pass
+            print(f"AI queue polling failed: {type(e).__name__}: {e}")
         await asyncio.sleep(3)
 
 async def daily_reminder_task():
