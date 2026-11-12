@@ -419,12 +419,46 @@ async function refreshSteps() {
 
         
 
+        function showStartupError(message) {
+            const status = document.getElementById('status-msg');
+            if (status) status.textContent = 'Помилка запуску Web App';
+            const existing = document.getElementById('startup-error');
+            if (existing) existing.remove();
+            const panel = document.createElement('div');
+            panel.id = 'startup-error';
+            panel.className = 'card p-4 mb-4 border border-red-500/40';
+            panel.style.color = '#fecaca';
+            panel.textContent = message;
+            document.body.prepend(panel);
+        }
+
         async function initApp() {
-            tg.ready(); tg.expand();
-            const urlParams = new URLSearchParams(window.location.search);
-            currentUserId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
-            if (!currentUserId) return;
-            try { await loadUserData(); await refreshScreen(); await checkAdmin(); await checkAchievements(); showPage('main'); } catch (err) { console.error(err); }
+            try {
+                if (!window.Telegram || !window.Telegram.WebApp) {
+                    throw new Error('Telegram WebApp SDK не завантажився. Відкрий застосунок через Telegram.');
+                }
+                tg.ready();
+                tg.expand();
+
+                const urlParams = new URLSearchParams(window.location.search);
+                currentUserId = urlParams.get('user_id') || tg.initDataUnsafe?.user?.id;
+                if (!currentUserId) {
+                    throw new Error('Не вдалося визначити Telegram user ID. Відкрий Mini App кнопкою з бота.');
+                }
+
+                currentUserId = String(currentUserId);
+                await loadUserData();
+                await refreshScreen();
+                await checkAdmin();
+                await checkAchievements();
+                showPage('main');
+            } catch (err) {
+                console.error('Virtus Fit startup failed:', err);
+                showStartupError(
+                    'Не вдалося завантажити профіль або дані. Перевір доступ Web App до Supabase (RLS/API) та Telegram user ID. Деталі: ' +
+                    (err && err.message ? err.message : String(err))
+                );
+            }
         }
 
         function renderRoadmap(currentLevel) {
@@ -442,6 +476,12 @@ async function refreshSteps() {
 
         async function loadUserData() {
             const { data, error } = await supabaseClient.from('users').select('*').eq('user_id', currentUserId).maybeSingle();
+            if (error) {
+                throw new Error('Supabase users SELECT failed: ' + error.message);
+            }
+            if (!data) {
+                throw new Error('No users row found for Telegram user ID ' + currentUserId);
+            }
             if (data) {
                 applyLanguage(data.language || tg.initDataUnsafe?.user?.language_code || 'ua');
                 let currentXp = data.xp || 0; let currentLevel = data.level || 1; let targetLevel = Math.floor(currentXp / 1000) + 1;
@@ -469,7 +509,19 @@ async function refreshSteps() {
                 }
                 if (currentLevel >= 10 && newGenerations <= 0) { newGenerations = 9999; needsUpdate = true; }
                 if (needsUpdate || targetLevel !== currentLevel) {
-                    await supabaseClient.from('users').update({ level: targetLevel, ai_generations: newGenerations, xp: currentXp, achievements: claimedAchievements }).eq('user_id', currentUserId); return loadUserData(); 
+                    const { error: updateError } = await supabaseClient
+                        .from('users')
+                        .update({
+                            level: targetLevel,
+                            ai_generations: newGenerations,
+                            xp: currentXp,
+                            achievements: claimedAchievements
+                        })
+                        .eq('user_id', currentUserId);
+                    if (updateError) {
+                        throw new Error('Supabase users UPDATE failed: ' + updateError.message);
+                    }
+                    return await loadUserData();
                 }
 
                 userData = data; renderRoadmap(data.level || 1); 
