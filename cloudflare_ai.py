@@ -82,7 +82,7 @@ class CloudflareAI:
                 connector=connector,
                 headers={
                     "Authorization": f"Bearer {self.api_token}",
-                    "Content-Type": "application/json",
+                    "Accept": "application/json",
                 },
             )
             logger.info(
@@ -246,26 +246,55 @@ class CloudflareAI:
 
         generation_config = generation_config or {}
         if generation_config.get("response_mime_type") == "application/json":
-            payload["response_format"] = {"type": "json_object"}
+        if generation_config.get("response_mime_type") == "application/json":
+            instruction = (
+                "Return ONLY valid JSON. Do not add markdown fences or explanations."
+            )
+            if isinstance(message_content, str):
+                payload["messages"][0]["content"] += "\n\n" + instruction
+            else:
+                payload["messages"].append({"role": "user", "content": instruction})
 
-        data = await self._post_json("v1/chat/completions", payload)
-        choices = data.get("choices") or []
-        if not choices:
+        data = await self._post_json(f"run/{self.model_id}", {
+            "messages": payload["messages"],
+            "temperature": payload["temperature"],
+            "max_tokens": 4096,
+        })
+        content = data.get("response") or data.get("text")
+        if not content:
             raise CloudflareAIError(
                 "Gemma returned an empty response: " + str(data)[:1000]
             )
-
-        message = choices[0].get("message") or {}
-        content = message.get("content", "")
         if isinstance(content, list):
-            text_parts = [
+            content = "\n".join(
                 str(part.get("text", ""))
-                for part in content
-                if isinstance(part, dict) and part.get("type") == "text"
-            ]
-            content = "\n".join(text_parts)
+                for part in content if isinstance(part, dict)
+            )
         if not isinstance(content, str) or not content.strip():
             raise CloudflareAIError("Gemma returned an empty text response.")
+
+        if generation_config.get("response_mime_type") == "application/json":
+            content = content.strip()
+            if content.startswith("```"):
+                content = content.split("\n", 1)[-1]
+                if content.endswith("```"):
+                    content = content[:-3].strip()
+            try:
+                import json
+                json.loads(content)
+            except ValueError:
+                start = min(
+                    [p for p in (content.find("{"), content.find("[")) if p >= 0],
+                    default=-1,
+                )
+                end = max(content.rfind("}"), content.rfind("]"))
+                if start >= 0 and end > start:
+                    candidate = content[start:end + 1]
+                    try:
+                        json.loads(candidate)
+                        content = candidate
+                    except ValueError:
+                        pass
 
         return AIResponse(text=content.strip())
 
@@ -276,11 +305,28 @@ class CloudflareAI:
         if len(audio_bytes) > 20 * 1024 * 1024:
             raise CloudflareAIError("The voice message is larger than 20 MB.")
 
-        audio_base64 = base64.b64encode(audio_bytes).decode("ascii")
-        data = await self._post_json(
-            f"run/{self.whisper_model_id}",
-            {"audio": audio_base64},
-        )
+        if self._session is None or self._session.closed:
+            await self.start()
+
+        assert self._session is not None
+        url = f"{self._api_base}/run/{self.whisper_model_id}"
+        async with self._semaphore:
+            async with self._session.post(
+                url,
+                data=audio_bytes,
+                headers={"Content-Type": "application/octet-stream"},
+            ) as response:
+                try:
+                    body = await response.json(content_type=None)
+                except (aiohttp.ContentTypeError, ValueError):
+                    body = {"raw": (await response.text())[:1000]}
+                if response.status >= 400:
+                    raise CloudflareAIError(
+                        f"Whisper HTTP {response.status}: {self._error_detail(body)}"
+                    )
+                if isinstance(body, dict) and body.get("success") is False:
+                    raise CloudflareAIError(self._error_detail(body))
+                data = body.get("result", body) if isinstance(body, dict) else {}
         transcript = data.get("text", "")
         if not isinstance(transcript, str) or not transcript.strip():
             raise CloudflareAIError("Whisper could not recognize speech.")
