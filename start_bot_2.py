@@ -1,6 +1,6 @@
 import asyncio
 import os
-import google.generativeai as genai
+from cloudflare_ai import CloudflareAI
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import FSInputFile, ContentType
@@ -493,16 +493,11 @@ EXERCISE_GIFS = {
 def get_text(lang: str, key: str) -> str:
     return TRANSLATIONS.get(lang, TRANSLATIONS["ru"]).get(key, key)
 
-# --- НАСТРОЙКИ ---
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel('models/gemini-3-flash-preview') 
+# --- AI CLIENT ---
+model = CloudflareAI()
+
 # --- ПАМЯТЬ БОТА (Храним контекст диалогов) ---
 USER_HISTORY = {}
-
-
-# --- НАСТРОЙКИ ---
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel('models/gemini-3-flash-preview')
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOKEN = os.getenv("BOT_TOKEN")
