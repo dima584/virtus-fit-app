@@ -1630,13 +1630,17 @@ async def handle_voice(message: types.Message):
         with open(v_path, "rb") as audio_file:
             audio_bytes = audio_file.read()
 
-        prompt = f"Listen to this voice message and answer strictly in {target_lang} as a fitness coach."
-        
-        # Передаем байты через стандартную мультимодальную структуру Gemini
-        response = await model.generate_content_async([
-            prompt,
-            {"mime_type": "audio/ogg", "data": audio_bytes}
-        ])
+        transcript = await model.transcribe_audio(audio_bytes)
+        if not transcript:
+            raise RuntimeError("Whisper returned an empty transcript.")
+
+        prompt = (
+            f"You are a fitness coach. Respond strictly in {target_lang}. "
+            "Answer the user's voice message. Preserve its intent and ask "
+            "a brief clarification if the transcription is ambiguous.\n\n"
+            f"Voice transcript: {transcript}"
+        )
+        response = await model.generate_content_async(prompt)
 
         # 3. Списываем баланс (если баланс не безлимитный)
         new_bal = user['balance'] if user['balance'] > 9000 else user['balance'] - 1
