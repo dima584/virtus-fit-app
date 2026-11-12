@@ -246,7 +246,6 @@ class CloudflareAI:
 
         generation_config = generation_config or {}
         if generation_config.get("response_mime_type") == "application/json":
-        if generation_config.get("response_mime_type") == "application/json":
             instruction = (
                 "Return ONLY valid JSON. Do not add markdown fences or explanations."
             )
