@@ -2398,17 +2398,31 @@ async def success_payment_handler(message: types.Message):
     await message.answer("🎉 Оплата пройшла успішно! Вам активовано Безліміт 👑 на місяць.")
 
 
-async def main():  
-    # 1. Запускаем планировщик уведомлений
+async def main():
+    # Fail early with a clear message when Cloudflare credentials are missing.
+    await model.start()
+
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(daily_reminder_task, 'cron', hour=21, minute=0) # Каждый день в 21:00
+    scheduler.add_job(
+        daily_reminder_task,
+        "cron",
+        hour=21,
+        minute=0,
+    )
     scheduler.start()
-    
-    # 2. Запускаем фоновый обработчик ИИ-запросов
-    asyncio.create_task(process_ai_requests()) 
-    
-    # 3. Запускаем бота (этот метод блокирующий, он должен быть последним)
-    await dp.start_polling(bot)
+
+    ai_queue_task = asyncio.create_task(process_ai_requests())
+    try:
+        await dp.start_polling(bot)
+    finally:
+        ai_queue_task.cancel()
+        try:
+            await ai_queue_task
+        except asyncio.CancelledError:
+            pass
+        scheduler.shutdown(wait=False)
+        await model.close()
+        await bot.session.close()
 
 if __name__ == "__main__": 
     asyncio.run(main())
