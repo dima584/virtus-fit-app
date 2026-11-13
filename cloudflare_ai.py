@@ -259,18 +259,29 @@ class CloudflareAI:
             "temperature": payload["temperature"],
             "max_tokens": 4096,
         })
+
+        # Workers AI may return either its native {response: "..."} envelope
+        # or an OpenAI-compatible chat.completion envelope with choices[0].
         content = data.get("response") or data.get("text")
         if not content:
-            raise CloudflareAIError(
-                "Gemma returned an empty response: " + str(data)[:1000]
-            )
+            choices = data.get("choices") or []
+            if choices:
+                first_choice = choices[0] or {}
+                message = first_choice.get("message") or {}
+                content = message.get("content")
+
         if isinstance(content, list):
             content = "\n".join(
                 str(part.get("text", ""))
-                for part in content if isinstance(part, dict)
+                for part in content
+                if isinstance(part, dict) and part.get("type", "text") == "text"
             )
+
         if not isinstance(content, str) or not content.strip():
-            raise CloudflareAIError("Gemma returned an empty text response.")
+            raise CloudflareAIError(
+                "Gemma returned an empty or unsupported response envelope: "
+                + str(data)[:1500]
+            )
 
         if generation_config.get("response_mime_type") == "application/json":
             content = content.strip()
