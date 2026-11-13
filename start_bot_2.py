@@ -1324,7 +1324,7 @@ async def handle_text(message: types.Message, state: FSMContext):
             await message.answer(ans)
         return 
 
-    elif text == get_text(lang, "balance"):
+    elif text.strip().lower().split("@", 1)[0] in {"/balance", "/bal"} or text == get_text(lang, "balance"):
         res = supabase.table("users").select("balance").eq("user_id", user_id).single().execute()
         balance = res.data.get("balance", 0) if res.data else 0
         await message.answer(f"{get_text(lang, 'your_balance')}{balance}")
