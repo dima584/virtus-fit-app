@@ -34,7 +34,7 @@ import re
 def get_available_exercises_menu():
     """Сканує папку і повертає список доступних sys_id"""
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    videos_dir = os.path.join(base_dir, "selected_videos")
+    videos_dir = os.path.join(base_dir, "renamed_videos")
     
     available_exercises = []
     
@@ -1876,6 +1876,18 @@ async def run_rest_timer(message: types.Message, state: FSMContext, user_id: int
 # === ЕТАП 3: ЯДРО ТРЕНУВАННЯ (FSM) ===
 
 MEDIA_STORAGE_CHANNEL = -1003875495804
+# Load Telegram GIF file IDs from the local JSON mapping.
+_GIF_MAP_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ready_gifs_dict.json")
+with open(_GIF_MAP_PATH, "r", encoding="utf-8") as _gif_map_file:
+    _READY_GIF_IDS = json.load(_gif_map_file)
+if not isinstance(_READY_GIF_IDS, dict):
+    raise TypeError("ready_gifs_dict.json must contain a JSON object")
+if any(not isinstance(k, str) or not isinstance(v, str) or not v.strip() or v == 'YOUR_FILE_ID_HERE' for k, v in _READY_GIF_IDS.items()):
+    raise ValueError("Invalid Telegram GIF mapping entry")
+EXERCISE_GIFS = {k: v for k, v in EXERCISE_GIFS.items() if isinstance(v, str) and v and v != 'YOUR_FILE_ID_HERE'}
+EXERCISE_GIFS.update(_READY_GIF_IDS)
+print(f"[GIF] Loaded {len(_READY_GIF_IDS)} Telegram GIF IDs")
+
 async def get_exercise_gif(sys_id: str):
     """
     Шукає гіфку: пам'ять -> Supabase -> Диск.
@@ -1901,7 +1913,7 @@ async def get_exercise_gif(sys_id: str):
     # 3. Якщо в базі немає — шукаємо фізичний файл у папці
     # Перевіряємо обидва розширення
     for ext in ['.gif', '.mp4']:
-        file_path = f"./renamed_videos/{sys_id}{ext}"
+        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "renamed_videos", f"{sys_id}{ext}")
         if os.path.exists(file_path):
             try:
                 # Відправляємо файл у сховище

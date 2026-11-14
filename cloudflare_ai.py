@@ -254,11 +254,33 @@ class CloudflareAI:
             else:
                 payload["messages"].append({"role": "user", "content": instruction})
 
-        data = await self._post_json(f"run/{self.model_id}", {
+        is_json = generation_config.get("response_mime_type") == "application/json"
+
+        max_tokens = int(
+            generation_config.get(
+                "max_output_tokens",
+                1800 if is_json else 4096
+            )
+        )
+
+        if not 1 <= max_tokens <= 8192:
+            raise CloudflareAIError("Invalid max_output_tokens")
+
+        request_payload = {
             "messages": payload["messages"],
             "temperature": payload["temperature"],
-            "max_tokens": 4096,
-        })
+            "max_tokens": max_tokens,
+            "chat_template_kwargs": {
+                "enable_thinking": bool(
+                    generation_config.get("enable_thinking", False)
+                )
+            }
+        }
+
+        data = await self._post_json(
+            f"run/{self.model_id}",
+            request_payload
+        )
 
         # Workers AI may return either its native {response: "..."} envelope
         # or an OpenAI-compatible chat.completion envelope with choices[0].
@@ -278,9 +300,16 @@ class CloudflareAI:
             )
 
         if not isinstance(content, str) or not content.strip():
+            choices = data.get("choices") or []
+            first_choice = choices[0] if choices else {}
+            message = first_choice.get("message") or {}
+
             raise CloudflareAIError(
-                "Gemma returned an empty or unsupported response envelope: "
-                + str(data)[:1500]
+                "Gemma returned empty assistant content. "
+                f"Model={data.get('model', self.model_id)}; "
+                f"finish_reason={first_choice.get('finish_reason')}; "
+                f"message_fields={sorted(message.keys())}. "
+                "Reasoning-only output is not accepted as a final answer."
             )
 
         if generation_config.get("response_mime_type") == "application/json":
