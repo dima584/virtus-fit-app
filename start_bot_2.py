@@ -70,9 +70,10 @@ except ImportError:
         CryptoInstance = getattr(aiocryptopay, 'AioCryptoPay', getattr(aiocryptopay, 'CryptoPay', None))
 
 if not CryptoInstance:
-    print("❌ Помилка: Бібліотека aiocryptopay не знайдена!")
-else:
-    crypto = CryptoInstance(token=os.getenv("CRYPTO_PAY_TOKEN"))
+    print("CryptoPay library unavailable")
+
+# Initialize inside the running asyncio event loop.
+crypto = None
 
 async def get_user_language(user_id: int) -> str:
     try:
@@ -2411,6 +2412,14 @@ async def success_payment_handler(message: types.Message):
 
 
 async def main():
+    global crypto
+
+    if CryptoInstance is None:
+        raise RuntimeError("aiocryptopay library is unavailable")
+
+    # Initialize Crypto Pay inside the running event loop.
+    crypto = CryptoInstance(token=PAYMENT_TOKEN)
+
     # Fail early with a clear message when Cloudflare credentials are missing.
     await model.start()
 
