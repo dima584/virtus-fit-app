@@ -1206,27 +1206,27 @@ async def apply_new_stats(message: types.Message, state: FSMContext):
 
 def _diet_markdown_to_plain_text(value: str) -> str:
     """Turn model-generated Markdown into Telegram-safe plain text."""
-    text = str(value or "").replace("\\r\\n", "\\n").replace("\\r", "\\n")
+    text = str(value or "").replace("\r\n", "\n").replace("\r", "\n")
 
-    text = re.sub(r"```[^\\n]*\\n?", "", text)
+    text = re.sub(r"```[^\n]*\n?", "", text)
     text = text.replace("```", "")
-    text = re.sub(r"`([^`\\n]+)`", r"\\1", text)
-    text = re.sub(r"\\[([^\\]]+)\\]\\((https?://[^)]+)\\)", r"\\1 (\\2)", text)
-    text = re.sub(r"(?m)^\\s{0,3}#{1,6}\\s*", "", text)
+    text = re.sub(r"`([^`\n]+)`", r"\1", text)
+    text = re.sub(r"\[([^\]]+)\]\((https?://[^)]+)\)", r"\1 (\2)", text)
+    text = re.sub(r"(?m)^\s{0,3}#{1,6}\s*", "", text)
     text = re.sub(
-        r"\\*\\*(.*?)\\*\\*|__(.*?)__",
+        r"\*\*(.*?)\*\*|__(.*?)__",
         lambda m: m.group(1) or m.group(2),
         text,
         flags=re.DOTALL,
     )
-    text = re.sub(r"(?<!\\*)\\*(?!\\s)(.+?)(?<!\\s)\\*(?!\\*)", r"\\1", text)
-    text = re.sub(r"(?<!_)_(?!\\s)(.+?)(?<!\\s)_(?!_)", r"\\1", text)
-    text = re.sub(r"~~(.*?)~~", r"\\1", text, flags=re.DOTALL)
-    text = re.sub(r"(?m)^\\s*[-+]\\s+", "• ", text)
+    text = re.sub(r"(?<!\*)\*(?!\s)(.+?)(?<!\s)\*(?!\*)", r"\1", text)
+    text = re.sub(r"(?<!_)_(?!\s)(.+?)(?<!\s)_(?!_)", r"\1", text)
+    text = re.sub(r"~~(.*?)~~", r"\1", text, flags=re.DOTALL)
+    text = re.sub(r"(?m)^\s*[-+]\s+", "• ", text)
 
     # Remove any unmatched Markdown delimiters left by the model.
     text = re.sub(r"[*_~`]", "", text)
-    text = re.sub(r"\\n{3,}", "\\n\\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
 
@@ -1247,7 +1247,7 @@ def _split_telegram_text(text: str, limit: int = 3500) -> list[str]:
         if end <= 0:
             raise ValueError("Unable to split Telegram message")
 
-        newline = remaining.rfind("\\n", 0, end)
+        newline = remaining.rfind("\n", 0, end)
         space = remaining.rfind(" ", 0, end)
         boundary = max(newline, space)
         if boundary > int(end * 0.6):
