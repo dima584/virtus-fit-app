@@ -1203,6 +1203,66 @@ async def apply_new_stats(message: types.Message, state: FSMContext):
     await state.set_state(WorkoutFSM.active_exercise)
     await send_current_exercise(message, state, user_id, lang)
 
+
+def _diet_markdown_to_plain_text(value: str) -> str:
+    """Turn model-generated Markdown into Telegram-safe plain text."""
+    text = str(value or "").replace("\\r\\n", "\\n").replace("\\r", "\\n")
+
+    text = re.sub(r"```[^\\n]*\\n?", "", text)
+    text = text.replace("```", "")
+    text = re.sub(r"`([^`\\n]+)`", r"\\1", text)
+    text = re.sub(r"\\[([^\\]]+)\\]\\((https?://[^)]+)\\)", r"\\1 (\\2)", text)
+    text = re.sub(r"(?m)^\\s{0,3}#{1,6}\\s*", "", text)
+    text = re.sub(
+        r"\\*\\*(.*?)\\*\\*|__(.*?)__",
+        lambda m: m.group(1) or m.group(2),
+        text,
+        flags=re.DOTALL,
+    )
+    text = re.sub(r"(?<!\\*)\\*(?!\\s)(.+?)(?<!\\s)\\*(?!\\*)", r"\\1", text)
+    text = re.sub(r"(?<!_)_(?!\\s)(.+?)(?<!\\s)_(?!_)", r"\\1", text)
+    text = re.sub(r"~~(.*?)~~", r"\\1", text, flags=re.DOTALL)
+    text = re.sub(r"(?m)^\\s*[-+]\\s+", "• ", text)
+
+    # Remove any unmatched Markdown delimiters left by the model.
+    text = re.sub(r"[*_~`]", "", text)
+    text = re.sub(r"\\n{3,}", "\\n\\n", text)
+    return text.strip()
+
+
+def _split_telegram_text(text: str, limit: int = 3500) -> list[str]:
+    """Split into Telegram-safe chunks measured in UTF-16 code units."""
+    remaining = text.strip()
+    chunks = []
+
+    while remaining:
+        if len(remaining.encode("utf-16-le")) // 2 <= limit:
+            chunks.append(remaining)
+            break
+
+        end = min(len(remaining), limit)
+        while end > 0 and len(remaining[:end].encode("utf-16-le")) // 2 > limit:
+            end -= 1
+
+        if end <= 0:
+            raise ValueError("Unable to split Telegram message")
+
+        newline = remaining.rfind("\\n", 0, end)
+        space = remaining.rfind(" ", 0, end)
+        boundary = max(newline, space)
+        if boundary > int(end * 0.6):
+            end = boundary
+
+        chunk = remaining[:end].strip()
+        if not chunk:
+            raise ValueError("Generated diet plan contains an unsplittable segment")
+
+        chunks.append(chunk)
+        remaining = remaining[end:].lstrip()
+
+    return chunks
+
+
 @dp.callback_query(F.data.startswith("diet_"), DietFSM.waiting_for_goal)
 async def diet_goal_chosen(callback: types.CallbackQuery, state: FSMContext):
     goal = callback.data.split("_")[1] # lose, gain, maintain
@@ -1286,14 +1346,23 @@ async def generate_diet_plan(callback: types.CallbackQuery, state: FSMContext):
     
     try:
         response = await model.generate_content_async(prompt)
-        
-        # Списываем баланс генераций
-        new_bal = user.get('balance', 1) - 1
-        if new_bal < 0: new_bal = 0
+
+        # Never pass model-generated Markdown directly to Telegram's entity parser.
+        diet_text = _diet_markdown_to_plain_text(response.text)
+        chunks = _split_telegram_text(diet_text)
+
+        if not chunks:
+            raise ValueError("AI returned an empty diet plan")
+
+        # Send plain text in safe-sized chunks.
+        await callback.message.edit_text(chunks[0], parse_mode=None)
+        for part in chunks[1:]:
+            await callback.message.answer(part, parse_mode=None)
+
+        # Deduct balance only after all parts were delivered.
+        current_balance = user.get("balance", 1)
+        new_bal = current_balance if current_balance > 9000 else max(0, current_balance - 1)
         supabase.table("users").update({"balance": new_bal}).eq("user_id", user_id).execute()
-        
-        # Отправляем готовый рацион
-        await callback.message.edit_text(response.text, parse_mode="Markdown")
         
     except Exception as e:
         print(f"Ошибка генерации рациона: {e}")
