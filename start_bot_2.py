@@ -732,6 +732,8 @@ def get_language_keyboard() -> types.InlineKeyboardMarkup:
 # --- ОБРАБОТЧИКИ СТАРТА И РЕГИСТРАЦИИ ---
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, command: CommandObject, state: FSMContext):
+    # Reset unfinished flows when the user returns to the main menu.
+    await state.clear()
     user_id = message.from_user.id
     args = command.args
     referrer_id = None
