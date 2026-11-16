@@ -21,10 +21,10 @@ def canonical_muscle_group(value: Any) -> str:
     raw = str(value or "").strip().casefold()
     aliases = {
         "chest": ("chest", "груд", "грудн"),
-        "back": ("back", "спин"),
-        "legs": ("legs", "leg", "ног", "квадриц", "бицепс бедра"),
-        "arms": ("arms", "arm", "рук", "бицеп", "трицеп"),
-        "shoulders": ("shoulders", "shoulder", "плеч", "дельт"),
+        "back": ("back", "спин", "lat", "широчай"),
+        "legs": ("legs", "leg", "ног", "квадриц", "бицепс бедра", "hamstring", "glute", "ягодиц"),
+        "arms": ("arms", "arm", "рук", "бицеп", "трицеп", "forearm"),
+        "shoulders": ("shoulders", "shoulder", "плеч", "дельт", "trap"),
         "core": ("core", "abs", "пресс", "кор", "живот"),
     }
     for group, fragments in aliases.items():
@@ -355,7 +355,7 @@ def finalize_workout_session(
                 muscle_group=muscles[(exercise_order, exercise_key)],
                 working_sets=working,
             )
-            if suggestion is not None:
+            if suggestion is not None and suggestion > 0:
                 suggestions[exercise_key] = suggestion
 
     db.table("workout_sessions").update({
