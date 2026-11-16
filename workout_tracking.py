@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import math
 import re
+from datetime import datetime, timezone
 from collections import defaultdict
 from statistics import median
 from typing import Any
@@ -353,7 +354,7 @@ def finalize_workout_session(
 
     db.table("workout_sessions").update({
         "status": "completed" if completed else "abandoned",
-        "finished_at": "now()",
+        "finished_at": datetime.now(timezone.utc).isoformat(),
     }).eq("id", str(session_id)).eq("user_id", int(user_id)).execute()
 
     return {
