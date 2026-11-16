@@ -57,7 +57,7 @@ ALTER TABLE public.workouts_strength
         REFERENCES public.workout_sessions(id) ON DELETE SET NULL,
     ADD COLUMN IF NOT EXISTS exercise_order integer;
 
-DO $
+DO $migration$
 BEGIN
     IF NOT EXISTS (
         SELECT 1
@@ -70,7 +70,7 @@ BEGIN
             UNIQUE (session_id, exercise_order);
     END IF;
 END
-$;
+$migration$;
 
 CREATE INDEX IF NOT EXISTS workouts_strength_user_created_idx
     ON public.workouts_strength (user_id, created_at DESC);
