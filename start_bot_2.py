@@ -2155,7 +2155,10 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         text = f"🏋️‍♂️ <b>Упражнение {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Подход: <b>{curr_set} из {ex.get('sets', 1)}</b>\n"
         text += f"🔄 Повторения: <b>{reps_value}</b>\n"
-        if weight_kg > 0: text += f"⚖️ Вес снаряда: <b>{weight_kg} кг</b>\n"        else: text += "⚖️ Укажи фактический вес через «Изменить вес/повторы».\n"
+        if weight_kg > 0:
+            text += f"⚖️ Вес снаряда: <b>{weight_kg} кг</b>\n"
+        else:
+            text += "⚖️ Укажи фактический вес через «Изменить вес/повторы».\n"
         btn_done = f"✅ Выполнено ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Пропустить"
         btn_stop = "🛑 Завершить"
@@ -2165,7 +2168,10 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         text = f"🏋️‍♂️ <b>Exercise {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Set: <b>{curr_set} of {ex.get('sets', 1)}</b>\n"
         text += f"🔄 Reps: <b>{reps_value}</b>\n"
-        if weight_kg > 0: text += f"⚖️ Weight: <b>{weight_kg} kg</b>\n"        else: text += "⚖️ Enter the actual load using Edit weight/reps.\n"
+        if weight_kg > 0:
+            text += f"⚖️ Weight: <b>{weight_kg} kg</b>\n"
+        else:
+            text += "⚖️ Enter the actual load using Edit weight/reps.\n"
         btn_done = f"✅ Done ({ex.get('rest_sec', 60)}s)"
         btn_skip = "⏭ Skip"
         btn_stop = "🛑 Stop"
@@ -2175,7 +2181,10 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         text = f"🏋️‍♂️ <b>Жаттығу {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Тәсіл: <b>{curr_set} / {ex.get('sets', 1)}</b>\n"
         text += f"🔄 Қайталау: <b>{reps_value}</b>\n"
-        if weight_kg > 0: text += f"⚖️ Салмақ: <b>{weight_kg} кг</b>\n"        else: text += "⚖️ Нақты салмақты Салмақ/қайталауды өзгерту арқылы енгізіңіз.\n"
+        if weight_kg > 0:
+            text += f"⚖️ Салмақ: <b>{weight_kg} кг</b>\n"
+        else:
+            text += "⚖️ Нақты салмақты Салмақ/қайталауды өзгерту арқылы енгізіңіз.\n"
         btn_done = f"✅ Орындалды ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Өткізіп жіберу"
         btn_stop = "🛑 Аяқтау"
@@ -2185,7 +2194,10 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         text = f"🏋️‍♂️ <b>Вправа {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Підхід: <b>{curr_set} з {ex.get('sets', 1)}</b>\n"
         text += f"🔄 Повторення: <b>{reps_value}</b>\n"
-        if weight_kg > 0: text += f"⚖️ Вага снаряда: <b>{weight_kg} кг</b>\n"        else: text += "⚖️ Вкажи фактичну вагу через «Змінити вагу/повтори».\n"
+        if weight_kg > 0:
+            text += f"⚖️ Вага снаряда: <b>{weight_kg} кг</b>\n"
+        else:
+            text += "⚖️ Вкажи фактичну вагу через «Змінити вагу/повтори».\n"
         btn_done = f"✅ Виконано ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Пропустити"
         btn_stop = "🛑 Завершити"
