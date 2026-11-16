@@ -1944,6 +1944,7 @@ async def generate_fast_workout(callback: types.CallbackQuery, state: FSMContext
             current_set=1,
             workout_session_id=session_id,
             current_set_overrides={},
+            exercise_set_weights={},
             progression_checked=[],
         )
         await state.set_state(WorkoutFSM.active_exercise)
@@ -2584,6 +2585,7 @@ async def start_saved_program(callback: types.CallbackQuery, state: FSMContext):
             current_set=1,
             workout_session_id=session_id,
             current_set_overrides={},
+            exercise_set_weights={},
             progression_checked=[],
         )
         await state.set_state(WorkoutFSM.active_exercise)
