@@ -215,6 +215,10 @@ def _update_exercise_progression(
         .execute()
     )
     existing = existing_result.data[0] if existing_result.data else {}
+    # A retry after a partial finalization must not apply the same workout twice.
+    if existing.get("last_session_id") == str(session_id):
+        current_suggestion = existing.get("next_suggested_weight")
+        return None if current_suggestion is None else _as_float(current_suggestion)
     decision = calculate_progression(
         working_sets=working_sets,
         previous_streak=_as_int(existing.get("failed_sessions_streak")),
@@ -329,15 +333,17 @@ def finalize_workout_session(
         )
 
         # Keep the legacy aggregate for existing Dashboard queries.
-        db.table("workouts_strength").insert({
+        db.table("workouts_strength").upsert({
             "user_id": int(user_id),
+            "session_id": str(session_id),
+            "exercise_order": int(exercise_order),
             "exercise_name": names[(exercise_order, exercise_key)],
             "sets": len(exercise_rows),
             "reps": int(round(reps_sum / max(1, len(exercise_rows)))),
             "weight_kg": round(average_weight, 2),
             "muscle_group": muscles[(exercise_order, exercise_key)],
             "calories_burned": int(round(sum(_as_int(r.get("reps")) for r in exercise_rows) * 0.5)),
-        }).execute()
+        }, on_conflict="session_id,exercise_order").execute()
 
         if completed and working:
             suggestion = _update_exercise_progression(
