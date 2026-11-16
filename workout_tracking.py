@@ -250,10 +250,8 @@ def _update_exercise_progression(
         "increment_kg": _as_float(existing.get("increment_kg"), 2.5) or 2.5,
         "next_suggested_weight": decision["next_weight"],
         "failed_sessions_streak": decision["failed_streak"],
-        "updated_at": "now()",
+        "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    # Omit updated_at: PostgREST expects a timestamp value, and the DB can default it.
-    payload.pop("updated_at")
     db.table("exercise_progression").upsert(
         payload, on_conflict="user_id,exercise_key"
     ).execute()
