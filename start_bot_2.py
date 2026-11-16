@@ -2159,7 +2159,7 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         if weight_kg > 0:
             text += f"⚖️ Вес снаряда: <b>{weight_kg} кг</b>\n"
         else:
-            text += "⚖️ Укажи фактический вес через «Изменить вес/повторы».\n"
+            text += "⚖️ Если используешь внешний вес, укажи его через «Изменить вес/повторы».\n"
         btn_done = f"✅ Выполнено ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Пропустить"
         btn_stop = "🛑 Завершить"
@@ -2172,7 +2172,7 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         if weight_kg > 0:
             text += f"⚖️ Weight: <b>{weight_kg} kg</b>\n"
         else:
-            text += "⚖️ Enter the actual load using Edit weight/reps.\n"
+            text += "⚖️ If you use external load, enter it with Edit weight/reps.\n"
         btn_done = f"✅ Done ({ex.get('rest_sec', 60)}s)"
         btn_skip = "⏭ Skip"
         btn_stop = "🛑 Stop"
@@ -2185,7 +2185,7 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         if weight_kg > 0:
             text += f"⚖️ Салмақ: <b>{weight_kg} кг</b>\n"
         else:
-            text += "⚖️ Нақты салмақты Салмақ/қайталауды өзгерту арқылы енгізіңіз.\n"
+            text += "⚖️ Сыртқы салмақ қолдансаңыз, оны Салмақ/қайталауды өзгерту арқылы енгізіңіз.\n"
         btn_done = f"✅ Орындалды ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Өткізіп жіберу"
         btn_stop = "🛑 Аяқтау"
@@ -2198,7 +2198,7 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         if weight_kg > 0:
             text += f"⚖️ Вага снаряда: <b>{weight_kg} кг</b>\n"
         else:
-            text += "⚖️ Вкажи фактичну вагу через «Змінити вагу/повтори».\n"
+            text += "⚖️ Якщо використовуєш зовнішню вагу, вкажи її через «Змінити вагу/повтори».\n"
         btn_done = f"✅ Виконано ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Пропустити"
         btn_stop = "🛑 Завершити"
@@ -2280,7 +2280,9 @@ async def workout_set_done(callback: types.CallbackQuery, state: FSMContext):
     overrides = data.get("current_set_overrides", {})
     set_override = overrides.get(f"{ex_idx}:{curr_set}", {})
     reps_raw = set_override.get("reps", ex.get("reps", 1))
-    weight_raw = set_override.get("weight_kg", ex.get("weight_kg", 0))
+    exercise_weights = data.get("exercise_set_weights", {})
+    default_weight = exercise_weights.get(str(ex_idx), ex.get("weight_kg", 0))
+    weight_raw = set_override.get("weight_kg", default_weight)
 
     try:
         reps_match = re.search(r"\d+", str(reps_raw))
