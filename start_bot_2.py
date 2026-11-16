@@ -1205,7 +1205,10 @@ async def apply_new_stats(message: types.Message, state: FSMContext):
     ex = plan[ex_idx]
     overrides = data.get("current_set_overrides", {})
     previous_override = overrides.get(f"{ex_idx}:{curr_set}", {})
-    current_weight = previous_override.get("weight_kg", ex.get("weight_kg", 0))
+    exercise_weights = data.get("exercise_set_weights", {})
+    current_weight = previous_override.get(
+        "weight_kg", exercise_weights.get(str(ex_idx), ex.get("weight_kg", 0))
+    )
 
     try:
         new_weight = (
@@ -2133,8 +2136,10 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
 
     overrides = data.get("current_set_overrides", {})
     set_override = overrides.get(f"{ex_idx}:{curr_set}", {})
+    exercise_weights = data.get("exercise_set_weights", {})
+    default_weight = exercise_weights.get(str(ex_idx), ex.get("weight_kg", 0))
     reps_value = set_override.get("reps", ex.get("reps", 1))
-    weight_kg = set_override.get("weight_kg", ex.get("weight_kg", 0))
+    weight_kg = set_override.get("weight_kg", default_weight)
 
     # === МАГИЯ СОВПАДЕНИЙ ===
     # Если ИИ прислал кривой sys_id или вообще его забыл, берем name!
@@ -2150,7 +2155,7 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         text = f"🏋️‍♂️ <b>Упражнение {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Подход: <b>{curr_set} из {ex.get('sets', 1)}</b>\n"
         text += f"🔄 Повторения: <b>{reps_value}</b>\n"
-        if weight_kg > 0: text += f"⚖️ Вес снаряда: <b>{weight_kg} кг</b>\n"
+        if weight_kg > 0: text += f"⚖️ Вес снаряда: <b>{weight_kg} кг</b>\n"        else: text += "⚖️ Укажи фактический вес через «Изменить вес/повторы».\n"
         btn_done = f"✅ Выполнено ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Пропустить"
         btn_stop = "🛑 Завершить"
@@ -2160,7 +2165,7 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         text = f"🏋️‍♂️ <b>Exercise {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Set: <b>{curr_set} of {ex.get('sets', 1)}</b>\n"
         text += f"🔄 Reps: <b>{reps_value}</b>\n"
-        if weight_kg > 0: text += f"⚖️ Weight: <b>{weight_kg} kg</b>\n"
+        if weight_kg > 0: text += f"⚖️ Weight: <b>{weight_kg} kg</b>\n"        else: text += "⚖️ Enter the actual load using Edit weight/reps.\n"
         btn_done = f"✅ Done ({ex.get('rest_sec', 60)}s)"
         btn_skip = "⏭ Skip"
         btn_stop = "🛑 Stop"
@@ -2170,7 +2175,7 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         text = f"🏋️‍♂️ <b>Жаттығу {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Тәсіл: <b>{curr_set} / {ex.get('sets', 1)}</b>\n"
         text += f"🔄 Қайталау: <b>{reps_value}</b>\n"
-        if weight_kg > 0: text += f"⚖️ Салмақ: <b>{weight_kg} кг</b>\n"
+        if weight_kg > 0: text += f"⚖️ Салмақ: <b>{weight_kg} кг</b>\n"        else: text += "⚖️ Нақты салмақты Салмақ/қайталауды өзгерту арқылы енгізіңіз.\n"
         btn_done = f"✅ Орындалды ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Өткізіп жіберу"
         btn_stop = "🛑 Аяқтау"
@@ -2180,7 +2185,7 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         text = f"🏋️‍♂️ <b>Вправа {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Підхід: <b>{curr_set} з {ex.get('sets', 1)}</b>\n"
         text += f"🔄 Повторення: <b>{reps_value}</b>\n"
-        if weight_kg > 0: text += f"⚖️ Вага снаряда: <b>{weight_kg} кг</b>\n"
+        if weight_kg > 0: text += f"⚖️ Вага снаряда: <b>{weight_kg} кг</b>\n"        else: text += "⚖️ Вкажи фактичну вагу через «Змінити вагу/повтори».\n"
         btn_done = f"✅ Виконано ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Пропустити"
         btn_stop = "🛑 Завершити"
@@ -2288,13 +2293,17 @@ async def workout_set_done(callback: types.CallbackQuery, state: FSMContext):
         )
         return
 
-    # An edit applies to this set only; the following set uses the plan target.
+    # An edit applies to this set only. Carry the measured load forward as the next-set default,
+    # without changing any already recorded set.
     overrides.pop(f"{ex_idx}:{curr_set}", None)
+    exercise_weights = data.get("exercise_set_weights", {})
+    exercise_weights[str(ex_idx)] = round(weight_value, 2)
     if curr_set >= int(ex.get("sets", 1)):
         await state.update_data(
             current_ex_index=ex_idx + 1,
             current_set=1,
             current_set_overrides=overrides,
+            exercise_set_weights=exercise_weights,
         )
         if lang == "ru": rest_text = f"🎉 Упражнение завершено!\n\n⏱ Отдохни {ex.get('rest_sec', 60)} сек перед следующим."
         elif lang == "en": rest_text = f"🎉 Exercise completed!\n\n⏱ Rest {ex.get('rest_sec', 60)} sec before the next one."
@@ -2304,6 +2313,7 @@ async def workout_set_done(callback: types.CallbackQuery, state: FSMContext):
         await state.update_data(
             current_set=curr_set + 1,
             current_set_overrides=overrides,
+            exercise_set_weights=exercise_weights,
         )
         if lang == "ru": rest_text = f"Отличная работа! 👏\n\n⏱ Отдых {ex.get('rest_sec', 60)} секунд."
         elif lang == "en": rest_text = f"Great job! 👏\n\n⏱ Rest {ex.get('rest_sec', 60)} seconds."
