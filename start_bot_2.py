@@ -12,6 +12,13 @@ from supabase import create_client, Client
 from aiocryptopay import AioCryptoPay
 import time
 from keyboards_app import get_main_menu_with_app
+from workout_tracking import (
+    canonical_exercise_key,
+    create_workout_session,
+    finalize_workout_session,
+    get_suggested_weight,
+    record_completed_set,
+)
 import json
 import re
 from aiogram.filters import Command, CommandObject
@@ -1175,33 +1182,53 @@ async def ask_new_stats(callback: types.CallbackQuery, state: FSMContext):
 async def apply_new_stats(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await get_user_language(user_id)
-    text = message.text.strip()
-    
-    # Пытаемся вытащить два числа из сообщения
-    nums = re.findall(r'\d+', text)
-    
-    if len(nums) < 1:
-        err = "⚠️ Я не нашел цифр. Напишите повторения и вес (например: `10 50`):" if lang == "ru" else "⚠️ Будь ласка, напишіть цифри (наприклад: `10 50`):"
-        return await message.answer(err, parse_mode="Markdown")
-        
-    new_reps = int(nums[0])
-    new_weight = int(nums[1]) if len(nums) > 1 else 0 # Если ввели только 1 число, считаем что вес = 0 (свой вес)
-    
-    # Достаем план тренировки и текущее упражнение
+    text = (message.text or "").strip()
+
+    nums = re.findall(r"\d+(?:[.,]\d+)?", text)
+    if not nums:
+        return await message.answer(
+            "⚠️ Укажите повторения и вес через пробел, например: 10 50 или 10 50.5."
+        )
+
+    new_reps = int(float(nums[0].replace(",", ".")))
+    if new_reps <= 0:
+        return await message.answer("⚠️ Повторения должны быть больше нуля.")
+
     data = await state.get_data()
     plan = data.get("workout_plan", [])
     ex_idx = data.get("current_ex_index", 0)
-    
-    # Обновляем данные прямо в плане
-    if ex_idx < len(plan):
-        plan[ex_idx]['reps'] = new_reps
-        plan[ex_idx]['weight_kg'] = new_weight
-        await state.update_data(workout_plan=plan)
-    
-    try: await message.delete()
-    except: pass
-    
-    # Возвращаем пользователя в режим активной тренировки и показываем обновленную карточку
+    curr_set = data.get("current_set", 1)
+    if ex_idx >= len(plan):
+        await state.clear()
+        return await message.answer("Тренировка уже завершена. Начни новую тренировку.")
+
+    ex = plan[ex_idx]
+    overrides = data.get("current_set_overrides", {})
+    previous_override = overrides.get(f"{ex_idx}:{curr_set}", {})
+    current_weight = previous_override.get("weight_kg", ex.get("weight_kg", 0))
+
+    try:
+        new_weight = (
+            float(nums[1].replace(",", "."))
+            if len(nums) > 1 else float(str(current_weight).replace(",", "."))
+        )
+    except ValueError:
+        return await message.answer("⚠️ Вес должен быть числом, например 50 или 50.5.")
+
+    if new_weight < 0:
+        return await message.answer("⚠️ Вес не может быть отрицательным.")
+
+    overrides[f"{ex_idx}:{curr_set}"] = {
+        "reps": new_reps,
+        "weight_kg": round(new_weight, 2),
+    }
+    await state.update_data(current_set_overrides=overrides)
+
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
     await state.set_state(WorkoutFSM.active_exercise)
     await send_current_exercise(message, state, user_id, lang)
 
@@ -1887,6 +1914,7 @@ async def generate_fast_workout(callback: types.CallbackQuery, state: FSMContext
     
     СУВОРО ЗАБОРОНЕНО придумувати свої власні назви для sys_id. Бери їх виключно зі списку вище.
     Поле 'name' переклади на {target_lang}.
+    Не вигадуй робочу вагу. Якщо немає достовірної історії користувача, вкажи "weight_kg": 0; користувач введе свою вагу сам.
 
     Format EXACTLY like this JSON array:
     [
@@ -1896,7 +1924,7 @@ async def generate_fast_workout(callback: types.CallbackQuery, state: FSMContext
             "sets": 3, 
             "reps": 12, 
             "rest_sec": 60, 
-            "weight_kg": 50,
+            "weight_kg": 0,
             "muscle": "Група м'язів"
         }}
     ]
@@ -1906,7 +1934,15 @@ async def generate_fast_workout(callback: types.CallbackQuery, state: FSMContext
         response = await model.generate_content_async(prompt, generation_config={"response_mime_type": "application/json"})
         workout_plan = json.loads(response.text)
         
-        await state.update_data(workout_plan=workout_plan, current_ex_index=0, current_set=1)
+        session_id = create_workout_session(supabase, user_id, source="bot")
+        await state.update_data(
+            workout_plan=workout_plan,
+            current_ex_index=0,
+            current_set=1,
+            workout_session_id=session_id,
+            current_set_overrides={},
+            progression_checked=[],
+        )
         await state.set_state(WorkoutFSM.active_exercise)
         await send_current_exercise(callback.message, state, user_id, lang)
         
@@ -2080,8 +2116,26 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         return
 
     ex = plan[ex_idx]
-    weight_kg = ex.get('weight_kg', 0)
-    
+
+    # Lookup progression once per exercise; bot and Mini App will share this state.
+    exercise_key = canonical_exercise_key(ex.get("sys_id"), ex.get("name"))
+    progression_checked = data.get("progression_checked", [])
+    if curr_set == 1 and exercise_key not in progression_checked:
+        try:
+            suggested_weight = get_suggested_weight(supabase, user_id, exercise_key)
+            if suggested_weight is not None:
+                ex["weight_kg"] = suggested_weight
+                await state.update_data(workout_plan=plan)
+            progression_checked.append(exercise_key)
+            await state.update_data(progression_checked=progression_checked)
+        except Exception as e:
+            print(f"[WORKOUT] Progression lookup failed for {exercise_key}: {e}")
+
+    overrides = data.get("current_set_overrides", {})
+    set_override = overrides.get(f"{ex_idx}:{curr_set}", {})
+    reps_value = set_override.get("reps", ex.get("reps", 1))
+    weight_kg = set_override.get("weight_kg", ex.get("weight_kg", 0))
+
     # === МАГИЯ СОВПАДЕНИЙ ===
     # Если ИИ прислал кривой sys_id или вообще его забыл, берем name!
     raw_name = ex.get('sys_id') or ex.get('name', 'unknown')
@@ -2095,7 +2149,7 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         name = ex.get('name', 'Без названия')
         text = f"🏋️‍♂️ <b>Упражнение {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Подход: <b>{curr_set} из {ex.get('sets', 1)}</b>\n"
-        text += f"🔄 Повторения: <b>{ex.get('reps', 1)}</b>\n"
+        text += f"🔄 Повторения: <b>{reps_value}</b>\n"
         if weight_kg > 0: text += f"⚖️ Вес снаряда: <b>{weight_kg} кг</b>\n"
         btn_done = f"✅ Выполнено ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Пропустить"
@@ -2105,7 +2159,7 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         name = ex.get('name', 'Unnamed')
         text = f"🏋️‍♂️ <b>Exercise {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Set: <b>{curr_set} of {ex.get('sets', 1)}</b>\n"
-        text += f"🔄 Reps: <b>{ex.get('reps', 1)}</b>\n"
+        text += f"🔄 Reps: <b>{reps_value}</b>\n"
         if weight_kg > 0: text += f"⚖️ Weight: <b>{weight_kg} kg</b>\n"
         btn_done = f"✅ Done ({ex.get('rest_sec', 60)}s)"
         btn_skip = "⏭ Skip"
@@ -2115,7 +2169,7 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         name = ex.get('name', 'Атаусыз')
         text = f"🏋️‍♂️ <b>Жаттығу {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Тәсіл: <b>{curr_set} / {ex.get('sets', 1)}</b>\n"
-        text += f"🔄 Қайталау: <b>{ex.get('reps', 1)}</b>\n"
+        text += f"🔄 Қайталау: <b>{reps_value}</b>\n"
         if weight_kg > 0: text += f"⚖️ Салмақ: <b>{weight_kg} кг</b>\n"
         btn_done = f"✅ Орындалды ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Өткізіп жіберу"
@@ -2125,7 +2179,7 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
         name = ex.get('name', 'Без назви')
         text = f"🏋️‍♂️ <b>Вправа {ex_idx + 1}/{len(plan)}: {name}</b>\n\n"
         text += f"🎯 Підхід: <b>{curr_set} з {ex.get('sets', 1)}</b>\n"
-        text += f"🔄 Повторення: <b>{ex.get('reps', 1)}</b>\n"
+        text += f"🔄 Повторення: <b>{reps_value}</b>\n"
         if weight_kg > 0: text += f"⚖️ Вага снаряда: <b>{weight_kg} кг</b>\n"
         btn_done = f"✅ Виконано ({ex.get('rest_sec', 60)}с)"
         btn_skip = "⏭ Пропустити"
@@ -2183,16 +2237,15 @@ async def send_current_exercise(message: types.Message, state: FSMContext, user_
 
 @dp.callback_query(F.data == "wo_set_done", WorkoutFSM.active_exercise)
 async def workout_set_done(callback: types.CallbackQuery, state: FSMContext):
-    await callback.answer() # 🛑 Миттєво зупиняємо "завантаження" кнопки, щоб уникнути подвійного кліку
-    
-    # 🛑 Одразу блокуємо повторні кліки, змінюючи стан!
+    await callback.answer()
     await state.set_state(WorkoutFSM.resting)
-    
+
     data = await state.get_data()
     plan = data.get("workout_plan", [])
     ex_idx = data.get("current_ex_index", 0)
     curr_set = data.get("current_set", 1)
-    
+    session_id = data.get("workout_session_id")
+
     user_id = callback.from_user.id
     lang = await get_user_language(user_id)
 
@@ -2200,17 +2253,58 @@ async def workout_set_done(callback: types.CallbackQuery, state: FSMContext):
         await finish_workout(callback.message, state, user_id, lang)
         return
 
+    if not session_id:
+        await state.set_state(WorkoutFSM.active_exercise)
+        await callback.message.answer("❌ Не найдена тренировочная сессия. Перезапусти тренировку.")
+        return
+
     ex = plan[ex_idx]
-    
-    # Оновлюємо лічильники
-    if curr_set >= ex.get('sets', 1):
-        await state.update_data(current_ex_index=ex_idx + 1, current_set=1)
+    overrides = data.get("current_set_overrides", {})
+    set_override = overrides.get(f"{ex_idx}:{curr_set}", {})
+    reps_raw = set_override.get("reps", ex.get("reps", 1))
+    weight_raw = set_override.get("weight_kg", ex.get("weight_kg", 0))
+
+    try:
+        reps_match = re.search(r"\d+", str(reps_raw))
+        reps_value = int(reps_match.group()) if reps_match else 0
+        weight_value = float(str(weight_raw).replace(",", "."))
+        record_completed_set(
+            supabase,
+            session_id=session_id,
+            exercise_order=ex_idx,
+            set_index=curr_set,
+            exercise_key=canonical_exercise_key(ex.get("sys_id"), ex.get("name")),
+            exercise_name=ex.get("name", "Exercise"),
+            muscle_group=ex.get("muscle", "core"),
+            reps=reps_value,
+            weight_kg=weight_value,
+            set_type="working",
+        )
+    except Exception as e:
+        print(f"[WORKOUT] Could not persist completed set: {e}")
+        await state.set_state(WorkoutFSM.active_exercise)
+        await callback.message.answer(
+            "❌ Не удалось сохранить подход. Он не засчитан. Проверь соединение и нажми «Выполнено» ещё раз."
+        )
+        return
+
+    # An edit applies to this set only; the following set uses the plan target.
+    overrides.pop(f"{ex_idx}:{curr_set}", None)
+    if curr_set >= int(ex.get("sets", 1)):
+        await state.update_data(
+            current_ex_index=ex_idx + 1,
+            current_set=1,
+            current_set_overrides=overrides,
+        )
         if lang == "ru": rest_text = f"🎉 Упражнение завершено!\n\n⏱ Отдохни {ex.get('rest_sec', 60)} сек перед следующим."
         elif lang == "en": rest_text = f"🎉 Exercise completed!\n\n⏱ Rest {ex.get('rest_sec', 60)} sec before the next one."
         elif lang == "kk": rest_text = f"🎉 Жаттығу аяқталды!\n\n⏱ Келесі жаттығу алдында {ex.get('rest_sec', 60)} сек демалыңыз."
         else: rest_text = f"🎉 Вправу завершено!\n\n⏱ Відпочинь {ex.get('rest_sec', 60)} сек перед наступною."
     else:
-        await state.update_data(current_set=curr_set + 1)
+        await state.update_data(
+            current_set=curr_set + 1,
+            current_set_overrides=overrides,
+        )
         if lang == "ru": rest_text = f"Отличная работа! 👏\n\n⏱ Отдых {ex.get('rest_sec', 60)} секунд."
         elif lang == "en": rest_text = f"Great job! 👏\n\n⏱ Rest {ex.get('rest_sec', 60)} seconds."
         elif lang == "kk": rest_text = f"Керемет жұмыс! 👏\n\n⏱ Демалыс {ex.get('rest_sec', 60)} секунд."
@@ -2223,19 +2317,23 @@ async def workout_set_done(callback: types.CallbackQuery, state: FSMContext):
 
     builder = InlineKeyboardBuilder()
     builder.row(types.InlineKeyboardButton(text=btn_skip, callback_data="wo_skip_rest"))
-    
-    # 🛑 ВИПРАВЛЕННЯ ДУБЛЮВАННЯ: Намагаємося змінити поточне повідомлення замість видалення
     try:
-        sent_msg = await callback.message.edit_text(rest_text, reply_markup=builder.as_markup(), parse_mode="HTML")
+        sent_msg = await callback.message.edit_text(
+            rest_text, reply_markup=builder.as_markup(), parse_mode="HTML"
+        )
     except Exception:
-        # Якщо це була GIF-ка, edit_text видасть помилку. Тоді жорстко видаляємо і надсилаємо текст.
-        try: await callback.message.delete()
-        except: pass
-        sent_msg = await callback.message.answer(rest_text, reply_markup=builder.as_markup(), parse_mode="HTML")
-    
-    rest_sec = ex.get('rest_sec', 60)
-    asyncio.create_task(run_rest_timer(sent_msg, state, user_id, lang, rest_sec, builder, rest_text))
+        try:
+            await callback.message.delete()
+        except Exception:
+            pass
+        sent_msg = await callback.message.answer(
+            rest_text, reply_markup=builder.as_markup(), parse_mode="HTML"
+        )
 
+    rest_sec = ex.get("rest_sec", 60)
+    asyncio.create_task(
+        run_rest_timer(sent_msg, state, user_id, lang, rest_sec, builder, rest_text)
+    )
 
 @dp.callback_query(F.data == "wo_skip_rest", WorkoutFSM.resting)
 async def workout_skip_rest(callback: types.CallbackQuery, state: FSMContext):
@@ -2272,75 +2370,111 @@ import re
 
 async def finish_workout(message: types.Message, state: FSMContext, user_id: int, lang: str, forced=False):
     data = await state.get_data()
-    plan = data.get("workout_plan", [])
-    ex_idx = data.get("current_ex_index", 0)
-    
-    completed_plan = plan[:ex_idx] if forced else plan
-    
-    def safe_int(val):
-        if isinstance(val, int) or isinstance(val, float): return int(val)
-        nums = re.findall(r'\d+', str(val))
-        return int(nums[0]) if nums else 0
+    session_id = data.get("workout_session_id")
+    if data.get("session_finalized"):
+        return
 
-    total_cals = 0
-    for ex in completed_plan:
-        sets = safe_int(ex.get('sets', 0))
-        reps = safe_int(ex.get('reps', 0))
-        weight = safe_int(ex.get('weight_kg', 0))
-        cals = sets * reps * 0.5 
-        total_cals += cals
-        
-        supabase.table("workouts_strength").insert({
-            "user_id": user_id,
-            "exercise_name": f"🤖 {ex.get('name', 'Упражнение')}",
-            "sets": sets,
-            "reps": reps,
-            "weight_kg": weight,
-            "muscle_group": ex.get('muscle', 'core'),
-            "calories_burned": int(cals)
-        }).execute()
-    
-    # Начисляем XP
-    res = supabase.table("users").select("xp").eq("user_id", user_id).execute()
-    if res.data:
-        current_xp = res.data[0].get("xp", 0)
-        supabase.table("users").update({"xp": current_xp + 100}).eq("user_id", user_id).execute()
+    try:
+        if not session_id:
+            raise RuntimeError("No workout_session_id in FSM state")
 
-    # === ФОРМИРУЕМ ТЕКСТ И КНОПКИ ===
-    if lang == "ru":
-        text = f"🎉 <b>Тренировка завершена!</b>\nСожжено: ~{int(total_cals)} ккал." if not forced else f"🛑 <b>Тренировка прервана</b>\nСохранено ~{int(total_cals)} ккал."
-        btn_save = "💾 Сохранить программу"
-        btn_close = "🏠 Закрыть"
-    elif lang == "en":
-        text = f"🎉 <b>Workout completed!</b>\nBurned: ~{int(total_cals)} kcal." if not forced else f"🛑 <b>Workout aborted</b>\nSaved ~{int(total_cals)} kcal."
-        btn_save = "💾 Save program"
-        btn_close = "🏠 Close"
-    elif lang == "kk":
-        text = f"🎉 <b>Жаттығу аяқталды!</b>\nЖағылды: ~{int(total_cals)} ккал." if not forced else f"🛑 <b>Жаттығу тоқтатылды</b>\nСақталды ~{int(total_cals)} ккал."
-        btn_save = "💾 Бағдарламаны сақтау"
-        btn_close = "🏠 Жабу"
-    else:
-        text = f"🎉 <b>Тренування завершено!</b>\nСпалено: ~{int(total_cals)} ккал." if not forced else f"🛑 <b>Тренування перервано</b>\nЗбережено ~{int(total_cals)} ккал."
-        btn_save = "💾 Зберегти програму"
-        btn_close = "🏠 Закрити"
-        
-    builder = InlineKeyboardBuilder()
-    
-    # Предлагаем сохранить только если юзер не нажал "Завершить" принудительно
-    if not forced:
-        builder.row(types.InlineKeyboardButton(text=btn_save, callback_data="wo_ask_save_name"))
-        
-    builder.row(types.InlineKeyboardButton(text=btn_close, callback_data="wo_close_clear"))
+        result = finalize_workout_session(
+            supabase,
+            session_id=session_id,
+            user_id=user_id,
+            completed=not forced,
+        )
+        if result.get("already_finalized"):
+            await state.update_data(session_finalized=True)
+            return
 
-    try: await message.delete()
-    except: pass
-    
-    await bot.send_message(user_id, text, reply_markup=builder.as_markup(), parse_mode="HTML")
-    
-    # Если тренировка прервана жестко, чистим память сразу, иначе оставляем висеть для сохранения
-    if forced:
-        await state.clear()
+        total_cals = int(result.get("calories", 0))
+        completed_sets = result.get("sets", [])
 
+        # XP is awarded only for a normally completed session with at least one saved set.
+        if not forced and completed_sets:
+            user_res = supabase.table("users").select("xp").eq("user_id", user_id).execute()
+            if user_res.data:
+                current_xp = user_res.data[0].get("xp", 0) or 0
+                supabase.table("users").update({"xp": current_xp + 100}).eq("user_id", user_id).execute()
+
+        suggestions = result.get("suggestions", {})
+        suggestion_lines = [
+            f"• {exercise_key}: {suggested_weight:g} кг"
+            for exercise_key, suggested_weight in suggestions.items()
+        ]
+        suggestion_text = ""
+        if suggestion_lines and not forced:
+            heading = (
+                "Следующая рекомендация по весам:" if lang == "ru" else
+                "Next session load suggestions:" if lang == "en" else
+                "Келесі жаттығуға салмақ ұсыныстары:" if lang == "kk" else
+                "Рекомендації ваги на наступне тренування:"
+            )
+            suggestion_text = "\n\n" + heading + "\n" + "\n".join(suggestion_lines)
+
+        if lang == "ru":
+            text = (
+                f"🎉 <b>Тренировка завершена!</b>\nСохранено подходов: {len(completed_sets)}\n"
+                f"Оценка расхода: ~{total_cals} ккал."
+                if not forced else
+                f"🛑 <b>Тренировка прервана</b>\nСохранено фактических подходов: {len(completed_sets)}\n"
+                f"Оценка расхода: ~{total_cals} ккал."
+            )
+            btn_save, btn_close = "💾 Сохранить программу", "🏠 Закрыть"
+        elif lang == "en":
+            text = (
+                f"🎉 <b>Workout completed!</b>\nSaved sets: {len(completed_sets)}\n"
+                f"Estimated calories: ~{total_cals}."
+                if not forced else
+                f"🛑 <b>Workout stopped</b>\nSaved completed sets: {len(completed_sets)}\n"
+                f"Estimated calories: ~{total_cals}."
+            )
+            btn_save, btn_close = "💾 Save program", "🏠 Close"
+        elif lang == "kk":
+            text = (
+                f"🎉 <b>Жаттығу аяқталды!</b>\nСақталған тәсілдер: {len(completed_sets)}\n"
+                f"Шамамен калория: ~{total_cals}."
+                if not forced else
+                f"🛑 <b>Жаттығу тоқтатылды</b>\nСақталған тәсілдер: {len(completed_sets)}\n"
+                f"Шамамен калория: ~{total_cals}."
+            )
+            btn_save, btn_close = "💾 Бағдарламаны сақтау", "🏠 Жабу"
+        else:
+            text = (
+                f"🎉 <b>Тренування завершено!</b>\nЗбережено підходів: {len(completed_sets)}\n"
+                f"Орієнтовно калорій: ~{total_cals}."
+                if not forced else
+                f"🛑 <b>Тренування перервано</b>\nЗбережено фактичних підходів: {len(completed_sets)}\n"
+                f"Орієнтовно калорій: ~{total_cals}."
+            )
+            btn_save, btn_close = "💾 Зберегти програму", "🏠 Закрити"
+
+        text += suggestion_text
+        builder = InlineKeyboardBuilder()
+        if not forced:
+            builder.row(types.InlineKeyboardButton(text=btn_save, callback_data="wo_ask_save_name"))
+        builder.row(types.InlineKeyboardButton(text=btn_close, callback_data="wo_close_clear"))
+
+        try:
+            await message.delete()
+        except Exception:
+            pass
+        await bot.send_message(user_id, text, reply_markup=builder.as_markup(), parse_mode="HTML")
+        await state.update_data(session_finalized=True)
+
+        if forced:
+            await state.clear()
+
+    except Exception as e:
+        print(f"[WORKOUT] Finalization failed for user {user_id}: {e}")
+        try:
+            await bot.send_message(
+                user_id,
+                "Не удалось сохранить итоги тренировки. Данные подходов не удалены; сообщи администратору."
+            )
+        except Exception:
+            pass
 
 # 1. Если юзер нажал "Закрыть" - просто чистим память
 @dp.callback_query(F.data == "wo_close_clear")
@@ -2398,7 +2532,14 @@ async def start_saved_program(callback: types.CallbackQuery, state: FSMContext):
     lang = await get_user_language(user_id)
     
     # Дістаємо текст програми
-    res = supabase.table("saved_programs").select("*").eq("id", prog_id).single().execute()
+    res = (
+        supabase.table("saved_programs")
+        .select("*")
+        .eq("id", prog_id)
+        .eq("user_id", user_id)
+        .single()
+        .execute()
+    )
     if not res.data: return
 
     program_data = res.data
@@ -2406,13 +2547,23 @@ async def start_saved_program(callback: types.CallbackQuery, state: FSMContext):
     wait_msg = "⏱ Завантаження програми..." if lang != "en" else "⏱ Loading program..."
     await callback.message.edit_text(wait_msg)
     
-    prompt = f"Convert this workout text into a JSON array of exercises with 'name', 'sets', 'reps', 'rest_sec', 'muscle'. Text: {program_data['content']}"
+    prompt = f"Convert this workout text into a JSON array of exercises with 'sys_id' when known, 'name', 'sets', 'reps', 'rest_sec', 'muscle', and 'weight_kg'. Never guess external weights; use 0 if no weight was explicitly provided. Text: {program_data['content']}"
     
     try:
         response = await model.generate_content_async(prompt, generation_config={"response_mime_type": "application/json"})
         workout_plan = json.loads(response.text)
         
-        await state.update_data(workout_plan=workout_plan, current_ex_index=0, current_set=1)
+        session_id = create_workout_session(
+            supabase, user_id, source="bot", program_id=prog_id
+        )
+        await state.update_data(
+            workout_plan=workout_plan,
+            current_ex_index=0,
+            current_set=1,
+            workout_session_id=session_id,
+            current_set_overrides={},
+            progression_checked=[],
+        )
         await state.set_state(WorkoutFSM.active_exercise)
         await send_current_exercise(callback.message, state, user_id, lang)
     except Exception as e:
