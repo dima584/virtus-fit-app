@@ -50,6 +50,31 @@ CREATE INDEX IF NOT EXISTS workout_sets_session_idx
 CREATE INDEX IF NOT EXISTS workout_sets_exercise_created_idx
     ON public.workout_sets (exercise_key, created_at DESC);
 
+-- Add an idempotent legacy aggregate link so retrying session finalization
+-- updates the same dashboard row instead of creating duplicate aggregates.
+ALTER TABLE public.workouts_strength
+    ADD COLUMN IF NOT EXISTS session_id uuid
+        REFERENCES public.workout_sessions(id) ON DELETE SET NULL,
+    ADD COLUMN IF NOT EXISTS exercise_order integer;
+
+DO $
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = 'public.workouts_strength'::regclass
+          AND conname = 'workouts_strength_session_exercise_unique'
+    ) THEN
+        ALTER TABLE public.workouts_strength
+            ADD CONSTRAINT workouts_strength_session_exercise_unique
+            UNIQUE (session_id, exercise_order);
+    END IF;
+END
+$;
+
+CREATE INDEX IF NOT EXISTS workouts_strength_user_created_idx
+    ON public.workouts_strength (user_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS public.exercise_progression (
     user_id bigint NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
     exercise_key text NOT NULL CHECK (length(trim(exercise_key)) > 0),
