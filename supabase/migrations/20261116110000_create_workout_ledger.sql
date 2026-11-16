@@ -69,7 +69,7 @@ BEGIN
             ADD CONSTRAINT workouts_strength_session_exercise_unique
             UNIQUE (session_id, exercise_order);
     END IF;
-END
+END;
 $migration$;
 
 CREATE INDEX IF NOT EXISTS workouts_strength_user_created_idx
