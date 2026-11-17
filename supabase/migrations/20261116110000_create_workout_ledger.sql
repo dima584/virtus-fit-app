@@ -11,12 +11,16 @@ CREATE TABLE IF NOT EXISTS public.workout_sessions (
     started_at timestamptz NOT NULL DEFAULT now(),
     finished_at timestamptz,
     source text NOT NULL CHECK (source IN ('bot', 'miniapp')),
+    plan jsonb NOT NULL DEFAULT '[]'::jsonb,
     program_id bigint REFERENCES public.saved_programs(id) ON DELETE SET NULL,
     status text NOT NULL DEFAULT 'active'
         CHECK (status IN ('active', 'completed', 'abandoned')),
     CONSTRAINT workout_sessions_finished_after_start
         CHECK (finished_at IS NULL OR finished_at >= started_at)
 );
+
+ALTER TABLE public.workout_sessions
+    ADD COLUMN IF NOT EXISTS plan jsonb NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE INDEX IF NOT EXISTS workout_sessions_user_started_idx
     ON public.workout_sessions (user_id, started_at DESC);
@@ -56,6 +60,27 @@ ALTER TABLE public.workouts_strength
     ADD COLUMN IF NOT EXISTS session_id uuid
         REFERENCES public.workout_sessions(id) ON DELETE SET NULL,
     ADD COLUMN IF NOT EXISTS exercise_order integer;
+
+-- The legacy table has a NOT NULL bigint id without a DEFAULT.
+-- Generate collision-free IDs for new aggregate rows while preserving history.
+CREATE SEQUENCE IF NOT EXISTS public.workouts_strength_id_seq AS bigint;
+
+ALTER SEQUENCE public.workouts_strength_id_seq
+    OWNED BY public.workouts_strength.id;
+
+SELECT setval(
+    'public.workouts_strength_id_seq'::regclass,
+    COALESCE((SELECT MAX(id) FROM public.workouts_strength), 1),
+    EXISTS (SELECT 1 FROM public.workouts_strength)
+);
+
+ALTER TABLE public.workouts_strength
+    ALTER COLUMN id
+    SET DEFAULT nextval('public.workouts_strength_id_seq'::regclass);
+
+GRANT USAGE, SELECT ON SEQUENCE
+    public.workouts_strength_id_seq
+    TO service_role;
 
 DO $migration$
 BEGIN

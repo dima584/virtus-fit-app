@@ -2,6 +2,7 @@ import unittest
 
 from workout_tracking import (
     calculate_progression,
+    has_complete_working_sets,
     canonical_exercise_key,
     canonical_muscle_group,
 )
@@ -70,6 +71,28 @@ class WorkoutTrackingTests(unittest.TestCase):
         )
         self.assertEqual(result["decision"], "bodyweight")
         self.assertEqual(result["next_weight"], 0)
+
+    def test_partial_exercise_does_not_unlock_progression(self):
+        one_set = [
+            {"completed": True, "set_type": "working", "set_index": 1,
+             "reps": 12, "weight_kg": 60},
+        ]
+        self.assertFalse(has_complete_working_sets(one_set, 3))
+
+    def test_all_planned_working_sets_unlock_progression(self):
+        all_sets = [
+            {"completed": True, "set_type": "working", "set_index": index,
+             "reps": 12, "weight_kg": 60}
+            for index in (1, 2, 3)
+        ]
+        self.assertTrue(has_complete_working_sets(all_sets, 3))
+
+    def test_missing_middle_set_does_not_unlock_progression(self):
+        incomplete = [
+            {"completed": True, "set_type": "working", "set_index": 1},
+            {"completed": True, "set_type": "working", "set_index": 3},
+        ]
+        self.assertFalse(has_complete_working_sets(incomplete, 3))
 
     def test_incomplete_sets_are_ignored(self):
         result = calculate_progression(

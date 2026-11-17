@@ -69,11 +69,17 @@ def create_workout_session(
     user_id: int,
     source: str = "bot",
     program_id: int | None = None,
+    plan: list[dict[str, Any]] | None = None,
 ) -> str:
     """Create a session and return its UUID string."""
     if source not in {"bot", "miniapp"}:
         raise ValueError("Unsupported workout source")
-    payload = {"user_id": int(user_id), "source": source, "status": "active"}
+    payload = {
+        "user_id": int(user_id),
+        "source": source,
+        "status": "active",
+        "plan": plan or [],
+    }
     if program_id is not None:
         payload["program_id"] = int(program_id)
     result = (
@@ -273,6 +279,25 @@ def get_suggested_weight(db: Any, user_id: int, exercise_key: str) -> float | No
     return None if value is None else _as_float(value)
 
 
+def has_complete_working_sets(
+    working_sets: list[dict[str, Any]],
+    planned_working_sets: int,
+) -> bool:
+    """True only when every planned working set was actually recorded."""
+    planned = _as_int(planned_working_sets)
+    if planned <= 0:
+        return False
+
+    expected_indices = set(range(1, planned + 1))
+    actual_indices = {
+        _as_int(row.get("set_index"))
+        for row in working_sets
+        if row.get("completed") is True
+        and row.get("set_type") == "working"
+    }
+    return actual_indices == expected_indices
+
+
 def finalize_workout_session(
     db: Any,
     *,
@@ -283,7 +308,7 @@ def finalize_workout_session(
     """Finalize one session from recorded facts and maintain legacy dashboard aggregates."""
     session_result = (
         db.table("workout_sessions")
-        .select("id,status")
+        .select("id,status,plan")
         .eq("id", str(session_id))
         .eq("user_id", int(user_id))
         .limit(1)
@@ -293,6 +318,14 @@ def finalize_workout_session(
         raise RuntimeError("Workout session not found for this user")
     if session_result.data[0].get("status") != "active":
         return {"sets": [], "total_reps": 0, "calories": 0, "already_finalized": True}
+
+    # The saved plan is the source of truth for expected working-set count.
+    session_plan = session_result.data[0].get("plan") or []
+    planned_exercises = {
+        index: exercise
+        for index, exercise in enumerate(session_plan)
+        if isinstance(exercise, dict)
+    }
 
     set_result = (
         db.table("workout_sets")
@@ -343,7 +376,15 @@ def finalize_workout_session(
             "calories_burned": int(round(sum(_as_int(r.get("reps")) for r in exercise_rows) * 0.5)),
         }, on_conflict="session_id,exercise_order").execute()
 
-        if completed and working:
+        exercise_plan = planned_exercises.get(exercise_order, {})
+        expected_working_sets = _as_int(exercise_plan.get("sets"), 0)
+
+        # Partial exercises remain in history but cannot change the next load.
+        if (
+            completed
+            and working
+            and has_complete_working_sets(working, expected_working_sets)
+        ):
             suggestion = _update_exercise_progression(
                 db,
                 user_id=user_id,

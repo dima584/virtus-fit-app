@@ -1918,6 +1918,7 @@ async def generate_fast_workout(callback: types.CallbackQuery, state: FSMContext
     СУВОРО ЗАБОРОНЕНО придумувати свої власні назви для sys_id. Бери їх виключно зі списку вище.
     Поле 'name' переклади на {target_lang}.
     Не вигадуй робочу вагу. Якщо немає достовірної історії користувача, вкажи "weight_kg": 0; користувач введе свою вагу сам.
+    Поле "sets" означає кількість РОБОЧИХ підходів; не включай розминку в це число.
 
     Format EXACTLY like this JSON array:
     [
@@ -1937,7 +1938,9 @@ async def generate_fast_workout(callback: types.CallbackQuery, state: FSMContext
         response = await model.generate_content_async(prompt, generation_config={"response_mime_type": "application/json"})
         workout_plan = json.loads(response.text)
         
-        session_id = create_workout_session(supabase, user_id, source="bot")
+        session_id = create_workout_session(
+            supabase, user_id, source="bot", plan=workout_plan
+        )
         await state.update_data(
             workout_plan=workout_plan,
             current_ex_index=0,
@@ -2572,14 +2575,14 @@ async def start_saved_program(callback: types.CallbackQuery, state: FSMContext):
     wait_msg = "⏱ Завантаження програми..." if lang != "en" else "⏱ Loading program..."
     await callback.message.edit_text(wait_msg)
     
-    prompt = f"Convert this workout text into a JSON array of exercises with 'sys_id' when known, 'name', 'sets', 'reps', 'rest_sec', 'muscle', and 'weight_kg'. Never guess external weights; use 0 if no weight was explicitly provided. Text: {program_data['content']}"
+    prompt = f"Convert this workout text into a JSON array of exercises with 'sys_id' when known, 'name', 'sets', 'reps', 'rest_sec', 'muscle', and 'weight_kg'. The 'sets' field means working sets only; do not include warm-up sets. Never guess external weights; use 0 if no weight was explicitly provided. Text: {program_data['content']}"
     
     try:
         response = await model.generate_content_async(prompt, generation_config={"response_mime_type": "application/json"})
         workout_plan = json.loads(response.text)
         
         session_id = create_workout_session(
-            supabase, user_id, source="bot", program_id=prog_id
+            supabase, user_id, source="bot", program_id=prog_id, plan=workout_plan
         )
         await state.update_data(
             workout_plan=workout_plan,
